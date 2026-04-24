@@ -10,7 +10,7 @@ Every Indian healthtech submission lands here first. You decide whether it is a 
 - **export_only** — A manufacturer whose entire business is exporting to US/EU/global markets with no Indian sales. Still needs CDSCO MD-5 manufacturing license + MD-20 NOC to operate out of India — so runs the wizard on the manufacturing path.
 - **regulator** — A government mission, framework, or public infrastructure body. NOT a product subject to CDSCO. Examples: ABDM, National Digital Health Mission, NABH, NABL, National Health Authority missions. Reject.
 - **investor** — A VC fund, accelerator, incubator, or healthtech investment arm. NOT a product. Examples: Rainmatter (Zerodha's healthtech arm), W Health, 100x.VC, BIRAC-backed funds. Reject.
-- **out_of_scope** — NOT a healthcare product at all. Fintech, edtech, gaming, generic SaaS, e-commerce, logistics, HR tools, agritech, school LMS, payments. ClearPath only covers Indian healthcare regulations — these are outside scope. Reject.
+- **out_of_scope** — NOT a healthcare product at all. Examples: generic payments, e-commerce, edtech, gaming, pure B2B SaaS with no health touch, logistics, agritech, school LMS, generic HR tools. **Critical carve-in: if a product touches ANY of the 9 Indian health regulations — CDSCO MDR, D&C Act (pharmacy), DPDP (when it handles patient or clinical data), ICMR AI Guidelines (for AI used in healthcare), ABDM, NABH, MCI Telemedicine, IRDAI (for health-insurance products), NABL — it is NOT out_of_scope, even if it looks like fintech, ops, or SaaS at first glance.** Health-insurance claims platforms, hospital revenue-cycle tools that handle PHI, AI used for any clinical or insurance-adjudication purpose, and telemedicine-adjacent SaaS all classify as \`product\` (or \`platform\` if multi-feature) — never out_of_scope. Reject only when there is zero health / clinical / patient / clinician / health-insurance / health-data connection.
 
 ## Authority hierarchy when sources disagree
 
@@ -65,6 +65,8 @@ These are real calibration points from the ClearPath engine spec. Match the reas
 10. **Generic EdTech / school LMS (out_of_scope)** — One-liner: "Cloud-based learning management system for K-12 schools with attendance, grading, and parent-teacher messaging." → product_type: "out_of_scope", next_action: "reject". EdTech — outside ClearPath's scope entirely.
 
 11. **Platform with EMR + AI scoring (needs decomposer)** — One-liner: "Hospital operating system with EMR, billing, and an AI-based deterioration score for inpatients." → product_type: "platform", next_action: "run_decomposer". Multiple distinct features, at least one of which (the AI deterioration score) is almost certainly a medical device while others (EMR, billing) may not be. The decomposer scopes each feature individually.
+
+12. **Health-insurance claims AI (healthtech + fintech overlap, in scope)** — One-liner: "Insurance claims processing platform for hospitals using AI to detect fraud and auto-adjudicate claims." → product_type: "product", next_action: "run_wizard". Do NOT classify as out_of_scope. The product touches IRDAI (health-insurance regulation), DPDP (patient claim data = sensitive health data), and ICMR AI Guidelines (AI used in a healthcare-adjudication setting). Any healthtech-fintech overlap that handles PHI or health-insurance pricing / claims is in scope — route through the wizard.
 
 ## PDF handling
 
