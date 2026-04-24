@@ -1,0 +1,241 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import Link from "next/link";
+import posthog from "posthog-js";
+
+const CHECK = (
+  <svg
+    className="w-4 h-4 flex-shrink-0 text-[#0F6E56]"
+    viewBox="0 0 16 16"
+    fill="none"
+    aria-hidden="true"
+  >
+    <path
+      d="M3 8l3.5 3.5L13 4.5"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+function BulletList({ items }: { items: string[] }) {
+  return (
+    <ul className="space-y-2 mt-4">
+      {items.map((item) => (
+        <li key={item} className="flex items-start gap-2 text-sm text-[#0E1411]">
+          {CHECK}
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+const steps = [
+  {
+    label: "Land",
+    sub: "clearpath.in",
+  },
+  {
+    label: "Describe",
+    sub: "one-liner + URL",
+  },
+  {
+    label: "Readiness Card",
+    sub: "5 minutes",
+    badge: "FREE",
+    badgeColor: "bg-[#E1F5EE] text-[#0F6E56]",
+  },
+  {
+    label: "Draft Pack",
+    sub: "10 minutes",
+    badge: "₹499",
+    badgeColor: "bg-[#FAEEDA] text-[#BA7517]",
+  },
+  {
+    label: "Concierge",
+    sub: "2–3 weeks",
+    badge: "₹50K",
+    badgeColor: "bg-[#FAECE7] text-[#993C1D]",
+  },
+  {
+    label: "Submit to CDSCO",
+    sub: "to CDSCO",
+  },
+];
+
+export default function HowItWorksSection() {
+  const ref = useRef<HTMLElement>(null);
+  const fired = useRef(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !fired.current) {
+          fired.current = true;
+          try {
+            posthog.capture("section_viewed", { section: "how_it_works" });
+          } catch {}
+        }
+      },
+      { threshold: 0.2 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <section
+      id="how-it-works"
+      ref={ref}
+      className="py-20 px-6 md:px-8 bg-[#F7F6F2]"
+    >
+      <div className="max-w-[1240px] mx-auto">
+        {/* Heading */}
+        <div className="text-center mb-12">
+          <h2 className="font-serif text-3xl md:text-4xl text-[#0E1411] tracking-tight">
+            Clarity → Draft → Submission
+          </h2>
+          <p className="mt-2 text-[#6B766F] text-base md:text-lg">
+            Three stages. Each one earns the next.
+          </p>
+        </div>
+
+        {/* Three tier cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Card 1 — Free */}
+          <div className="rounded-xl border border-[#0F6E56] bg-[#E1F5EE] p-6 flex flex-col">
+            <span className="font-mono text-xs tracking-widest uppercase text-[#0F6E56] mb-3">
+              Stage 1 · Free
+            </span>
+            <h3 className="font-serif text-2xl text-[#0E1411]">
+              Readiness Card
+            </h3>
+            <p className="italic text-[#6B766F] text-sm mt-1">
+              5-minute clarity
+            </p>
+            <BulletList
+              items={[
+                "Risk · High / Medium / Low",
+                "Readiness score · /10",
+                "Likely CDSCO class (if applicable)",
+                "Top 3 gaps to fix first",
+                "Time-to-approval estimate",
+              ]}
+            />
+            <p className="mt-auto pt-5 italic text-sm text-[#0F6E56]">
+              Shareable. Screenshot-worthy. Honest about uncertainty.
+            </p>
+          </div>
+
+          {/* Card 2 — ₹499 */}
+          <div className="rounded-xl border border-[#BA7517] bg-[#FAEEDA] p-6 flex flex-col">
+            <span className="font-mono text-xs tracking-widest uppercase text-[#BA7517] mb-3">
+              Stage 2 · ₹499
+            </span>
+            <h3 className="font-serif text-2xl text-[#0E1411]">
+              Regulatory Draft Pack
+            </h3>
+            <p className="italic text-[#6B766F] text-sm mt-1">
+              Delivered in ~10 minutes
+            </p>
+            <BulletList
+              items={[
+                "Structured application draft",
+                "Section-wise content (intended use, risk, clinical context)",
+                "Checklist mapped to CDSCO submission structure",
+                "Relevant CDSCO forms (MD-12, MD-9 etc.)",
+                "Pathway + realistic timeline",
+              ]}
+            />
+            <p className="mt-auto pt-5 italic text-sm text-[#633806]">
+              Not auto-filled official forms. Content your consultant or
+              regulator can work with.
+            </p>
+          </div>
+
+          {/* Card 3 — ₹50K */}
+          <div className="rounded-xl border border-[#993C1D] bg-[#FAECE7] p-6 flex flex-col">
+            <span className="font-mono text-xs tracking-widest uppercase text-[#993C1D] mb-3">
+              Stage 3 · ₹50,000
+            </span>
+            <h3 className="font-serif text-2xl text-[#0E1411]">
+              Submission Concierge
+            </h3>
+            <p className="italic text-[#6B766F] text-sm mt-1">
+              Expert-reviewed · 2–3 weeks
+            </p>
+            <BulletList
+              items={[
+                "Document refinement by Indian regulatory experts",
+                "Classification validation",
+                "QMS checklist guidance (ISO 13485, IEC 62304)",
+                "Clinical validation plan",
+                "Submission support · 1 iteration",
+              ]}
+            />
+            <p className="mt-auto pt-5 italic text-sm text-[#993C1D]">
+              Join the waitlist for the launch cohort.
+            </p>
+          </div>
+        </div>
+
+        {/* Horizontal stepper */}
+        <div className="mt-16 overflow-x-auto">
+          <div className="flex items-start min-w-max mx-auto justify-center">
+            {steps.map((step, i) => (
+              <div key={step.label} className="flex items-start">
+                {/* Step */}
+                <div className="flex flex-col items-center w-32">
+                  {/* Circle */}
+                  <div className="w-10 h-10 rounded-full border-2 border-[#D9D5C8] bg-[#FDFCF8] flex items-center justify-center flex-shrink-0">
+                    <span className="font-mono text-xs font-medium text-[#0E1411]">
+                      {i + 1}
+                    </span>
+                  </div>
+                  {/* Badge (if any) */}
+                  {step.badge && (
+                    <span
+                      className={`mt-1 text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full ${step.badgeColor}`}
+                    >
+                      {step.badge}
+                    </span>
+                  )}
+                  {!step.badge && <div className="mt-1 h-[22px]" />}
+                  {/* Label */}
+                  <p className="mt-1 text-xs font-medium text-[#0E1411] text-center leading-tight">
+                    {step.label}
+                  </p>
+                  {/* Sub */}
+                  <p className="mt-0.5 text-[10px] text-[#6B766F] text-center">
+                    {step.sub}
+                  </p>
+                </div>
+
+                {/* Connector */}
+                {i < steps.length - 1 && (
+                  <div className="flex-shrink-0 w-8 mt-4 border-t-2 border-dashed border-[#D9D5C8]" />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* CTA below stepper */}
+        <div className="mt-10 text-center">
+          <Link
+            href="/start"
+            className="inline-block bg-[#0F6E56] text-white text-sm font-medium px-6 py-3 rounded-full hover:bg-[#0d5c48] transition-colors"
+          >
+            Start with Stage 1 — it&apos;s free →
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
