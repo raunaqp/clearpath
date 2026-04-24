@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "poc:prerouter": "tsx scripts/poc-prerouter.ts"
+    "poc:prerouter": "tsx scripts/poc-prerouter.ts",
+    "test:f3": "tsx scripts/test-feature-3.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.0",
