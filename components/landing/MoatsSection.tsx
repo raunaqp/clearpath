@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import posthog from "posthog-js";
+import { useSectionTracking } from "@/lib/analytics/useSectionTracking";
 
 const moats = [
   {
@@ -32,26 +31,7 @@ const moats = [
 ];
 
 export default function MoatsSection() {
-  const ref = useRef<HTMLElement>(null);
-  const fired = useRef(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !fired.current) {
-          fired.current = true;
-          try {
-            posthog.capture("section_viewed", { section: "moats" });
-          } catch {}
-        }
-      },
-      { threshold: 0.2 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+  const ref = useSectionTracking("moats");
 
   return (
     <section

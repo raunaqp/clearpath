@@ -1,7 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useEffect, useRef } from "react";
-import posthog from "posthog-js";
+import { useSectionTracking } from "@/lib/analytics/useSectionTracking";
 
 const credentials = [
   "IPU Pathfinder Award",
@@ -13,52 +12,28 @@ const credentials = [
 
 const testimonials = [
   {
-    quote:
-      "This can be an extremely useful tool for new founders, before they start building their product.",
+    quote: "This can be an extremely useful tool for new founders, before they start building their product.",
     name: "Dr Bhaskar Rajakumar",
     title: "CEO, Charaka",
   },
   {
-    quote:
-      "It was a nightmarish process over 2 years, where I had to figure out everything by myself — and spend hours preparing the documentation.",
+    quote: "It was a nightmarish process over 2 years, where I had to figure out everything by myself — and spend hours preparing the documentation.",
     name: "Dhritiman Mallick",
     title: "CEO, Vyuhaa Med Data",
   },
   {
-    quote:
-      "For healthcare regulations, providing support end to end can be of a lot of value to the founder.",
+    quote: "For healthcare regulations, providing support end to end can be of a lot of value to the founder.",
     name: "Sohit Kapoor",
     title: "Founder, Briefcase",
   },
 ];
 
 export default function FounderSection() {
-  const ref = useRef<HTMLElement>(null);
-  const tracked = useRef(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !tracked.current) {
-          tracked.current = true;
-          try {
-            posthog.capture("section_viewed", { section: "founder" });
-          } catch {}
-        }
-      },
-      { threshold: 0.2 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+  const founderRef = useSectionTracking("founder_profile");
+  const testimonialsRef = useSectionTracking("testimonials");
 
   return (
-    <section
-      ref={ref}
-      className="py-20 md:py-28 border-b border-[#E8E4D6]"
-    >
+    <section className="py-20 md:py-28 border-b border-[#E8E4D6]">
       <div className="max-w-[1240px] mx-auto px-6 md:px-8">
         <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-6">
           Who built this
@@ -68,8 +43,8 @@ export default function FounderSection() {
         </h2>
 
         <div className="grid md:grid-cols-2 gap-12">
-          {/* Left: Founder */}
-          <div>
+          {/* Left: Founder profile */}
+          <div ref={founderRef as React.RefObject<HTMLDivElement>}>
             <div className="flex flex-col items-start gap-5">
               <Image
                 src="/founder.jpeg"
@@ -105,12 +80,9 @@ export default function FounderSection() {
           </div>
 
           {/* Right: Testimonials */}
-          <div className="flex flex-col gap-4">
+          <div ref={testimonialsRef as React.RefObject<HTMLDivElement>} className="flex flex-col gap-4">
             {testimonials.map((t) => (
-              <div
-                key={t.name}
-                className="bg-[#FDFCF8] border border-[#D9D5C8] rounded-xl p-5"
-              >
+              <div key={t.name} className="bg-[#FDFCF8] border border-[#D9D5C8] rounded-xl p-5">
                 <p className="font-serif italic text-[15px] text-[#0E1411] leading-relaxed">
                   <span className="text-[#0F6E56] not-italic">&ldquo;</span>
                   {t.quote}

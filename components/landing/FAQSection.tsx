@@ -1,4 +1,5 @@
 "use client";
+import { useRef } from "react";
 import posthog from "posthog-js";
 import {
   Accordion,
@@ -6,6 +7,7 @@ import {
   AccordionTrigger,
   AccordionContent,
 } from "@/components/ui/accordion";
+import { useSectionTracking } from "@/lib/analytics/useSectionTracking";
 
 const faqs = [
   {
@@ -61,22 +63,26 @@ const faqs = [
   {
     question: "Who's behind ClearPath?",
     answer:
-      "ClearPath is built by Raunaq Pradhan — core contributor to the Ayushman Bharat Digital Mission, Champion Mentor for ABDM, SIIP Fellow (DBT BIRAC), and mentor to 20+ digital health startups. Designed with inputs from Dhritiman Mallick (Vyuhaa Med Data / CerviAI) and Dr Bhaskar Rajakumar (Charaka / Karnataka Medtech Cluster).",
+      "ClearPath is built by Raunaq Pradhan — core contributor to the Ayushman Bharat Digital Mission, Champion Mentor for ABDM, SIIP Fellow (DBT BIRAC), and mentor to 20+ digital health startups. Designed with inputs from Dhritiman Mallick (Vyuhaa Med Data / CerviAI) and Dr Bhaskar Rajakumar (Charaka).",
   },
 ];
 
 export default function FAQSection() {
-  function handleOpen(index: number, question: string) {
-    try {
-      posthog.capture("faq_opened", {
-        question_index: index,
-        question_text: question,
-      });
-    } catch {}
+  const ref = useSectionTracking("faq");
+  const openedQuestions = useRef(new Set<string>());
+
+  function handleTriggerClick(e: React.MouseEvent<HTMLButtonElement>, question: string) {
+    const isExpanded = e.currentTarget.getAttribute("aria-expanded") === "true";
+    if (!isExpanded && !openedQuestions.current.has(question)) {
+      openedQuestions.current.add(question);
+      try {
+        posthog.capture("faq_opened", { question });
+      } catch {}
+    }
   }
 
   return (
-    <section id="faq" className="py-20 md:py-28 border-b border-[#E8E4D6]">
+    <section ref={ref} id="faq" className="py-20 md:py-28 border-b border-[#E8E4D6]">
       <div className="max-w-[1240px] mx-auto px-6 md:px-8">
         <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-6">
           FAQ
@@ -91,7 +97,7 @@ export default function FAQSection() {
               <AccordionItem key={i} value={String(i)}>
                 <AccordionTrigger
                   className="font-sans text-[15px] font-medium text-[#0E1411] py-4 hover:no-underline"
-                  onClick={() => handleOpen(i, faq.question)}
+                  onClick={(e) => handleTriggerClick(e, faq.question)}
                 >
                   {faq.question}
                 </AccordionTrigger>

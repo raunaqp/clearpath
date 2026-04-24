@@ -15,6 +15,7 @@ export default function PostHogProvider({
       person_profiles: "identified_only",
       capture_pageview: true,
       capture_pageleave: true,
+      autocapture: false,
     });
   }, []);
 

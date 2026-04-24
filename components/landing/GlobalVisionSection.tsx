@@ -1,8 +1,11 @@
 "use client";
+import { useSectionTracking } from "@/lib/analytics/useSectionTracking";
 
 export default function GlobalVisionSection() {
+  const ref = useSectionTracking("global_vision");
+
   return (
-    <section className="py-16 md:py-20 px-6 md:px-8 border-b border-[#E8E4D6] bg-[#F7F6F2]">
+    <section ref={ref} className="py-16 md:py-20 px-6 md:px-8 border-b border-[#E8E4D6] bg-[#F7F6F2]">
       <div className="max-w-3xl mx-auto text-center">
         <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-5">
           What&apos;s Next

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import Link from "next/link";
 import posthog from "posthog-js";
+import { useSectionTracking } from "@/lib/analytics/useSectionTracking";
 
 const regulationPills = [
   { label: "CDSCO MDR", verdict: "likely required" },
@@ -38,26 +38,7 @@ function gapStyle(severity: string) {
 }
 
 export default function ReportPreviewSection() {
-  const ref = useRef<HTMLElement>(null);
-  const fired = useRef(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !fired.current) {
-          fired.current = true;
-          try {
-            posthog.capture("section_viewed", { section: "report_preview" });
-          } catch {}
-        }
-      },
-      { threshold: 0.2 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+  const ref = useSectionTracking("sample_card");
 
   return (
     <section
@@ -186,6 +167,9 @@ export default function ReportPreviewSection() {
           </p>
           <Link
             href="/start"
+            onClick={() => {
+              try { posthog.capture("cta_clicked", { cta_location: "card_bottom", cta_text: "Get your free Readiness Card →", destination: "/start" }); } catch {}
+            }}
             className="inline-block bg-[#0F6E56] text-white text-sm font-medium px-6 py-3 rounded-full hover:bg-[#0d5c48] transition-colors"
           >
             Get your free Readiness Card →

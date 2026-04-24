@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import posthog from "posthog-js";
+import { useSectionTracking } from "@/lib/analytics/useSectionTracking";
 
 const stats = [
   {
@@ -20,27 +21,26 @@ const stats = [
   },
 ];
 
+function trackCta(location: string, text: string) {
+  try {
+    posthog.capture("cta_clicked", {
+      cta_location: location,
+      cta_text: text,
+      destination: "/start",
+    });
+  } catch {}
+}
+
 export default function HeroSection() {
-  function trackCta() {
-    if (typeof window !== "undefined") {
-      try {
-        posthog.capture("cta_clicked", {
-          location: "hero",
-          cta_text: "get_free_card",
-        });
-      } catch {}
-    }
-  }
+  const ref = useSectionTracking("hero");
 
   return (
-    <section className="pt-20 pb-16 md:pt-28 md:pb-24 border-b border-[#E8E4D6]">
+    <section ref={ref} className="pt-20 pb-16 md:pt-28 md:pb-24 border-b border-[#E8E4D6]">
       <div className="max-w-[1240px] mx-auto px-6 md:px-8">
-        {/* Eyebrow */}
         <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-6">
           Indian Digital Health · Regulatory Readiness
         </p>
 
-        {/* H1 */}
         <h1 className="font-serif font-normal text-[clamp(40px,6vw,80px)] leading-[1.04] tracking-[-0.03em] text-[#0E1411] max-w-4xl mb-6">
           CDSCO changed what counts as a medical device.{" "}
           <span className="text-[#2A3430]">
@@ -48,7 +48,6 @@ export default function HeroSection() {
           </span>
         </h1>
 
-        {/* Subhead — Change 2: explicit regulation naming */}
         <p className="text-[18px] text-[#6B766F] max-w-2xl leading-relaxed mb-10">
           CDSCO&apos;s Medical Device Rules 2017 and the Oct 2025 SaMD draft changed
           what counts as a medical device. ClearPath tells you in 5 minutes
@@ -56,11 +55,10 @@ export default function HeroSection() {
           compliance looks like.
         </p>
 
-        {/* CTA */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
           <Link
             href="/start"
-            onClick={trackCta}
+            onClick={() => trackCta("hero", "Get your readiness card — free")}
             className="inline-flex items-center gap-2 bg-[#0F6E56] text-white font-medium text-[15px] px-6 py-3.5 rounded-full hover:bg-[#0d5c48] transition-colors"
           >
             Get your readiness card — free
@@ -70,18 +68,14 @@ export default function HeroSection() {
           </span>
         </div>
 
-        {/* Expert trust strip — Change 1 */}
-        <p className="text-[11px] text-[#6B766F] font-mono tracking-[0.12em] uppercase mt-5">
+        <p className="font-mono text-[11px] tracking-[0.12em] uppercase text-[#6B766F] mt-5">
           Backed by experts from ABDM · Regulatory Officials · Indian healthtech founders
         </p>
-
-        {/* Trust strip */}
         <p className="text-[12px] text-[#6B766F] font-mono tracking-wide mt-2">
           Built on real CDSCO submissions · Aligned to the Oct 2025 SaMD draft
           · Tested on 15+ Indian healthtech products
         </p>
 
-        {/* Pain stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-14">
           {stats.map((s) => (
             <div

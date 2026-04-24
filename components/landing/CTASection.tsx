@@ -1,19 +1,23 @@
 "use client";
 import Link from "next/link";
 import posthog from "posthog-js";
+import { useSectionTracking } from "@/lib/analytics/useSectionTracking";
 
 export default function CTASection() {
+  const ref = useSectionTracking("final_cta");
+
   function handleClick() {
     try {
       posthog.capture("cta_clicked", {
-        location: "bottom_cta",
-        cta_text: "get_free_card",
+        cta_location: "final_cta",
+        cta_text: "Get your readiness card →",
+        destination: "/start",
       });
     } catch {}
   }
 
   return (
-    <section className="bg-[#0E1411] py-24 md:py-32 w-full">
+    <section ref={ref} className="bg-[#0E1411] py-24 md:py-32 w-full">
       <div className="max-w-[1240px] mx-auto px-6 md:px-8 text-center">
         <h2 className="font-serif font-normal text-[clamp(32px,5vw,48px)] leading-[1.1] tracking-[-0.02em] text-white mb-4">
           Know where you stand in 5 minutes.
@@ -30,10 +34,7 @@ export default function CTASection() {
         </Link>
         <p className="text-[#9AA69F] text-[13px] mt-6">
           Questions? Write to{" "}
-          <a
-            href="mailto:founder@clearpath.in"
-            className="underline hover:text-white transition-colors"
-          >
+          <a href="mailto:founder@clearpath.in" className="underline hover:text-white transition-colors">
             founder@clearpath.in
           </a>
         </p>

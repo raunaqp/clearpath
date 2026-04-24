@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import posthog from "posthog-js";
+import { useSectionTracking } from "@/lib/analytics/useSectionTracking";
 
 const CHECK = (
   <svg
@@ -33,16 +34,33 @@ function BulletList({ items }: { items: string[] }) {
   );
 }
 
+const tierLocations: Record<string, string> = {
+  free: "pricing_free",
+  draft_pack: "pricing_499",
+  concierge: "pricing_50k",
+};
+const tierTexts: Record<string, string> = {
+  free: "Start free →",
+  draft_pack: "Get draft pack →",
+  concierge: "Join waitlist →",
+};
+
 function trackCta(tier: string) {
   try {
-    posthog.capture("pricing_cta_clicked", { tier });
+    posthog.capture("cta_clicked", {
+      cta_location: tierLocations[tier],
+      cta_text: tierTexts[tier],
+      destination: "/start",
+    });
   } catch {}
 }
 
 export default function PricingSection() {
+  const ref = useSectionTracking("pricing");
   return (
     <section
       id="pricing"
+      ref={ref}
       className="py-20 md:py-28 px-6 md:px-8 border-b border-[#E8E4D6]"
     >
       <div className="max-w-[1240px] mx-auto">
