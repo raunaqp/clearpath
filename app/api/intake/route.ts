@@ -30,7 +30,13 @@ const schema = z.object({
       message: "Enter a valid URL starting with http:// or https://",
     }),
   uploaded_docs: z.array(uploadedDocSchema).max(3).optional().default([]),
+  resume_id: z.string().uuid().optional(),
 });
+
+type AssessmentMeta = Record<string, unknown> & {
+  conflict_acknowledged?: boolean;
+  conflict_edit_attempts?: number;
+};
 
 export async function POST(req: NextRequest) {
   let body: unknown;
@@ -46,9 +52,68 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: first.message }, { status: 422 });
   }
 
-  const { name, email, mobile, one_liner, url, uploaded_docs } = parsed.data;
+  const { name, email, mobile, one_liner, url, uploaded_docs, resume_id } = parsed.data;
 
   const supabase = getServiceClient();
+
+  if (resume_id) {
+    // Resume flow: update existing row in place, clear downstream, bump edit counter.
+    const { data: existing, error: fetchError } = await supabase
+      .from("assessments")
+      .select("id, meta")
+      .eq("id", resume_id)
+      .maybeSingle();
+
+    if (fetchError) {
+      console.error("Supabase fetch error:", fetchError);
+      return NextResponse.json(
+        { error: "Could not load assessment." },
+        { status: 500 }
+      );
+    }
+    if (!existing) {
+      return NextResponse.json({ error: "Assessment not found." }, { status: 404 });
+    }
+
+    const currentMeta: AssessmentMeta =
+      (existing.meta as AssessmentMeta | null) ?? {};
+    const nextMeta: AssessmentMeta = { ...currentMeta };
+    // Remove the key entirely rather than setting it to false.
+    delete nextMeta.conflict_acknowledged;
+    const priorAttempts =
+      typeof currentMeta.conflict_edit_attempts === "number"
+        ? currentMeta.conflict_edit_attempts
+        : 0;
+    nextMeta.conflict_edit_attempts = priorAttempts + 1;
+
+    const { error: updateError } = await supabase
+      .from("assessments")
+      .update({
+        name,
+        email,
+        mobile: mobile || null,
+        one_liner,
+        url: url || null,
+        uploaded_docs: uploaded_docs.length > 0 ? uploaded_docs : null,
+        status: "draft",
+        product_type: null,
+        url_fetched_content: null,
+        meta: nextMeta,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", resume_id);
+
+    if (updateError) {
+      console.error("Supabase update error:", updateError);
+      return NextResponse.json(
+        { error: "Could not save your submission. Please try again." },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ assessmentId: existing.id }, { status: 200 });
+  }
+
   const { data, error } = await supabase
     .from("assessments")
     .insert({

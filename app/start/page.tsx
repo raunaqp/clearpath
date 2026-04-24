@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import posthog from "posthog-js";
 import { countPdfPages, sha256Hex } from "@/lib/pdf-utils";
@@ -51,7 +51,17 @@ function uploadWithProgress(
 }
 
 export default function StartPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#F7F6F2]" />}>
+      <StartPageInner />
+    </Suspense>
+  );
+}
+
+function StartPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const resumeId = searchParams?.get("resume") ?? null;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form state
@@ -66,12 +76,74 @@ export default function StartPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [fileError, setFileError] = useState("");
+  const [prefillLoading, setPrefillLoading] = useState<boolean>(!!resumeId);
+  const [prefillError, setPrefillError] = useState("");
 
   useEffect(() => {
     try {
-      posthog.capture("intake_form_started");
+      posthog.capture("intake_form_started", { resume: !!resumeId });
     } catch {}
-  }, []);
+  }, [resumeId]);
+
+  // Prefill from existing assessment when ?resume={id} is present.
+  useEffect(() => {
+    if (!resumeId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/assessment/${resumeId}`);
+        if (!res.ok) {
+          if (!cancelled) {
+            setPrefillError(
+              res.status === 404
+                ? "We couldn't find that assessment to edit."
+                : "Could not load your previous submission."
+            );
+            setPrefillLoading(false);
+          }
+          return;
+        }
+        const data = await res.json();
+        if (cancelled) return;
+        setName(data.name ?? "");
+        setEmail(data.email ?? "");
+        setMobile(data.mobile ?? "");
+        setOneLiner(data.one_liner ?? "");
+        setUrl(data.url ?? "");
+        if (Array.isArray(data.uploaded_docs)) {
+          setDocs(
+            (
+              data.uploaded_docs as Array<{
+                filename: string;
+                storage_path: string;
+                size_bytes: number;
+                sha256: string;
+              }>
+            ).map((d) => ({
+              id: d.sha256,
+              filename: d.filename,
+              size_bytes: d.size_bytes,
+              sha256: d.sha256,
+              page_count: 0,
+              storage_path: d.storage_path,
+              status: "uploaded" as const,
+              progress: 100,
+            }))
+          );
+        }
+        setPrefillLoading(false);
+      } catch (err) {
+        if (!cancelled) {
+          console.error("prefill fetch failed:", err);
+          setPrefillError("Could not load your previous submission.");
+          setPrefillLoading(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [resumeId]);
 
   // Step-1 validity
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -221,6 +293,7 @@ export default function StartPage() {
           size_bytes: d.size_bytes,
           sha256: d.sha256,
         })),
+        ...(resumeId ? { resume_id: resumeId } : {}),
       }),
     });
 
@@ -248,6 +321,24 @@ export default function StartPage() {
 
       <main className="flex-1 flex items-start justify-center px-4 py-12 md:py-20">
         <div className="w-full max-w-xl">
+          {resumeId && !prefillError && (
+            <div className="mb-5 px-4 py-3 rounded-lg bg-[#EAF3EF] border border-[#0F6E56]/30">
+              <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#0F6E56] mb-1">
+                {prefillLoading ? "Loading your submission…" : "Editing your submission"}
+              </p>
+              {!prefillLoading && (
+                <p className="text-xs text-[#0E1411] leading-relaxed">
+                  We&apos;ve loaded your answers. Edit any field, then submit to re-run the analysis.
+                </p>
+              )}
+            </div>
+          )}
+          {prefillError && (
+            <div className="mb-5 px-4 py-3 rounded-lg bg-[#FAECE7] border border-[#f0c4b6]">
+              <p className="text-sm text-[#993C1D]">{prefillError}</p>
+            </div>
+          )}
+
           {/* Step header */}
           <div className="flex items-center gap-2 mb-4">
             <StepDot filled active={step === 1} onClick={step === 2 ? goToStep1 : undefined} />
