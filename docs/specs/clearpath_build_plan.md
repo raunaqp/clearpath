@@ -595,20 +595,42 @@ api_cost_tracked      { feature: 'pre_router', model: 'sonnet-4-6', tokens, cost
 
 **Goal:** collect 7 structured answers. No LLM. Partial state saves.
 
-## 4.0 — Conflict disclosure on Q1 (conditional)
+## 4.0 — Conflict disclosure on a dedicated route (v4 Patch 4)
 
-Before rendering the wizard stepper for Q1, check `assessments.meta`:
+The disclosure lives at its own route: **`/wizard/[id]/conflict`**. The wizard step pages (`/wizard/[id]/q/[n]`) never render the card — they always serve the question cleanly. Gating happens in `/assess/[id]` after pre-router and on the `/conflict` page itself.
+
+### Routing branch (in `/assess/[id]`)
 
 ```ts
-const shouldShowConflictCard =
+const meta = assessment.meta ?? {};
+const severity = meta.conflict_details?.severity;
+const showConflictScreen =
   meta.conflict_detected === true &&
-  ['high', 'medium'].includes(meta.conflict_details?.severity) &&
+  (severity === 'high' || severity === 'medium') &&
   meta.conflict_acknowledged !== true;
+
+if (showConflictScreen) redirect(`/wizard/${id}/conflict`);
+redirect(`/wizard/${id}/q/${firstUnansweredStep(assessment.wizard_answers)}`);
 ```
 
-**If true**: render the conflict disclosure card at the TOP of the Q1 page (above the question stepper). Render ONCE on Q1 only — does NOT persist across Q2–Q7. User scrolls past or dismisses via "Continue to questions."
+### `/wizard/[id]/conflict` page
 
-**If false**: proceed directly to Q1 questions.
+Server component. On load:
+- Status-based redirects apply first (draft → `/assess`, rejected → `/declined`, completed → `/c/{token}`).
+- If `!conflict_detected` or `severity` is low/none → redirect to `/wizard/[id]/q/1` (defensive; this page shouldn't be reachable in those cases).
+- If `conflict_acknowledged === true` → redirect to `/wizard/[id]/q/1` (one-way gate; revisits auto-forward).
+- Otherwise render `<ConflictDisclosureCard />` full-viewport — no stepper, no question header.
+
+### Card CTAs (unchanged component, new context)
+
+`"Continue to questions →"`:
+- Client calls `POST /api/wizard/ack-conflict` → `meta.conflict_acknowledged = true`.
+- Fires `wizard_conflict_continued{severity}`.
+- Calls `router.refresh()` — server re-evaluates `/conflict`, sees `conflict_acknowledged === true`, redirects to `/wizard/[id]/q/1`.
+
+`"← Edit my description"`:
+- Fires `wizard_conflict_edit_clicked{severity}`.
+- `router.push('/start?resume={id}')`.
 
 ### Card interactions
 
@@ -642,8 +664,8 @@ On `/start?resume={assessment_id}`:
 6. Redirect back to wizard (`/wizard/{assessment_id}/q1`)
 
 Outcomes after edit:
-- **If new conflict severity is high/medium**: card appears again on Q1 with different copy (see copy scope §4.0 "Still a mismatch"). Fire `wizard_conflict_reappeared`.
-- **If severity drops to low/none**: card skipped, user goes straight to Q1.
+- **If new conflict severity is high/medium**: user lands on `/wizard/[id]/conflict` again with heading `Still a mismatch` (driven by `meta.conflict_edit_attempts > 0`). Fires `wizard_conflict_reappeared`.
+- **If severity drops to low/none**: `/assess` redirects straight to `/wizard/[id]/q/1`; `/conflict` is never hit.
 
 Edit cost: one additional Sonnet call per edit (~$0.015). Acceptable — gives users control without breaking the cost model.
 
@@ -656,12 +678,13 @@ wizard_conflict_edit_clicked   { severity }
 wizard_conflict_reappeared     { severity, edit_attempt_count }
 ```
 
-### When the card does NOT render
+### When the `/conflict` route is bypassed
 
 - `conflict_detected === false`
 - `severity === 'low' || 'none'`
-- `conflict_acknowledged === true` (user already continued past)
-- User back-navigates within wizard (Q3 → Q2 → Q1 — card already acknowledged)
+- `conflict_acknowledged === true` (user already continued past; the page itself also auto-redirects as a safety net)
+
+Direct navigation to `/wizard/[id]/q/[n]` always renders the question — the Q pages never gate on conflict state.
 
 ## 4a — Questions
 

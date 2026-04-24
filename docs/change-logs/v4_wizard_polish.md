@@ -122,7 +122,10 @@ The `*` is coral (`#993C1D`) and precedes the question text.
 
 ---
 
-## Patch 4 — Conflict card on separate screen
+## Patch 4 — Conflict card on separate screen **[APPLIED]**
+
+> Shipped as commit — `/wizard/[id]/conflict` route created, `/wizard/[id]/q/[n]` no longer renders the inline card, `/assess/[id]` branches on conflict severity before redirecting into the wizard. Gate + auto-redirect rules on the dedicated page are implemented in `app/wizard/[id]/conflict/page.tsx`.
+
 
 ### Affects: `docs/specs/clearpath_screens_spec.md` Screen 5.0 + `docs/specs/clearpath_build_plan.md` §4.0
 

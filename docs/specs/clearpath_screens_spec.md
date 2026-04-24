@@ -269,22 +269,23 @@ All screens:
 
 ---
 
-## Screen 5.0 — Conflict disclosure (conditional, appears on Q1 only)
+## Screen 5.0 — Conflict disclosure (dedicated route, not a Q1 overlay)
 
-**Purpose.** Transparent disclosure when one-liner and documents/URL classify the product differently. Appears once on Q1, not persistent across Q2–Q7.
+**Purpose.** Transparent disclosure when one-liner and documents/URL classify the product differently. Rendered as a full-viewport screen at `/wizard/[id]/conflict` — no stepper, no "Question 1 of 7" header. The user reads the disclosure, then clicks Continue (→ `/wizard/[id]/q/1`) or Edit (→ `/start?resume={id}`). One-way gate; once acknowledged, revisits auto-redirect to `/q/1`.
 
-**When it appears:**
+**When it appears:** after `/assess/[id]` completes pre-router:
 - `assessments.meta.conflict_detected === true`
 - `assessments.meta.conflict_details.severity in ['high', 'medium']`
 - `assessments.meta.conflict_acknowledged !== true`
 
-**Layout sketch:**
+`/assess/[id]` redirects straight to `/wizard/[id]/conflict`. Otherwise it goes to `/wizard/[id]/q/{firstUnanswered}`.
+
+**Layout sketch (standalone, centered):**
 
 ```
 ┌───────────────────────────────────────────────────┐
+│   ClearPath                                        │  ← only the nav
 │                                                    │
-│   {Product name} · Question 1 of 7                 │
-│   [|        |        |        |        |        ]  │  ← 7 segments, all upcoming
 │                                                    │
 │   ┌─────────────────────────────────────────────┐ │
 │   │                                              │ │
@@ -314,13 +315,14 @@ All screens:
 │   │                                              │ │
 │   └─────────────────────────────────────────────┘ │
 │                                                    │
-│   [Q1 content renders below once user clicks       │
-│    Continue, or immediately if no conflict]        │
 │                                                    │
 └───────────────────────────────────────────────────┘
 ```
 
+No stepper, no question header — the dedicated screen focuses attention on the disclosure itself. Q1 renders cleanly when the user clicks Continue.
+
 **Components:**
+- Single nav row with the ClearPath wordmark
 - Card container (rounded, light border, white/off-white background)
 - H3 heading ("Quick heads up" first time, "Still a mismatch" on reappearance)
 - Two-column comparison sub-cards with small-caps labels
@@ -332,13 +334,18 @@ All screens:
 
 | Element | Action |
 |---|---|
-| "Continue to questions →" | Set `meta.conflict_acknowledged = true`, fire `wizard_conflict_continued`, scroll card out, render Q1 below |
-| "← Edit my description" | Fire `wizard_conflict_edit_clicked`, redirect to `/start?resume={assessment_id}` |
+| "Continue to questions →" | POST `/api/wizard/ack-conflict` → sets `meta.conflict_acknowledged = true`, fires `wizard_conflict_continued`. Then `router.refresh()` — server re-evaluates and redirects to `/wizard/[id]/q/1`. |
+| "← Edit my description" | Fires `wizard_conflict_edit_clicked`, `router.push('/start?resume={id}')`. |
 
 **Desktop layout:** two-column comparison side-by-side.
-**Mobile (375px):** columns stack vertically, CTAs stack with primary first.
+**Mobile (375px):** columns stack vertically; CTAs stack full-width (Edit on top, Continue below).
 
-**Back-navigation behaviour:** once acknowledged (Continue clicked), the card does NOT re-render on Q2 → Q1 back-nav, nor on later resume of the same assessment. It only re-renders if the user edits via the intake form AND the new pre-router run still detects high/medium-severity conflict — in that case the heading changes to "Still a mismatch" and a `wizard_conflict_reappeared` event fires.
+**Gate rules on the /conflict route itself:**
+- If `conflict_detected !== true` or `severity` is low/none → redirect to `/wizard/[id]/q/1` (defensive; this screen shouldn't be reachable in those cases).
+- If `conflict_acknowledged === true` → redirect to `/wizard/[id]/q/1` (one-way gate — revisits auto-forward).
+- Status-based redirects still apply (draft → `/assess`, rejected → `/declined`, completed → `/c/{token}`).
+
+**Back-navigation behaviour:** once acknowledged, visiting `/wizard/[id]/conflict` (via back button or link) immediately redirects to `/wizard/[id]/q/1`. The screen is not "revisitable" from a user perspective — the server auto-forwards. Reappearance only happens when the user edits via `/start?resume={id}` AND the new pre-router run still flags a high/medium-severity conflict (heading changes to "Still a mismatch"; `wizard_conflict_reappeared` fires).
 
 ---
 

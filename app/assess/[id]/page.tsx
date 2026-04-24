@@ -17,6 +17,14 @@ type UploadedDoc = {
   sha256: string;
 };
 
+type AssessmentMeta = {
+  conflict_detected?: boolean;
+  conflict_details?: {
+    severity?: "high" | "medium" | "low" | "none";
+  } | null;
+  conflict_acknowledged?: boolean;
+};
+
 type AssessmentRow = {
   id: string;
   one_liner: string;
@@ -26,6 +34,7 @@ type AssessmentRow = {
   share_token: string | null;
   product_type: string | null;
   wizard_answers: WizardAnswers | null;
+  meta: AssessmentMeta | null;
 };
 
 function firstUnansweredStep(answers: WizardAnswers | null): number {
@@ -51,7 +60,7 @@ export default async function AssessPage({
   const { data: assessment, error } = await supabase
     .from("assessments")
     .select(
-      "id, one_liner, url, uploaded_docs, status, share_token, product_type, wizard_answers"
+      "id, one_liner, url, uploaded_docs, status, share_token, product_type, wizard_answers, meta"
     )
     .eq("id", id)
     .maybeSingle<AssessmentRow>();
@@ -75,12 +84,25 @@ export default async function AssessPage({
     // else: status is now routing_complete; fall through.
   }
 
-  // routing_complete / wizard → jump into the wizard at the first unanswered question.
+  // routing_complete / wizard → jump into the wizard.
+  // If an unacknowledged high/medium conflict exists, divert to
+  // the dedicated /wizard/[id]/conflict screen first.
   if (
     assessment.status === "routing_complete" ||
     assessment.status === "wizard" ||
     assessment.status === "draft" // just processed
   ) {
+    const meta = assessment.meta ?? {};
+    const severity = meta.conflict_details?.severity;
+    const showConflictScreen =
+      meta.conflict_detected === true &&
+      (severity === "high" || severity === "medium") &&
+      meta.conflict_acknowledged !== true;
+
+    if (showConflictScreen) {
+      redirect(`/wizard/${id}/conflict`);
+    }
+
     const step = firstUnansweredStep(assessment.wizard_answers);
     redirect(`/wizard/${id}/q/${step}`);
   }

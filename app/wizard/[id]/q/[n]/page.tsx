@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getServiceClient } from "@/lib/supabase";
-import ConflictDisclosureCard from "@/components/wizard/ConflictDisclosureCard";
 import WizardClient from "@/components/wizard/WizardClient";
 import { displayName } from "@/lib/wizard/display-name";
 import { totalSteps } from "@/lib/wizard/questions";
@@ -13,15 +12,6 @@ type UploadedDoc = { sha256: string; filename: string };
 
 type AssessmentMeta = {
   conflict_detected?: boolean;
-  conflict_details?: {
-    severity?: "high" | "medium" | "low" | "none";
-    authority_used?: "pdf" | "url" | "one_liner";
-    one_liner_interpretation?: string;
-    pdf_interpretation?: string | null;
-    url_interpretation?: string | null;
-  } | null;
-  conflict_acknowledged?: boolean;
-  conflict_edit_attempts?: number;
   wizard_skipped_questions?: number[];
 };
 
@@ -63,18 +53,12 @@ export default async function WizardStepPage({
   }
 
   // Route back through /assess for statuses that need processing or decline.
+  // Conflict gating lives on /assess and /wizard/[id]/conflict — Q pages
+  // always render the question cleanly.
   if (data.status === "draft") redirect(`/assess/${id}`);
   if (data.status === "rejected") redirect(`/declined/${id}`);
 
   const meta = data.meta ?? {};
-  const conflictDetails = meta.conflict_details ?? null;
-  const severity = conflictDetails?.severity;
-  const shouldShowConflictCard =
-    step === 1 &&
-    meta.conflict_detected === true &&
-    (severity === "high" || severity === "medium") &&
-    meta.conflict_acknowledged !== true;
-
   const productDisplayName = displayName(data.one_liner);
   const pdfCount = Array.isArray(data.uploaded_docs)
     ? data.uploaded_docs.length
@@ -95,26 +79,6 @@ export default async function WizardStepPage({
 
       <main className="flex-1 flex items-start justify-center px-4 py-10 md:py-16">
         <div className="w-full max-w-xl">
-          {shouldShowConflictCard && conflictDetails && (
-            <ConflictDisclosureCard
-              assessmentId={id}
-              severity={severity as "high" | "medium"}
-              authorityUsed={conflictDetails.authority_used ?? "pdf"}
-              oneLinerInterpretation={
-                conflictDetails.one_liner_interpretation ?? data.one_liner
-              }
-              contentInterpretation={
-                conflictDetails.pdf_interpretation ??
-                conflictDetails.url_interpretation ??
-                null
-              }
-              contentSource={
-                conflictDetails.authority_used === "url" ? "url" : "pdf"
-              }
-              editAttemptCount={meta.conflict_edit_attempts ?? 0}
-            />
-          )}
-
           <WizardClient
             assessmentId={id}
             productDisplayName={productDisplayName}

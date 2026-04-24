@@ -98,11 +98,26 @@ async function getWizardHtml(id: string, step: number): Promise<string> {
   return await res.text();
 }
 
-async function getAssessRedirect(id: string): Promise<string | null> {
-  const res = await fetch(`${BASE}/assess/${id}`, { redirect: "manual" });
-  const html = await res.text();
+async function getConflictHtml(id: string): Promise<string> {
+  const res = await fetch(`${BASE}/wizard/${id}/conflict`);
+  return await res.text();
+}
+
+function extractRedirect(html: string): string | null {
   const m = html.match(/NEXT_REDIRECT;replace;([^;"\\]+);/);
   return m ? m[1] : null;
+}
+
+async function getAssessRedirect(id: string): Promise<string | null> {
+  const res = await fetch(`${BASE}/assess/${id}`, { redirect: "manual" });
+  return extractRedirect(await res.text());
+}
+
+async function getConflictRedirect(id: string): Promise<string | null> {
+  const res = await fetch(`${BASE}/wizard/${id}/conflict`, {
+    redirect: "manual",
+  });
+  return extractRedirect(await res.text());
 }
 
 async function getMeta(id: string): Promise<Record<string, unknown>> {
@@ -149,27 +164,35 @@ async function testLowSeverity() {
 }
 
 async function testHighSeverity() {
-  console.log("\n[3] High severity → card renders");
+  console.log("\n[3] High severity → card renders on /conflict (not /q/1)");
   const id = await seedAssessment({
     conflict_detected: true,
     severity: "high",
   });
-  const html = await getWizardHtml(id, 1);
-  if (html.includes("Quick heads up")) {
-    pass("high severity renders card", 'heading "Quick heads up" found');
+  const q1 = await getWizardHtml(id, 1);
+  const conflict = await getConflictHtml(id);
+  if (!q1.includes("Quick heads up") && !q1.includes("Still a mismatch")) {
+    pass("q/1 does not render conflict card", "card stripped from Q pages");
   } else {
-    fail("high severity renders card", "heading missing");
+    fail("q/1 card isolation", "conflict heading leaked into /q/1 HTML");
+  }
+  if (conflict.includes("Quick heads up")) {
+    pass(
+      "/wizard/[id]/conflict renders card",
+      'heading "Quick heads up" found on dedicated route'
+    );
+  } else {
+    fail("/conflict renders card", 'heading "Quick heads up" missing');
   }
   await cleanup(id);
 }
 
 async function testContinueAck() {
-  console.log("\n[4] Continue → ack=true, card gone on revisit");
+  console.log("\n[4] Continue → ack=true, /conflict auto-redirects to /q/1");
   const id = await seedAssessment({
     conflict_detected: true,
     severity: "high",
   });
-  // simulate Continue click: POST to ack endpoint
   const ackRes = await fetch(`${BASE}/api/wizard/ack-conflict`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -186,12 +209,15 @@ async function testContinueAck() {
   } else {
     fail("ack persisted", `got ${meta.conflict_acknowledged}`);
   }
-  const html = await getWizardHtml(id, 1);
-  const shown = html.includes("Quick heads up") || html.includes("Still a mismatch");
-  if (!shown) {
-    pass("revisit q1 → no card", "card suppressed after ack");
+  const target = await getConflictRedirect(id);
+  const expected = `/wizard/${id}/q/1`;
+  if (target === expected) {
+    pass(
+      "/conflict after ack redirects to /q/1",
+      `server redirect target=${target}`
+    );
   } else {
-    fail("revisit q1 → no card", "card re-rendered");
+    fail("/conflict after ack redirect", `expected ${expected}, got ${target}`);
   }
   await cleanup(id);
 }
@@ -202,14 +228,14 @@ async function testEditRedirectAndPrefill() {
     conflict_detected: true,
     severity: "high",
   });
-  // UI link target
-  const html = await getWizardHtml(id, 1);
+  // UI link target — now lives on /wizard/[id]/conflict, not /q/1.
+  const html = await getConflictHtml(id);
   const hasEditIntent =
     html.includes("Edit my description") || html.includes("Edit description");
   if (hasEditIntent) {
-    pass("edit button present", "conflict card has an Edit CTA");
+    pass("edit button present on /conflict", "conflict card has an Edit CTA");
   } else {
-    fail("edit button present", "no Edit label in HTML");
+    fail("edit button present", "no Edit label in /conflict HTML");
   }
   // prefill API
   const res = await fetch(`${BASE}/api/assessment/${id}`);
@@ -244,19 +270,22 @@ async function testEditResolve() {
 }
 
 async function testEditPersist() {
-  console.log('[7] Edit + persist → "Still a mismatch"');
+  console.log('[7] Edit + persist → "Still a mismatch" on /conflict');
   const id = await seedAssessment({
     conflict_detected: true,
     severity: "high",
     conflict_edit_attempts: 1,
   });
-  const html = await getWizardHtml(id, 1);
+  const html = await getConflictHtml(id);
   if (html.includes("Still a mismatch")) {
-    pass('reappeared card shows "Still a mismatch"', "edit_attempts=1 heading");
+    pass(
+      'reappeared card shows "Still a mismatch"',
+      "edit_attempts=1 heading on /wizard/[id]/conflict"
+    );
   } else {
     fail(
-      'reappeared card heading',
-      '"Still a mismatch" text missing from HTML'
+      "reappeared card heading",
+      '"Still a mismatch" text missing from /conflict HTML'
     );
   }
   await cleanup(id);
@@ -499,6 +528,106 @@ async function testRequiredMarkersAndLegend() {
     );
   }
 
+  await cleanup(id);
+}
+
+async function testAssessRoutesToConflict() {
+  console.log("\n[22] High severity: /assess redirects to /conflict (not /q/1)");
+  const id = await seedAssessment({
+    conflict_detected: true,
+    severity: "high",
+  });
+  const target = await getAssessRedirect(id);
+  const expected = `/wizard/${id}/conflict`;
+  if (target === expected) {
+    pass("/assess → /conflict", `redirect=${target}`);
+  } else {
+    fail(
+      "/assess routing on conflict",
+      `expected ${expected}, got ${target}`
+    );
+  }
+  await cleanup(id);
+}
+
+async function testContinueFromConflictGoesToQ1() {
+  console.log("\n[23] Continue on /conflict → ack + redirect to /q/1");
+  const id = await seedAssessment({
+    conflict_detected: true,
+    severity: "high",
+  });
+  // Simulate the Continue click by calling the ack endpoint the component hits.
+  const ackRes = await fetch(`${BASE}/api/wizard/ack-conflict`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ assessment_id: id }),
+  });
+  if (!ackRes.ok) {
+    fail("ack API", `status=${ackRes.status}`);
+    await cleanup(id);
+    return;
+  }
+  const meta = await getMeta(id);
+  if (meta.conflict_acknowledged === true) {
+    pass("ack persisted", "meta.conflict_acknowledged=true");
+  } else {
+    fail("ack persisted", `got ${meta.conflict_acknowledged}`);
+  }
+  const target = await getConflictRedirect(id);
+  const expected = `/wizard/${id}/q/1`;
+  if (target === expected) {
+    pass("Continue → /q/1", `server redirect target=${target}`);
+  } else {
+    fail("Continue redirect", `expected ${expected}, got ${target}`);
+  }
+  // Also assert /assess now routes to /q/1 (not /conflict) after ack.
+  const assessTarget = await getAssessRedirect(id);
+  if (assessTarget?.startsWith(`/wizard/${id}/q/`)) {
+    pass(
+      "/assess after ack skips /conflict",
+      `redirect=${assessTarget}`
+    );
+  } else {
+    fail(
+      "/assess after ack",
+      `expected /wizard/${id}/q/... got ${assessTarget}`
+    );
+  }
+  await cleanup(id);
+}
+
+async function testManualRevisitToConflictAfterAck() {
+  console.log("\n[23b] Manual revisit to /conflict after ack → redirect to /q/1");
+  const id = await seedAssessment({
+    conflict_detected: true,
+    severity: "high",
+    conflict_acknowledged: true,
+  });
+  const target = await getConflictRedirect(id);
+  const expected = `/wizard/${id}/q/1`;
+  if (target === expected) {
+    pass("ack'd /conflict redirects", `target=${target}`);
+  } else {
+    fail("ack'd /conflict redirect", `expected ${expected}, got ${target}`);
+  }
+  await cleanup(id);
+}
+
+async function testLowSeverityBypassesConflictRoute() {
+  console.log("\n[23c] Low severity: /assess redirects to /q/1 (not /conflict)");
+  const id = await seedAssessment({
+    conflict_detected: true,
+    severity: "low",
+  });
+  const target = await getAssessRedirect(id);
+  if (target?.startsWith(`/wizard/${id}/q/`)) {
+    pass("low severity skips /conflict", `redirect=${target}`);
+  } else {
+    fail(
+      "low severity routing",
+      `expected /wizard/${id}/q/... got ${target}`
+    );
+  }
   await cleanup(id);
 }
 
@@ -769,6 +898,10 @@ async function main() {
   await testSkipCompletion();
   await testCompleteAllSeven();
   await testRequiredMarkersAndLegend();
+  await testAssessRoutesToConflict();
+  await testContinueFromConflictGoesToQ1();
+  await testManualRevisitToConflictAfterAck();
+  await testLowSeverityBypassesConflictRoute();
   await testOptimisticPatternSource();
   await testRetryToastWiring();
   await testAutoDismissTimer();
