@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getServiceClient } from "@/lib/supabase";
 
+const uploadedDocSchema = z.object({
+  filename: z.string().min(1).max(200),
+  storage_path: z.string().min(1).max(500),
+  size_bytes: z.number().int().positive().max(5 * 1024 * 1024),
+  sha256: z.string().length(64),
+});
+
 const schema = z.object({
   name: z.string().trim().min(1, "Please tell us your name."),
   email: z.string().email("Enter a valid email address."),
@@ -15,13 +22,14 @@ const schema = z.object({
   one_liner: z
     .string()
     .min(20, "Please tell us a bit more — at least 20 characters.")
-    .max(200, "Keep it to 200 characters or under."),
+    .max(300, "Keep it to 300 characters or under."),
   url: z
     .string()
     .optional()
     .refine((v) => !v || v === "" || /^https?:\/\/.+\..+/.test(v), {
       message: "Enter a valid URL starting with http:// or https://",
     }),
+  uploaded_docs: z.array(uploadedDocSchema).max(3).optional().default([]),
 });
 
 export async function POST(req: NextRequest) {
@@ -38,7 +46,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: first.message }, { status: 422 });
   }
 
-  const { name, email, mobile, one_liner, url } = parsed.data;
+  const { name, email, mobile, one_liner, url, uploaded_docs } = parsed.data;
 
   const supabase = getServiceClient();
   const { data, error } = await supabase
@@ -49,6 +57,7 @@ export async function POST(req: NextRequest) {
       mobile: mobile || null,
       one_liner,
       url: url || null,
+      uploaded_docs: uploaded_docs.length > 0 ? uploaded_docs : null,
       status: "draft",
     })
     .select("id")

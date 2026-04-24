@@ -1,21 +1,71 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import posthog from "posthog-js";
+import { countPdfPages, sha256Hex } from "@/lib/pdf-utils";
+
+const MAX_FILES = 3;
+const MAX_SIZE_BYTES = 5 * 1024 * 1024;   // 5 MB
+const MAX_PAGES = 10;
+const ONE_LINER_MIN = 20;
+const ONE_LINER_MAX = 300;
+
+type UploadedDoc = {
+  id: string;
+  filename: string;
+  size_bytes: number;
+  sha256: string;
+  page_count: number;
+  storage_path: string;
+  status: "uploading" | "uploaded" | "failed";
+  progress: number;
+  error?: string;
+};
+
+function fmtSize(bytes: number) {
+  const kb = bytes / 1024;
+  return kb >= 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${Math.round(kb)} KB`;
+}
+
+function uploadWithProgress(
+  signedUrl: string,
+  file: File,
+  onProgress: (pct: number) => void
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", signedUrl);
+    xhr.setRequestHeader("Content-Type", "application/pdf");
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress((e.loaded / e.total) * 100);
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      else reject(new Error(`Upload failed (${xhr.status})`));
+    };
+    xhr.onerror = () => reject(new Error("Network error"));
+    xhr.send(file);
+  });
+}
 
 export default function StartPage() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Form state
+  const [step, setStep] = useState<1 | 2>(1);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
   const [oneLiner, setOneLiner] = useState("");
   const [url, setUrl] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  const tooShort = oneLiner.length > 0 && oneLiner.length < 20;
+  const [docs, setDocs] = useState<UploadedDoc[]>([]);
+  const [dragOver, setDragOver] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [fileError, setFileError] = useState("");
 
   useEffect(() => {
     try {
@@ -23,16 +73,136 @@ export default function StartPage() {
     } catch {}
   }, []);
 
+  // Step-1 validity
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const step1Valid = name.trim().length > 0 && emailValid;
+
+  // Step-2 validity
+  const oneLinerLen = oneLiner.length;
+  const oneLinerTooShort = oneLinerLen > 0 && oneLinerLen < ONE_LINER_MIN;
+  const hasPendingUploads = docs.some((d) => d.status === "uploading");
+  const hasFailedUploads = docs.some((d) => d.status === "failed");
+  const step2Valid =
+    oneLinerLen >= ONE_LINER_MIN &&
+    oneLinerLen <= ONE_LINER_MAX &&
+    !hasPendingUploads &&
+    !hasFailedUploads;
+
+  function goToStep2() {
+    if (!step1Valid) return;
+    setStep(2);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function goToStep1() {
+    setStep(1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  const handleFiles = useCallback(
+    async (files: FileList | File[]) => {
+      setFileError("");
+      const list = Array.from(files);
+
+      if (docs.length + list.length > MAX_FILES) {
+        setFileError(`Max ${MAX_FILES} files. Remove one first.`);
+        return;
+      }
+
+      for (const file of list) {
+        if (file.type !== "application/pdf") {
+          setFileError(`"${file.name}" isn't a PDF.`);
+          continue;
+        }
+        if (file.size > MAX_SIZE_BYTES) {
+          setFileError(`"${file.name}" is over 5 MB.`);
+          continue;
+        }
+
+        let pageCount: number;
+        try {
+          pageCount = await countPdfPages(file);
+        } catch {
+          setFileError(`Couldn't read "${file.name}" — may be encrypted.`);
+          continue;
+        }
+        if (pageCount > MAX_PAGES) {
+          setFileError(
+            `"${file.name}" has ${pageCount} pages — max ${MAX_PAGES}.`
+          );
+          continue;
+        }
+
+        const hash = await sha256Hex(file);
+        const id = crypto.randomUUID();
+        const entry: UploadedDoc = {
+          id,
+          filename: file.name,
+          size_bytes: file.size,
+          sha256: hash,
+          page_count: pageCount,
+          storage_path: "",
+          status: "uploading",
+          progress: 0,
+        };
+        setDocs((prev) => [...prev, entry]);
+
+        try {
+          const res = await fetch("/api/storage/signed-url", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              filename: file.name,
+              size_bytes: file.size,
+            }),
+          });
+          if (!res.ok) throw new Error((await res.json()).error || "Signed URL failed");
+          const { signedUrl, storage_path } = await res.json();
+
+          await uploadWithProgress(signedUrl, file, (pct) => {
+            setDocs((prev) =>
+              prev.map((d) => (d.id === id ? { ...d, progress: pct } : d))
+            );
+          });
+
+          setDocs((prev) =>
+            prev.map((d) =>
+              d.id === id
+                ? { ...d, storage_path, status: "uploaded", progress: 100 }
+                : d
+            )
+          );
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "Upload failed";
+          setDocs((prev) =>
+            prev.map((d) =>
+              d.id === id ? { ...d, status: "failed", error: msg } : d
+            )
+          );
+        }
+      }
+    },
+    [docs.length]
+  );
+
+  function removeDoc(id: string) {
+    setDocs((prev) => prev.filter((d) => d.id !== id));
+    setFileError("");
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
-    setLoading(true);
+    if (!step2Valid) return;
+    setSubmitError("");
+    setSubmitting(true);
+
+    const uploaded = docs.filter((d) => d.status === "uploaded");
 
     try {
       posthog.capture("intake_form_submitted", {
         has_url: !!url,
-        docs_uploaded_count: 0,
-        one_liner_length: oneLiner.length,
+        docs_uploaded_count: uploaded.length,
+        one_liner_length: oneLinerLen,
       });
     } catch {}
 
@@ -45,14 +215,20 @@ export default function StartPage() {
         mobile: mobile || undefined,
         one_liner: oneLiner,
         url: url || undefined,
+        uploaded_docs: uploaded.map((d) => ({
+          filename: d.filename,
+          storage_path: d.storage_path,
+          size_bytes: d.size_bytes,
+          sha256: d.sha256,
+        })),
       }),
     });
 
     const json = await res.json();
 
     if (!res.ok) {
-      setError(json.error ?? "Something went wrong. Please try again.");
-      setLoading(false);
+      setSubmitError(json.error ?? "Something went wrong. Please try again.");
+      setSubmitting(false);
       return;
     }
 
@@ -61,7 +237,6 @@ export default function StartPage() {
 
   return (
     <div className="min-h-screen bg-[#F7F6F2] flex flex-col">
-      {/* Minimal nav */}
       <nav className="px-6 py-4 border-b border-[#E8E4D6]">
         <Link
           href="/"
@@ -73,175 +248,450 @@ export default function StartPage() {
 
       <main className="flex-1 flex items-start justify-center px-4 py-12 md:py-20">
         <div className="w-full max-w-xl">
+          {/* Step header */}
+          <div className="flex items-center gap-2 mb-4">
+            <StepDot filled active={step === 1} onClick={step === 2 ? goToStep1 : undefined} />
+            <div className="flex-1 h-px bg-[#D9D5C8]" />
+            <StepDot filled={step === 2} active={step === 2} />
+          </div>
           <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-4">
-            Regulatory Readiness Engine
-          </p>
-          <h1 className="font-serif font-normal text-[clamp(28px,4vw,40px)] leading-[1.1] tracking-[-0.02em] text-[#0E1411] mb-2">
-            Tell us about your product
-          </h1>
-          <p className="text-[#6B766F] text-base mb-8 leading-relaxed">
-            We&apos;ll analyse it against 9 Indian regulations in about 5 minutes — free.
+            Step {step} of 2
           </p>
 
-          <form onSubmit={handleSubmit} noValidate>
-            <div className="bg-[#FDFCF8] border border-[#D9D5C8] rounded-xl p-6 md:p-8 space-y-6">
+          {step === 1 && (
+            <Step1
+              name={name}
+              setName={setName}
+              email={email}
+              setEmail={setEmail}
+              mobile={mobile}
+              setMobile={setMobile}
+              canContinue={step1Valid}
+              onContinue={goToStep2}
+            />
+          )}
 
-              {/* Name */}
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-[#0E1411] mb-1.5"
-                >
-                  Your name
-                  <span className="text-[#993C1D] ml-0.5">*</span>
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Dr. Priya Sharma"
-                  className="w-full rounded-lg border border-[#D9D5C8] bg-white px-4 py-3 text-sm text-[#0E1411] placeholder:text-[#6B766F] focus:outline-none focus:border-[#0F6E56] focus:ring-1 focus:ring-[#0F6E56] transition-colors"
-                  required
-                />
-              </div>
-
-              {/* Email */}
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-[#0E1411] mb-1.5"
-                >
-                  Your email
-                  <span className="text-[#993C1D] ml-0.5">*</span>
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="founder@yourcompany.com"
-                  className="w-full rounded-lg border border-[#D9D5C8] bg-white px-4 py-3 text-sm text-[#0E1411] placeholder:text-[#6B766F] focus:outline-none focus:border-[#0F6E56] focus:ring-1 focus:ring-[#0F6E56] transition-colors"
-                  required
-                />
-                <p className="text-xs text-[#6B766F] mt-1.5">
-                  We&apos;ll send your Readiness Card here. No spam.
-                </p>
-              </div>
-
-              {/* Mobile */}
-              <div>
-                <label
-                  htmlFor="mobile"
-                  className="block text-sm font-medium text-[#0E1411] mb-1.5"
-                >
-                  Mobile{" "}
-                  <span className="text-[#6B766F] font-normal">(optional)</span>
-                </label>
-                <input
-                  id="mobile"
-                  type="tel"
-                  value={mobile}
-                  onChange={(e) => setMobile(e.target.value)}
-                  placeholder="+91 98765 43210"
-                  className="w-full rounded-lg border border-[#D9D5C8] bg-white px-4 py-3 text-sm text-[#0E1411] placeholder:text-[#6B766F] focus:outline-none focus:border-[#0F6E56] focus:ring-1 focus:ring-[#0F6E56] transition-colors"
-                />
-              </div>
-
-              {/* One-liner */}
-              <div>
-                <label
-                  htmlFor="one_liner"
-                  className="block text-sm font-medium text-[#0E1411] mb-1.5"
-                >
-                  What does your product do?
-                  <span className="text-[#993C1D] ml-0.5">*</span>
-                </label>
-                <textarea
-                  id="one_liner"
-                  rows={3}
-                  maxLength={200}
-                  value={oneLiner}
-                  onChange={(e) => setOneLiner(e.target.value)}
-                  placeholder='E.g. "AI tool that flags early Alzheimer&apos;s from MRI scans for radiologists"'
-                  className="w-full rounded-lg border border-[#D9D5C8] bg-white px-4 py-3 text-sm text-[#0E1411] placeholder:text-[#6B766F] focus:outline-none focus:border-[#0F6E56] focus:ring-1 focus:ring-[#0F6E56] resize-none transition-colors"
-                  required
-                />
-                <div className="flex justify-between mt-1.5">
-                  {tooShort ? (
-                    <p className="text-xs text-[#993C1D]">
-                      A little more detail helps — aim for 20 characters minimum.
-                    </p>
-                  ) : (
-                    <span />
-                  )}
-                  <p
-                    className={`text-xs ml-auto ${
-                      oneLiner.length > 180 ? "text-[#BA7517]" : "text-[#6B766F]"
-                    }`}
-                  >
-                    {oneLiner.length} / 200
-                  </p>
-                </div>
-              </div>
-
-              {/* URL */}
-              <div>
-                <label
-                  htmlFor="url"
-                  className="block text-sm font-medium text-[#0E1411] mb-1.5"
-                >
-                  Product website{" "}
-                  <span className="text-[#6B766F] font-normal">(optional)</span>
-                </label>
-                <input
-                  id="url"
-                  type="url"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder="https://yourproduct.com"
-                  className="w-full rounded-lg border border-[#D9D5C8] bg-white px-4 py-3 text-sm text-[#0E1411] placeholder:text-[#6B766F] focus:outline-none focus:border-[#0F6E56] focus:ring-1 focus:ring-[#0F6E56] transition-colors"
-                />
-                <p className="text-xs text-[#6B766F] mt-1.5">
-                  We&apos;ll read your site to cross-check your description — helps catch features you might have missed.
-                </p>
-              </div>
-
-              {/* Error */}
-              {error && (
-                <p className="text-sm text-[#993C1D] bg-[#FAECE7] border border-[#f0c4b6] rounded-lg px-4 py-3">
-                  {error}
-                </p>
-              )}
-
-              {/* Submit */}
-              <button
-                type="submit"
-                disabled={loading || oneLiner.length < 20 || !email || !name.trim()}
-                className="w-full bg-[#0F6E56] text-white font-medium text-[15px] px-6 py-3.5 rounded-full hover:bg-[#0d5c48] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                    Saving your submission…
-                  </>
-                ) : (
-                  "Start analysis →"
-                )}
-              </button>
-
-              {/* DPDP notice */}
-              <p className="text-xs text-[#6B766F] text-center leading-relaxed">
-                Your data is used only to generate your Readiness Card. Stored
-                encrypted, deleted after 90 days, never shared.{" "}
-                <Link href="/privacy" className="underline underline-offset-2 hover:text-[#0E1411]">
-                  Privacy Policy
-                </Link>
-              </p>
-            </div>
-          </form>
+          {step === 2 && (
+            <Step2
+              oneLiner={oneLiner}
+              setOneLiner={setOneLiner}
+              oneLinerTooShort={oneLinerTooShort}
+              oneLinerLen={oneLinerLen}
+              url={url}
+              setUrl={setUrl}
+              docs={docs}
+              dragOver={dragOver}
+              setDragOver={setDragOver}
+              handleFiles={handleFiles}
+              removeDoc={removeDoc}
+              fileInputRef={fileInputRef}
+              fileError={fileError}
+              submitting={submitting}
+              submitError={submitError}
+              canSubmit={step2Valid}
+              onBack={goToStep1}
+              onSubmit={handleSubmit}
+            />
+          )}
         </div>
       </main>
+    </div>
+  );
+}
+
+function StepDot({
+  filled,
+  active,
+  onClick,
+}: {
+  filled: boolean;
+  active?: boolean;
+  onClick?: () => void;
+}) {
+  const size = active ? "w-3.5 h-3.5" : "w-2.5 h-2.5";
+  const bg = filled ? "bg-[#0F6E56]" : "bg-[#D9D5C8]";
+  const base = `rounded-full transition-all ${size} ${bg}`;
+  return onClick ? (
+    <button type="button" onClick={onClick} className={base + " cursor-pointer"} aria-label="Go to step 1" />
+  ) : (
+    <span className={base} />
+  );
+}
+
+function Step1({
+  name,
+  setName,
+  email,
+  setEmail,
+  mobile,
+  setMobile,
+  canContinue,
+  onContinue,
+}: {
+  name: string;
+  setName: (v: string) => void;
+  email: string;
+  setEmail: (v: string) => void;
+  mobile: string;
+  setMobile: (v: string) => void;
+  canContinue: boolean;
+  onContinue: () => void;
+}) {
+  return (
+    <>
+      <h1 className="font-serif font-normal text-[clamp(28px,4vw,40px)] leading-[1.1] tracking-[-0.02em] text-[#0E1411] mb-2">
+        Tell us about yourself
+      </h1>
+      <p className="text-[#6B766F] text-base mb-8 leading-relaxed">
+        We&apos;ll email your Readiness Card here. Takes 30 seconds.
+      </p>
+
+      <div className="bg-[#FDFCF8] border border-[#D9D5C8] rounded-xl p-6 md:p-8 space-y-6">
+        <Field
+          id="name"
+          label="Your name"
+          required
+          value={name}
+          onChange={setName}
+          placeholder="Dr. Priya Sharma"
+        />
+        <Field
+          id="email"
+          label="Your email"
+          required
+          type="email"
+          value={email}
+          onChange={setEmail}
+          placeholder="founder@yourcompany.com"
+          helper="We&rsquo;ll send your Readiness Card here. No spam."
+        />
+        <Field
+          id="mobile"
+          label="Mobile"
+          optional
+          type="tel"
+          value={mobile}
+          onChange={setMobile}
+          placeholder="+91 98765 43210"
+        />
+
+        <button
+          type="button"
+          onClick={onContinue}
+          disabled={!canContinue}
+          className="w-full bg-[#0F6E56] text-white font-medium text-[15px] px-6 py-3.5 rounded-full hover:bg-[#0d5c48] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          Continue →
+        </button>
+
+        <p className="text-xs text-[#6B766F] text-center leading-relaxed">
+          Your data is used only to generate your Readiness Card. Stored
+          encrypted, deleted after 90 days, never shared.{" "}
+          <Link href="/privacy" className="underline underline-offset-2 hover:text-[#0E1411]">
+            Privacy Policy
+          </Link>
+        </p>
+      </div>
+    </>
+  );
+}
+
+function Step2({
+  oneLiner,
+  setOneLiner,
+  oneLinerTooShort,
+  oneLinerLen,
+  url,
+  setUrl,
+  docs,
+  dragOver,
+  setDragOver,
+  handleFiles,
+  removeDoc,
+  fileInputRef,
+  fileError,
+  submitting,
+  submitError,
+  canSubmit,
+  onBack,
+  onSubmit,
+}: {
+  oneLiner: string;
+  setOneLiner: (v: string) => void;
+  oneLinerTooShort: boolean;
+  oneLinerLen: number;
+  url: string;
+  setUrl: (v: string) => void;
+  docs: UploadedDoc[];
+  dragOver: boolean;
+  setDragOver: (v: boolean) => void;
+  handleFiles: (files: FileList | File[]) => Promise<void>;
+  removeDoc: (id: string) => void;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  fileError: string;
+  submitting: boolean;
+  submitError: string;
+  canSubmit: boolean;
+  onBack: () => void;
+  onSubmit: (e: React.FormEvent) => void;
+}) {
+  const atCap = docs.length >= MAX_FILES;
+
+  return (
+    <>
+      <h1 className="font-serif font-normal text-[clamp(28px,4vw,40px)] leading-[1.1] tracking-[-0.02em] text-[#0E1411] mb-2">
+        Tell us about your product
+      </h1>
+      <p className="text-[#6B766F] text-base mb-8 leading-relaxed">
+        We&apos;ll analyse it against 9 Indian regulations in about 5 minutes — free.
+      </p>
+
+      <form onSubmit={onSubmit} noValidate>
+        <div className="bg-[#FDFCF8] border border-[#D9D5C8] rounded-xl p-6 md:p-8 space-y-6">
+
+          {/* One-liner with helper + counter ABOVE the box */}
+          <div>
+            <label
+              htmlFor="one_liner"
+              className="block text-sm font-medium text-[#0E1411] mb-1"
+            >
+              What does your product do?
+              <span className="text-[#993C1D] ml-0.5">*</span>
+            </label>
+            <div className="flex items-start justify-between gap-3 mb-2">
+              <p className="text-xs text-[#6B766F] leading-relaxed">
+                One sentence. What the product does, for whom, using what approach.
+              </p>
+              <p
+                className={`text-xs shrink-0 tabular-nums ${
+                  oneLinerLen > ONE_LINER_MAX - 20 ? "text-[#BA7517]" : "text-[#6B766F]"
+                }`}
+              >
+                {oneLinerLen} / {ONE_LINER_MAX}
+              </p>
+            </div>
+            <textarea
+              id="one_liner"
+              rows={3}
+              maxLength={ONE_LINER_MAX}
+              value={oneLiner}
+              onChange={(e) => setOneLiner(e.target.value)}
+              placeholder='E.g. "AI tool that flags early Alzheimer&apos;s from MRI scans for radiologists"'
+              className="w-full rounded-lg border border-[#D9D5C8] bg-white px-4 py-3 text-sm text-[#0E1411] placeholder:text-[#6B766F] focus:outline-none focus:border-[#0F6E56] focus:ring-1 focus:ring-[#0F6E56] resize-none transition-colors"
+              required
+            />
+            {oneLinerTooShort && (
+              <p className="text-xs text-[#993C1D] mt-1.5">
+                A little more detail helps — aim for {ONE_LINER_MIN} characters minimum.
+              </p>
+            )}
+          </div>
+
+          {/* PDF upload */}
+          <div>
+            <label className="block text-sm font-medium text-[#0E1411] mb-1">
+              Upload product docs{" "}
+              <span className="text-[#6B766F] font-normal">(optional, recommended)</span>
+            </label>
+            <p className="text-xs text-[#6B766F] mb-2 leading-relaxed">
+              Pitch decks · product briefs · tech specs · prior filings. Up to {MAX_FILES} files,
+              5 MB each, {MAX_PAGES} pages each. PDF only.
+            </p>
+
+            <label
+              htmlFor="pdf-input"
+              onDragOver={(e) => {
+                e.preventDefault();
+                if (!atCap) setDragOver(true);
+              }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragOver(false);
+                if (!atCap) handleFiles(e.dataTransfer.files);
+              }}
+              className={`block border border-dashed rounded-lg px-4 py-6 text-center cursor-pointer transition-colors ${
+                atCap
+                  ? "bg-gray-50 border-[#D9D5C8] cursor-not-allowed"
+                  : dragOver
+                  ? "bg-[#EAF3EF] border-[#0F6E56]"
+                  : "bg-white border-[#D9D5C8] hover:border-[#0F6E56]"
+              }`}
+            >
+              <input
+                id="pdf-input"
+                ref={fileInputRef}
+                type="file"
+                accept="application/pdf"
+                multiple
+                className="sr-only"
+                disabled={atCap}
+                onChange={(e) => {
+                  if (e.target.files) handleFiles(e.target.files);
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                }}
+              />
+              <p className="text-sm text-[#0E1411]">
+                {atCap ? (
+                  "Remove a file to add another"
+                ) : (
+                  <>
+                    Drop PDFs here or{" "}
+                    <span className="underline underline-offset-2 text-[#0F6E56]">
+                      click to select
+                    </span>
+                  </>
+                )}
+              </p>
+            </label>
+
+            {fileError && (
+              <p className="text-xs text-[#993C1D] mt-2">{fileError}</p>
+            )}
+
+            {/* File list */}
+            {docs.length > 0 && (
+              <ul className="mt-3 space-y-2">
+                {docs.map((d) => (
+                  <li
+                    key={d.id}
+                    className="bg-white border border-[#D9D5C8] rounded-lg px-3 py-2 text-xs"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[#0E1411] truncate" title={d.filename}>
+                          {d.filename}
+                        </p>
+                        <p className="text-[#6B766F]">
+                          {fmtSize(d.size_bytes)} · {d.page_count}{" "}
+                          {d.page_count === 1 ? "page" : "pages"}
+                          {d.status === "uploading" && ` · ${Math.round(d.progress)}%`}
+                          {d.status === "uploaded" && " · uploaded"}
+                          {d.status === "failed" && (
+                            <span className="text-[#993C1D]"> · {d.error || "failed"}</span>
+                          )}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeDoc(d.id)}
+                        className="text-[#6B766F] hover:text-[#993C1D] transition-colors px-1"
+                        aria-label="Remove file"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    {d.status === "uploading" && (
+                      <div className="mt-1.5 h-1 bg-[#E8E4D6] rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-[#0F6E56] transition-[width] duration-150"
+                          style={{ width: `${d.progress}%` }}
+                        />
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* URL */}
+          <div>
+            <label
+              htmlFor="url"
+              className="block text-sm font-medium text-[#0E1411] mb-1.5"
+            >
+              Product website{" "}
+              <span className="text-[#6B766F] font-normal">(optional)</span>
+            </label>
+            <input
+              id="url"
+              type="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://yourproduct.com"
+              className="w-full rounded-lg border border-[#D9D5C8] bg-white px-4 py-3 text-sm text-[#0E1411] placeholder:text-[#6B766F] focus:outline-none focus:border-[#0F6E56] focus:ring-1 focus:ring-[#0F6E56] transition-colors"
+            />
+            <p className="text-xs text-[#6B766F] mt-1.5">
+              We&apos;ll read your site to cross-check your description — helps catch features you might have missed.
+            </p>
+          </div>
+
+          {submitError && (
+            <p className="text-sm text-[#993C1D] bg-[#FAECE7] border border-[#f0c4b6] rounded-lg px-4 py-3">
+              {submitError}
+            </p>
+          )}
+
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onBack}
+              className="flex-shrink-0 text-[#0E1411] font-medium text-[15px] px-5 py-3.5 rounded-full border border-[#D9D5C8] bg-white hover:bg-[#F7F6F2] transition-colors"
+            >
+              ← Back
+            </button>
+            <button
+              type="submit"
+              disabled={submitting || !canSubmit}
+              className="flex-1 bg-[#0F6E56] text-white font-medium text-[15px] px-6 py-3.5 rounded-full hover:bg-[#0d5c48] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            >
+              {submitting ? (
+                <>
+                  <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  Saving your submission…
+                </>
+              ) : (
+                "Start analysis →"
+              )}
+            </button>
+          </div>
+        </div>
+      </form>
+    </>
+  );
+}
+
+function Field({
+  id,
+  label,
+  required,
+  optional,
+  type = "text",
+  value,
+  onChange,
+  placeholder,
+  helper,
+}: {
+  id: string;
+  label: string;
+  required?: boolean;
+  optional?: boolean;
+  type?: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  helper?: string;
+}) {
+  return (
+    <div>
+      <label htmlFor={id} className="block text-sm font-medium text-[#0E1411] mb-1.5">
+        {label}
+        {required && <span className="text-[#993C1D] ml-0.5">*</span>}
+        {optional && (
+          <span className="text-[#6B766F] font-normal ml-1">(optional)</span>
+        )}
+      </label>
+      <input
+        id={id}
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        required={required}
+        className="w-full rounded-lg border border-[#D9D5C8] bg-white px-4 py-3 text-sm text-[#0E1411] placeholder:text-[#6B766F] focus:outline-none focus:border-[#0F6E56] focus:ring-1 focus:ring-[#0F6E56] transition-colors"
+      />
+      {helper && <p className="text-xs text-[#6B766F] mt-1.5">{helper}</p>}
     </div>
   );
 }
