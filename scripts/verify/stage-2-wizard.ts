@@ -446,8 +446,64 @@ async function testCompleteAllSeven() {
   await cleanup(id);
 }
 
+async function testRequiredMarkersAndLegend() {
+  console.log("\n[14] * markers + legend on Q1-Q3, absent on Q4-Q7");
+  const id = await seedAssessment({
+    status: "routing_complete",
+    wizard_answers: { q1: "critical", q2: "drives", q3: "hcps" },
+  });
+  const q1html = await getWizardHtml(id, 1);
+  const q4html = await getWizardHtml(id, 4);
+
+  // Q1 (required) expectations
+  const q1HasMarker = q1html.includes("data-required-marker");
+  const q1HasLegend = q1html.includes("data-required-legend");
+  const q1MarkerIsCoral =
+    /data-required-marker[^>]*text-\[#993C1D\]|text-\[#993C1D\][^>]*data-required-marker/.test(
+      q1html
+    );
+  // Legend wrapping <p> must NOT itself be coral; must be muted.
+  const q1LegendMuted = /text-\[#6B766F\][^>]*data-required-legend|data-required-legend[^>]*text-\[#6B766F\]/.test(
+    q1html
+  );
+  const q1LegendText = q1html.includes("indicates a required question");
+
+  // Q4 (optional) expectations
+  const q4HasMarker = q4html.includes("data-required-marker");
+  const q4HasLegend = q4html.includes("data-required-legend");
+
+  if (q1HasMarker) pass("Q1 renders * marker", "data-required-marker present");
+  else fail("Q1 * marker", "data-required-marker missing on Q1");
+
+  if (q1MarkerIsCoral) pass("Q1 * marker is coral", "text-[#993C1D] on marker span");
+  else fail("Q1 * marker color", "coral class not attached to marker span");
+
+  if (q1HasLegend && q1LegendText) {
+    pass(
+      "Q1 legend rendered",
+      '"* indicates a required question" present with marker attribute'
+    );
+  } else {
+    fail("Q1 legend", `hasLegend=${q1HasLegend} hasText=${q1LegendText}`);
+  }
+
+  if (q1LegendMuted) pass("Q1 legend is muted (not coral)", "text-[#6B766F] on legend");
+  else fail("Q1 legend color", "legend <p> not styled muted");
+
+  if (!q4HasMarker && !q4HasLegend) {
+    pass("Q4 has no marker and no legend", "optional question clean");
+  } else {
+    fail(
+      "Q4 state",
+      `hasMarker=${q4HasMarker} hasLegend=${q4HasLegend} (both expected false)`
+    );
+  }
+
+  await cleanup(id);
+}
+
 async function main() {
-  console.log("Feature 4 — wizard + conflict disclosure (12 checks)");
+  console.log("Feature 4 — wizard + conflict disclosure (13 checks)");
   console.log("=".repeat(70));
   await testNoConflict();
   await testLowSeverity();
@@ -461,6 +517,7 @@ async function main() {
   await testResumeDropoff();
   await testSkipCompletion();
   await testCompleteAllSeven();
+  await testRequiredMarkersAndLegend();
 
   console.log("\n" + "=".repeat(70));
   const passed = results.filter((r) => r.pass).length;

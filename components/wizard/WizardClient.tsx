@@ -365,6 +365,17 @@ export default function WizardClient({
       />
 
       <h1 className="font-serif font-normal text-[clamp(24px,3.4vw,32px)] leading-[1.15] tracking-[-0.01em] text-[#0E1411] mt-6 mb-2">
+        {question.required && (
+          <>
+            <span
+              aria-hidden
+              className="text-[#993C1D]"
+              data-required-marker
+            >
+              *
+            </span>{" "}
+          </>
+        )}
         {question.prompt}
       </h1>
       {question.helper && (
@@ -403,6 +414,18 @@ export default function WizardClient({
           )
         )}
       </div>
+
+      {question.required && (
+        <p
+          className="text-sm italic text-[#6B766F] mb-6"
+          data-required-legend
+        >
+          <span aria-hidden className="text-[#993C1D]">
+            *
+          </span>{" "}
+          indicates a required question
+        </p>
+      )}
 
       {error && (
         <p className="text-sm text-[#993C1D] bg-[#FAECE7] border border-[#f0c4b6] rounded-lg px-4 py-3 mb-4">

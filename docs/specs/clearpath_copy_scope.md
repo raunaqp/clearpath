@@ -886,7 +886,7 @@ All other elements (comparison, CTAs, helper) identical.
 
 ```
 Question:
-What clinical state does your product address?
+* What clinical state does your product address?
 
 Helper:
 This determines how critical any error would be.
@@ -912,7 +912,7 @@ Options:
 
 ```
 Question:
-How much does your product influence clinical decisions?
+* How much does your product influence clinical decisions?
 
 Helper:
 "Inform" = displays data. "Drive" = suggests action. 
@@ -955,7 +955,7 @@ Should we update your answer?
 
 ```
 Question:
-Who uses your product?
+* Who uses your product?
 
 Options:
 ○ Healthcare professionals (doctors, nurses, lab techs)
