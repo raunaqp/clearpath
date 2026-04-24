@@ -623,8 +623,138 @@ async function testAutoDismissTimer() {
   }
 }
 
+async function testQ7AwaitedSubmit() {
+  console.log("\n[27] Q7 answered Generate awaits save + complete");
+  const src = fs.readFileSync(
+    path.resolve("components/wizard/WizardClient.tsx"),
+    "utf8"
+  );
+
+  // Q7 answered branch: must await both save + complete before router.push.
+  const hasAwaitedSave = /await\s+saveAnswerAwaited\s*\(/.test(src);
+  const hasAwaitedComplete = /await\s+completeWizardAttempt\s*\(/.test(src);
+  // Q7 path isLastStep branch must set busy=true before awaits and before router.push.
+  const q7AnsweredBranch = src.match(
+    /if\s*\(\s*isLastStep\s*\)[\s\S]{0,1400}router\.push\(\s*`\/assess\/\$\{assessmentId\}`/
+  );
+  const q7HasSetBusy =
+    !!q7AnsweredBranch && /setBusy\(\s*true\s*\)/.test(q7AnsweredBranch[0]);
+  const q7HasBothAwaits =
+    !!q7AnsweredBranch &&
+    /await\s+saveAnswerAwaited/.test(q7AnsweredBranch[0]) &&
+    /await\s+completeWizardAttempt/.test(q7AnsweredBranch[0]);
+  // "Generating…" label conditional on busy && isLastStep.
+  const hasGeneratingLabel = /busy\s*\n?\s*\?\s*"Generating…"/.test(src);
+
+  if (hasAwaitedSave) pass("saveAnswerAwaited helper used", "await saveAnswerAwaited present");
+  else fail("awaited save helper", "expected `await saveAnswerAwaited(...)`");
+
+  if (hasAwaitedComplete) pass("completeWizardAttempt helper used", "await completeWizardAttempt present");
+  else fail("awaited complete helper", "expected `await completeWizardAttempt(...)`");
+
+  if (q7HasBothAwaits)
+    pass(
+      "Q7 answered awaits both before redirect",
+      "save + complete awaited inside isLastStep branch"
+    );
+  else fail("Q7 answered branch", "save/complete awaits not in the Q7 isLastStep block");
+
+  if (q7HasSetBusy)
+    pass(
+      "Q7 submit toggles busy",
+      "setBusy(true) inside isLastStep branch before await"
+    );
+  else fail("Q7 busy flag", "setBusy(true) missing from Q7 answered branch");
+
+  if (hasGeneratingLabel)
+    pass(
+      '"Generating…" label shown during submit',
+      "busy ? \"Generating…\" conditional present"
+    );
+  else fail("button label during submit", "expected conditional nextLabel for busy+isLastStep");
+}
+
+async function testQ7AutoSkipAwaited() {
+  console.log("\n[28] Q7 auto-skip (unanswered Generate) saves skip + awaits complete");
+  const src = fs.readFileSync(
+    path.resolve("components/wizard/WizardClient.tsx"),
+    "utf8"
+  );
+  const autoSkipBranch = src.match(
+    /isLastStep\s*&&\s*!canContinue[\s\S]{0,1000}router\.push\(\s*`\/assess\/\$\{assessmentId\}`/
+  );
+  if (!autoSkipBranch) {
+    fail("auto-skip branch", "Q7 isLastStep && !canContinue branch not found");
+    return;
+  }
+  const block = autoSkipBranch[0];
+  const firesSkipEvent = /posthog\.capture\(\s*"wizard_step_skipped"[^)]*step_number:\s*currentStep/.test(
+    block
+  );
+  const awaitsComplete = /await\s+completeWizardAttempt\s*\(/.test(block);
+  const errorToastOnFailure = /showToast\(\s*"Couldn't submit/.test(block);
+
+  if (firesSkipEvent)
+    pass(
+      "wizard_step_skipped fires for step 7",
+      'posthog.capture("wizard_step_skipped",...) in auto-skip branch'
+    );
+  else fail("skip event wired", "wizard_step_skipped not fired in auto-skip path");
+
+  if (awaitsComplete)
+    pass(
+      "auto-skip awaits completeWizardAttempt",
+      "await completeWizardAttempt(finalSkipped, ...) in branch"
+    );
+  else fail("auto-skip awaited complete", "no awaited completeWizardAttempt");
+
+  if (errorToastOnFailure)
+    pass(
+      "submit failure → error toast",
+      'showToast("Couldn\'t submit…") wired for auto-skip failure'
+    );
+  else fail("auto-skip error toast", "no failure toast in auto-skip branch");
+}
+
+async function testPrefetchOnMount() {
+  console.log("\n[29] router.prefetch fires for next step on mount");
+  const src = fs.readFileSync(
+    path.resolve("components/wizard/WizardClient.tsx"),
+    "utf8"
+  );
+  // Look for a useEffect containing router.prefetch, and within that effect
+  // block the two URL templates (next question + /assess for Q7).
+  const effectMatch = src.match(
+    /useEffect\(\s*\(\)\s*=>\s*\{[\s\S]{0,500}router\.prefetch\([\s\S]{0,50}\);[\s\S]{0,200}?\}/
+  );
+  const hasPrefetchEffect = !!effectMatch;
+  const block = effectMatch?.[0] ?? "";
+  const prefetchesNextStep = /`\/wizard\/\$\{assessmentId\}\/q\/\$\{currentStep\s*\+\s*1\}`/.test(
+    block
+  );
+  const prefetchesAssessOnQ7 = /`\/assess\/\$\{assessmentId\}`/.test(block);
+
+  if (hasPrefetchEffect)
+    pass("useEffect calls router.prefetch", "prefetch effect present");
+  else fail("prefetch effect", "no useEffect with router.prefetch found");
+
+  if (prefetchesNextStep)
+    pass(
+      "Q1–Q6 prefetch next question URL",
+      "prefetch path includes currentStep + 1"
+    );
+  else fail("prefetch next q", "prefetch path for Q1–Q6 missing currentStep+1");
+
+  if (prefetchesAssessOnQ7)
+    pass(
+      "Q7 prefetches /assess/{id}",
+      "prefetch target on isLastStep is /assess"
+    );
+  else fail("prefetch assess on Q7", "Q7 prefetch target not /assess/{id}");
+}
+
 async function main() {
-  console.log("Feature 4 — wizard + conflict disclosure (16 checks)");
+  console.log("Feature 4 — wizard + conflict disclosure (19 checks)");
   console.log("=".repeat(70));
   await testNoConflict();
   await testLowSeverity();
@@ -642,6 +772,9 @@ async function main() {
   await testOptimisticPatternSource();
   await testRetryToastWiring();
   await testAutoDismissTimer();
+  await testQ7AwaitedSubmit();
+  await testQ7AutoSkipAwaited();
+  await testPrefetchOnMount();
 
   console.log("\n" + "=".repeat(70));
   const passed = results.filter((r) => r.pass).length;
