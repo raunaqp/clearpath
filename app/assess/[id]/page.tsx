@@ -126,6 +126,9 @@ async function runPreRouterFlow(
             cost_usd: result.cost_usd,
             ran_at: new Date().toISOString(),
           },
+          conflict_detected: result.conflict_detected,
+          conflict_details: result.conflict_details,
+          detected_signals: result.detected_signals,
         },
       })
       .eq("id", assessment.id);

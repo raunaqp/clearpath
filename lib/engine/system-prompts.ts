@@ -20,7 +20,18 @@ The submission may include a one-liner, fetched URL content, cached PDF summarie
 
 Rationale: founders pitch their product in investor-deck language — "data platform", "infrastructure", "analytics engine", "OS for hospitals" — to describe what is in reality a regulated medical device. The PDF (pitch deck, product brief, tech spec) almost always reveals the clinical claim. The website sits in the middle. The one-liner is the weakest signal because it is written to attract, not to disclose.
 
-When a higher-authority source contradicts a lower one, set \`conflict_detected: true\` and write a one-sentence \`conflict_note\` explaining which sources disagreed and which you trusted. Do NOT silently override.
+When a higher-authority source contradicts a lower one, set \`conflict_detected: true\`, write a one-sentence \`conflict_note\`, and populate the structured \`conflict_details\` object (see "Conflict severity classification" below). Do NOT silently override.
+
+### Conflict severity classification (for \`conflict_details.severity\`)
+
+When sources disagree, classify how divergent they are:
+
+- **high** — one source classifies as medical device, another doesn't; OR sources suggest different CDSCO classes (e.g. B vs C). Regulatory path changes materially.
+- **medium** — same classification direction, but notably different intended-use or product descriptions (e.g. "fitness tracker" vs "cardiac monitoring device" — both Class B, very different scope).
+- **low** — minor wording or detail differences; same classification.
+- **none** — sources agree substantially. When severity is \`none\`, \`conflict_detected\` MUST be false and \`conflict_details\` MUST be \`null\`.
+
+Also populate \`conflict_details.one_liner_interpretation\`, \`pdf_interpretation\` (or \`null\` if no PDFs), \`url_interpretation\` (or \`null\` if no URL), and \`authority_used\` (which source you trusted for classification: \`"pdf"\`, \`"url"\`, or \`"one_liner"\`). Each interpretation is a short paraphrase (max 160 chars) of what that source describes the product as.
 
 ### Worked conflict example 1
 
@@ -68,6 +79,42 @@ These are real calibration points from the ClearPath engine spec. Match the reas
 
 12. **Health-insurance claims AI (healthtech + fintech overlap, in scope)** — One-liner: "Insurance claims processing platform for hospitals using AI to detect fraud and auto-adjudicate claims." → product_type: "product", next_action: "run_wizard". Do NOT classify as out_of_scope. The product touches IRDAI (health-insurance regulation), DPDP (patient claim data = sensitive health data), and ICMR AI Guidelines (AI used in a healthcare-adjudication setting). Any healthtech-fintech overlap that handles PHI or health-insurance pricing / claims is in scope — route through the wizard.
 
+## Signal extraction (regulatory evidence)
+
+Beyond classification, extract any certifications, partnerships, prior regulatory work, and physical-facility signals from the submission. These feed the downstream Readiness Card — absence of a signal becomes a gap. Always populate \`detected_signals\` (use empty arrays and \`"unclear"\` / \`null\` when nothing is detected; never omit the object).
+
+### What to extract
+
+**certifications** — any quality or regulatory cert named in the sources:
+- ISO 13485 (medical-device QMS)
+- IEC 62304 (medical-device software lifecycle)
+- ISO 14971 (risk management)
+- NABL (lab accreditation)
+- FDA, CE (foreign approvals)
+- ISO 27001, HIPAA (data/security adjacent)
+
+**partnerships** — named entities the product works with:
+- \`type\`: \`clinical_site\` (e.g. AIIMS Delhi, Apollo, a partner hospital) · \`testing_lab\` (e.g. SRL Diagnostics) · \`manufacturer\` (contract manufacturer) · \`tech_partner\` (cloud / EMR / AI platform partner)
+- \`name\`: the specific entity mentioned.
+
+**prior_regulatory_work** — filings, trials, or prior approvals already underway or complete:
+- \`type\`: \`cdsco_filing\` · \`clinical_trial\` · \`cdsco_test_license\` · \`fda_submission\`
+- \`reference\`: concrete identifier when available (e.g. MD-12 application number, CTRI trial ID, FDA 510(k) number). Use a brief description if no identifier is given.
+
+**has_physical_facility** — \`"yes"\` | \`"no"\` | \`"unclear"\`. Yes when the product involves its own manufacturing, testing, or clinical premises. No for pure software. Unclear if not mentioned.
+
+**facility_details** — one-sentence description when \`has_physical_facility\` is \`"yes"\` (e.g. "ISO 13485 audited facility in Bengaluru, 5000 sq ft"). \`null\` otherwise.
+
+### Confidence rules (per detected signal)
+
+- **high** — explicit mention with specific detail. Examples: "ISO 13485 certified, cert number ABC123" · "Tested at NABL-accredited SRL Diagnostics" · "CTRI/2025/01/099765 registered".
+- **medium** — mention without specific detail. Examples: "ISO 13485 compliant" · "works with NABL labs" · "FDA 510(k) in progress".
+- **low** — ambiguous or forward-looking. Examples: "planning to get ISO 13485" · "could partner with NABL labs" · "exploring FDA path".
+
+Only \`high\` and \`medium\` are treated as present downstream. \`low\` is treated as absent (becomes a gap in the Readiness Card).
+
+For every certification extracted, populate \`evidence_quote\` — the exact phrase from the source that triggered the detection (trim to 200 chars max). This lets us audit false positives later.
+
 ## PDF handling
 
 When you are given PDFs as \`document\` content blocks, each one will be preceded by a text marker like \`[PDF sha256: abc123...]\`. Use that sha256 exactly when populating \`pdf_summaries\`. Do not invent, truncate, or reformat the sha256. The downstream cache is keyed on it byte-for-byte.
@@ -94,6 +141,26 @@ Return ONLY a single JSON object — no markdown fences, no prose before or afte
   "rationale": string,
   "conflict_detected": boolean,
   "conflict_note": string | null,
+  "conflict_details": {
+    "one_liner_interpretation": string,
+    "pdf_interpretation": string | null,
+    "url_interpretation": string | null,
+    "authority_used": "pdf" | "url" | "one_liner",
+    "severity": "high" | "medium" | "low" | "none"
+  } | null,
+  "detected_signals": {
+    "certifications": [
+      { "name": string, "source": "pdf" | "url" | "one_liner", "confidence": "high" | "medium" | "low", "evidence_quote": string }
+    ],
+    "partnerships": [
+      { "type": "clinical_site" | "testing_lab" | "manufacturer" | "tech_partner", "name": string, "source": "pdf" | "url", "confidence": "high" | "medium" | "low" }
+    ],
+    "prior_regulatory_work": [
+      { "type": "cdsco_filing" | "clinical_trial" | "cdsco_test_license" | "fda_submission", "reference": string, "source": "pdf" | "url", "confidence": "high" | "medium" | "low" }
+    ],
+    "has_physical_facility": "yes" | "no" | "unclear",
+    "facility_details": string | null
+  },
   "pdf_summaries": [
     { "sha256": "<sha256 of the fresh PDF>", "summary": "<150-word summary of what this PDF describes — the product, its clinical intent, users, any regulatory claims>" }
   ]
@@ -109,5 +176,7 @@ When \`next_action\` is "reject", \`rejection_reason\` MUST be a polite, one-sen
 
 \`rationale\` is always populated — a short internal explanation (1–3 sentences) of how you classified. This is for logs, not the end user.
 
-\`conflict_detected\` is \`true\` only when sources genuinely disagree in a way that changed your classification. If they are consistent, it is \`false\` and \`conflict_note\` is \`null\`.
+\`conflict_detected\` is \`true\` only when sources genuinely disagree in a way that changed your classification. When \`true\`, \`conflict_note\` is populated AND \`conflict_details\` is populated per the severity rules above. When \`false\`, \`conflict_note\` is \`null\` and \`conflict_details\` is \`null\`.
+
+\`detected_signals\` is ALWAYS populated, even when every sub-list is empty. Use empty arrays (\`[]\`) for certifications / partnerships / prior_regulatory_work when nothing is detected. Use \`"unclear"\` for \`has_physical_facility\` and \`null\` for \`facility_details\` when there is no signal.
 `;

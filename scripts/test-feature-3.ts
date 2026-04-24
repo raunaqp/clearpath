@@ -144,22 +144,226 @@ async function checkPdfContentCacheExists() {
 }
 
 async function makeTestPdf(): Promise<Buffer> {
+  return makePdfWithContent("ProductSpec: MediScribe", [
+    "AI medical scribe that transcribes doctor-patient",
+    "consultations, generates SOAP notes, integrates with",
+    "hospital EMR systems via HL7 FHIR APIs.",
+    "Target users: primary care physicians, specialists.",
+  ]);
+}
+
+async function makePdfWithContent(
+  title: string,
+  bodyLines: string[]
+): Promise<Buffer> {
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.Helvetica);
-  const page = pdf.addPage([400, 600]);
-  page.drawText("ProductSpec: MediScribe", { x: 40, y: 550, size: 16, font });
-  page.drawText("AI medical scribe that transcribes doctor-patient", {
-    x: 40, y: 520, size: 11, font,
-  });
-  page.drawText("consultations, generates SOAP notes, integrates with", {
-    x: 40, y: 505, size: 11, font,
-  });
-  page.drawText("hospital EMR systems via HL7 FHIR APIs.", { x: 40, y: 490, size: 11, font });
-  page.drawText("Target users: primary care physicians, specialists.", {
-    x: 40, y: 470, size: 11, font,
-  });
+  const page = pdf.addPage([420, 640]);
+  page.drawText(title, { x: 40, y: 580, size: 16, font });
+  let y = 550;
+  for (const line of bodyLines) {
+    page.drawText(line, { x: 40, y, size: 11, font });
+    y -= 16;
+  }
   const bytes = await pdf.save();
   return Buffer.from(bytes);
+}
+
+async function uploadPdfAndSubmit(
+  oneLiner: string,
+  pdfBuf: Buffer,
+  filename: string,
+  email: string
+): Promise<string | null> {
+  const sha256 = createHash("sha256").update(pdfBuf).digest("hex");
+  // Best-effort cache clear so cache doesn't mask a real extraction run
+  await supabase.from("pdf_content_cache").delete().eq("pdf_sha256", sha256);
+
+  const signRes = await fetch(`${BASE}/api/storage/signed-url`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ filename, size_bytes: pdfBuf.length }),
+  });
+  if (!signRes.ok) return null;
+  const { signedUrl, storage_path } = await signRes.json();
+
+  const putRes = await fetch(signedUrl, {
+    method: "PUT",
+    headers: { "Content-Type": "application/pdf" },
+    body: new Uint8Array(pdfBuf.buffer, pdfBuf.byteOffset, pdfBuf.byteLength),
+  });
+  if (!putRes.ok) return null;
+
+  const intakeRes = await fetch(`${BASE}/api/intake`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: "F3 Test",
+      email,
+      one_liner: oneLiner,
+      uploaded_docs: [
+        { filename, storage_path, size_bytes: pdfBuf.length, sha256 },
+      ],
+    }),
+  });
+  const { assessmentId } = await intakeRes.json();
+  if (!assessmentId) return null;
+
+  // Await full response body so the pre-router's DB write has landed
+  const assessRes = await fetch(`${BASE}/assess/${assessmentId}`);
+  await assessRes.text();
+  return assessmentId as string;
+}
+
+type PreRouterMeta = {
+  pre_router?: { rationale?: string };
+  conflict_detected?: boolean;
+  conflict_details?: {
+    severity?: string;
+    authority_used?: string;
+    one_liner_interpretation?: string;
+    pdf_interpretation?: string | null;
+    url_interpretation?: string | null;
+  } | null;
+  detected_signals?: {
+    certifications?: Array<{ name?: string; confidence?: string; source?: string; evidence_quote?: string }>;
+    partnerships?: unknown[];
+    prior_regulatory_work?: unknown[];
+    has_physical_facility?: string;
+    facility_details?: string | null;
+  };
+};
+
+async function runConflictDetectionPath() {
+  console.log("\n[A] conflict detection — description says platform, PDF describes cancer screening");
+
+  const pdfBuf = await makePdfWithContent(
+    "Product brief: OncoScan Cervical",
+    [
+      "AI-powered cervical cancer screening system for colposcopy clinics.",
+      "Analyses colposcopy images using a CNN trained on 48,000 cases.",
+      "Outputs a risk score that drives referral to biopsy or colposcopic",
+      "follow-up. Intended use: diagnostic decision support for trained",
+      "gynaecologists. Target users: gynae-oncologists, women's health",
+      "clinics. Regulatory path: SaMD, CDSCO Class C equivalent under",
+      "evaluation. Clinical validation: 95% sensitivity, 87% specificity",
+      "on a 2,400-patient retrospective study.",
+    ]
+  );
+
+  const id = await uploadPdfAndSubmit(
+    "Women's health data analytics platform for Indian hospitals",
+    pdfBuf,
+    "oncoscan-brief.pdf",
+    "f3conflict@clearpath.test"
+  );
+
+  if (!id) {
+    fail("conflict test setup", "could not submit intake with pdf");
+    return;
+  }
+
+  const { data } = await supabase
+    .from("assessments")
+    .select("meta")
+    .eq("id", id)
+    .maybeSingle<{ meta: PreRouterMeta }>();
+
+  const meta = data?.meta ?? {};
+  const cd = meta.conflict_details ?? null;
+
+  if (meta.conflict_detected === true) {
+    pass("conflict_detected=true", `after one-liner/pdf mismatch`);
+  } else {
+    fail(
+      "conflict_detected",
+      `expected true, got ${meta.conflict_detected}`
+    );
+  }
+  if (cd && (cd.severity === "high" || cd.severity === "medium")) {
+    pass("severity high/medium", `severity=${cd.severity}`);
+  } else {
+    fail(
+      "severity",
+      `expected high/medium, got ${cd?.severity ?? "(no details)"}`
+    );
+  }
+  if (cd?.authority_used === "pdf") {
+    pass("authority_used=pdf", "pdf trusted over one-liner");
+  } else {
+    fail("authority_used", `expected pdf, got ${cd?.authority_used}`);
+  }
+
+  await supabase.from("assessments").delete().eq("id", id);
+  await supabase
+    .from("pdf_content_cache")
+    .delete()
+    .eq("pdf_sha256", createHash("sha256").update(pdfBuf).digest("hex"));
+}
+
+async function runCertificationExtractionPath() {
+  console.log("\n[B] certification extraction — PDF mentions ISO 13485 + cert number");
+
+  const pdfBuf = await makePdfWithContent(
+    "Tech brief: DermAI",
+    [
+      "AI tool for skin-lesion triage. Takes a photo, returns a risk",
+      "score and referral suggestion for dermatology clinics.",
+      "Regulatory posture: ISO 13485 certified (cert number ABC123).",
+      "IEC 62304 software lifecycle process in place.",
+      "Validation partner: SRL Diagnostics (NABL-accredited).",
+      "Intended users: general practitioners, skin clinics.",
+    ]
+  );
+
+  const id = await uploadPdfAndSubmit(
+    "AI-assisted skin-lesion triage tool for Indian dermatology clinics",
+    pdfBuf,
+    "dermai-brief.pdf",
+    "f3certs@clearpath.test"
+  );
+
+  if (!id) {
+    fail("certification test setup", "could not submit intake with pdf");
+    return;
+  }
+
+  const { data } = await supabase
+    .from("assessments")
+    .select("meta")
+    .eq("id", id)
+    .maybeSingle<{ meta: PreRouterMeta }>();
+
+  const certs = data?.meta?.detected_signals?.certifications ?? [];
+  const iso = certs.find(
+    (c) => (c.name ?? "").toUpperCase().includes("ISO 13485")
+  );
+
+  if (iso) {
+    pass(
+      "ISO 13485 detected",
+      `confidence=${iso.confidence} evidence="${(iso.evidence_quote ?? "").slice(0, 60)}..."`
+    );
+  } else {
+    fail(
+      "ISO 13485 detection",
+      `no ISO 13485 in certifications (${certs.length} total certs)`
+    );
+  }
+  if (iso && iso.confidence === "high") {
+    pass("confidence=high", "cert number ABC123 triggered high confidence");
+  } else {
+    fail(
+      "ISO 13485 confidence",
+      `expected high (cert number given), got ${iso?.confidence ?? "(none)"}`
+    );
+  }
+
+  await supabase.from("assessments").delete().eq("id", id);
+  await supabase
+    .from("pdf_content_cache")
+    .delete()
+    .eq("pdf_sha256", createHash("sha256").update(pdfBuf).digest("hex"));
 }
 
 async function runPdfUploadPath() {
@@ -349,6 +553,8 @@ async function main() {
     "Indian healthcare product"
   );
   await runPdfUploadPath();
+  await runConflictDetectionPath();
+  await runCertificationExtractionPath();
   await runPromptCacheRepeat();
   await checkVercelDeploy();
 
