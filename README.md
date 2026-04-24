@@ -192,3 +192,5 @@ npm run build   # production build
 Create `.env.local` with: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`, `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`. See [`docs/CLAUDE_CODE_HANDOFF.md`](./docs/CLAUDE_CODE_HANDOFF.md) for the full list.
 
 Specs in [`docs/specs/`](./docs/specs/) · change logs in [`docs/change-logs/`](./docs/change-logs/) · pptx / xlsx / images in [`docs/reference/`](./docs/reference/).
+
+<!-- build: auto-deploy test 2026-04-24T20:19:12Z -->
