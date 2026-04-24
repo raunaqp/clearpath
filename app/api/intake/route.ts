@@ -10,19 +10,32 @@ const uploadedDocSchema = z.object({
 });
 
 const schema = z.object({
-  name: z.string().trim().min(1, "Please tell us your name."),
-  email: z.string().email("Enter a valid email address."),
+  name: z.string().trim().min(1, "Please enter your name"),
+  email: z
+    .string()
+    .trim()
+    .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please enter a valid email, e.g. abc@xyz.com"),
   mobile: z
     .string()
     .trim()
     .optional()
-    .refine((v) => !v || /^\+?\d[\d\s-]{7,14}$/.test(v), {
-      message: "Enter a valid mobile number.",
-    }),
+    .refine(
+      (v) => {
+        if (!v) return true;
+        const digits = v.replace(/^\+?91[\s-]*/, "").replace(/[^0-9]/g, "");
+        return digits.length === 10;
+      },
+      { message: "Please enter a 10-digit mobile number" }
+    ),
   one_liner: z
     .string()
-    .min(20, "Please tell us a bit more — at least 20 characters.")
-    .max(300, "Keep it to 300 characters or under."),
+    .trim()
+    .min(20, "Please add more detail (at least 20 characters)")
+    .max(300, "Keep it to 300 characters or under.")
+    .refine((v) => !/^\s*e\.g\./i.test(v), {
+      message:
+        "Please replace the example text with your own product description",
+    }),
   url: z
     .string()
     .optional()

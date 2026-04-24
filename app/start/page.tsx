@@ -5,12 +5,22 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import posthog from "posthog-js";
 import { countPdfPages, sha256Hex } from "@/lib/pdf-utils";
+import {
+  validateEmail,
+  validateMobile,
+  validateName,
+  validateOneLiner,
+  validateUrl,
+  type IntakeErrors,
+  ONE_LINER_MIN,
+  ONE_LINER_MAX,
+} from "@/lib/intake/validation";
 
 const MAX_FILES = 3;
 const MAX_SIZE_BYTES = 5 * 1024 * 1024;   // 5 MB
 const MAX_PAGES = 10;
-const ONE_LINER_MIN = 20;
-const ONE_LINER_MAX = 300;
+
+type FieldName = "name" | "email" | "mobile" | "oneLiner" | "url";
 
 type UploadedDoc = {
   id: string;
@@ -79,6 +89,54 @@ function StartPageInner() {
   const [prefillLoading, setPrefillLoading] = useState<boolean>(!!resumeId);
   const [prefillError, setPrefillError] = useState("");
 
+  // Per-field errors + whether the field has been blurred at least once.
+  const [errors, setErrors] = useState<IntakeErrors>({});
+  const [touched, setTouched] = useState<Partial<Record<FieldName, boolean>>>({});
+
+  const clearError = useCallback((field: FieldName) => {
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  }, []);
+
+  const runFieldValidation = useCallback(
+    (field: FieldName, value: string): string | null => {
+      switch (field) {
+        case "name":
+          return validateName(value);
+        case "email":
+          return validateEmail(value);
+        case "mobile":
+          return validateMobile(value);
+        case "oneLiner":
+          return validateOneLiner(value);
+        case "url":
+          return validateUrl(value);
+      }
+    },
+    []
+  );
+
+  const handleBlur = useCallback(
+    (field: FieldName, value: string) => {
+      setTouched((prev) => (prev[field] ? prev : { ...prev, [field]: true }));
+      const err = runFieldValidation(field, value);
+      setErrors((prev) => {
+        if (!err) {
+          if (!prev[field]) return prev;
+          const next = { ...prev };
+          delete next[field];
+          return next;
+        }
+        return { ...prev, [field]: err };
+      });
+    },
+    [runFieldValidation]
+  );
+
   useEffect(() => {
     try {
       posthog.capture("intake_form_started", { resume: !!resumeId });
@@ -146,22 +204,55 @@ function StartPageInner() {
   }, [resumeId]);
 
   // Step-1 validity
-  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const step1Valid = name.trim().length > 0 && emailValid;
+  const step1Valid =
+    validateName(name) === null &&
+    validateEmail(email) === null &&
+    validateMobile(mobile) === null;
 
   // Step-2 validity
   const oneLinerLen = oneLiner.length;
-  const oneLinerTooShort = oneLinerLen > 0 && oneLinerLen < ONE_LINER_MIN;
   const hasPendingUploads = docs.some((d) => d.status === "uploading");
   const hasFailedUploads = docs.some((d) => d.status === "failed");
   const step2Valid =
-    oneLinerLen >= ONE_LINER_MIN &&
-    oneLinerLen <= ONE_LINER_MAX &&
+    validateOneLiner(oneLiner) === null &&
+    validateUrl(url) === null &&
     !hasPendingUploads &&
     !hasFailedUploads;
 
+  function scrollToFieldError(field: FieldName) {
+    const domId = field === "oneLiner" ? "one_liner" : field;
+    if (typeof document === "undefined") return;
+    const el = document.getElementById(domId);
+    if (el) {
+      el.focus({ preventScroll: true });
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }
+
   function goToStep2() {
-    if (!step1Valid) return;
+    // Validate step-1 fields explicitly so Next click without blur
+    // still surfaces errors.
+    const step1Errors: IntakeErrors = {};
+    const nErr = validateName(name);
+    if (nErr) step1Errors.name = nErr;
+    const eErr = validateEmail(email);
+    if (eErr) step1Errors.email = eErr;
+    const mErr = validateMobile(mobile);
+    if (mErr) step1Errors.mobile = mErr;
+
+    if (Object.keys(step1Errors).length > 0) {
+      setErrors((prev) => ({ ...prev, ...step1Errors }));
+      setTouched((prev) => ({
+        ...prev,
+        name: true,
+        email: true,
+        mobile: true,
+      }));
+      const order: FieldName[] = ["name", "email", "mobile"];
+      const first = order.find((f) => f in step1Errors);
+      if (first) scrollToFieldError(first);
+      return;
+    }
     setStep(2);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -264,6 +355,41 @@ function StartPageInner() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // Explicit validation on submit — cover both step-1 and step-2 fields
+    // so invalid step-1 data can't slip through via direct step state
+    // manipulation.
+    const allErrors: IntakeErrors = {};
+    const nErr = validateName(name);
+    if (nErr) allErrors.name = nErr;
+    const eErr = validateEmail(email);
+    if (eErr) allErrors.email = eErr;
+    const mErr = validateMobile(mobile);
+    if (mErr) allErrors.mobile = mErr;
+    const oErr = validateOneLiner(oneLiner);
+    if (oErr) allErrors.oneLiner = oErr;
+    const uErr = validateUrl(url);
+    if (uErr) allErrors.url = uErr;
+    if (Object.keys(allErrors).length > 0) {
+      setErrors(allErrors);
+      setTouched({
+        name: true,
+        email: true,
+        mobile: true,
+        oneLiner: true,
+        url: true,
+      });
+      const order: FieldName[] = ["name", "email", "mobile", "oneLiner", "url"];
+      const first = order.find((f) => f in allErrors);
+      if (first) {
+        // step-1 errors mean we bounce back to step-1 first.
+        if (first === "name" || first === "email" || first === "mobile") {
+          setStep(1);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+        scrollToFieldError(first);
+      }
+      return;
+    }
     if (!step2Valid) return;
     setSubmitError("");
     setSubmitting(true);
@@ -352,11 +478,22 @@ function StartPageInner() {
           {step === 1 && (
             <Step1
               name={name}
-              setName={setName}
+              setName={(v) => {
+                setName(v);
+                clearError("name");
+              }}
               email={email}
-              setEmail={setEmail}
+              setEmail={(v) => {
+                setEmail(v);
+                clearError("email");
+              }}
               mobile={mobile}
-              setMobile={setMobile}
+              setMobile={(v) => {
+                setMobile(v);
+                clearError("mobile");
+              }}
+              onBlur={handleBlur}
+              errors={errors}
               canContinue={step1Valid}
               onContinue={goToStep2}
             />
@@ -365,11 +502,18 @@ function StartPageInner() {
           {step === 2 && (
             <Step2
               oneLiner={oneLiner}
-              setOneLiner={setOneLiner}
-              oneLinerTooShort={oneLinerTooShort}
+              setOneLiner={(v) => {
+                setOneLiner(v);
+                clearError("oneLiner");
+              }}
               oneLinerLen={oneLinerLen}
               url={url}
-              setUrl={setUrl}
+              setUrl={(v) => {
+                setUrl(v);
+                clearError("url");
+              }}
+              onBlur={handleBlur}
+              errors={errors}
               docs={docs}
               dragOver={dragOver}
               setDragOver={setDragOver}
@@ -379,7 +523,6 @@ function StartPageInner() {
               fileError={fileError}
               submitting={submitting}
               submitError={submitError}
-              canSubmit={step2Valid}
               onBack={goToStep1}
               onSubmit={handleSubmit}
             />
@@ -416,6 +559,8 @@ function Step1({
   setEmail,
   mobile,
   setMobile,
+  onBlur,
+  errors,
   canContinue,
   onContinue,
 }: {
@@ -425,6 +570,8 @@ function Step1({
   setEmail: (v: string) => void;
   mobile: string;
   setMobile: (v: string) => void;
+  onBlur: (field: FieldName, value: string) => void;
+  errors: IntakeErrors;
   canContinue: boolean;
   onContinue: () => void;
 }) {
@@ -444,6 +591,8 @@ function Step1({
           required
           value={name}
           onChange={setName}
+          onBlur={() => onBlur("name", name)}
+          error={errors.name}
           placeholder="Dr. Priya Sharma"
         />
         <Field
@@ -453,6 +602,8 @@ function Step1({
           type="email"
           value={email}
           onChange={setEmail}
+          onBlur={() => onBlur("email", email)}
+          error={errors.email}
           placeholder="founder@yourcompany.com"
           helper="We&rsquo;ll send your Readiness Card here. No spam."
         />
@@ -463,13 +614,14 @@ function Step1({
           type="tel"
           value={mobile}
           onChange={setMobile}
+          onBlur={() => onBlur("mobile", mobile)}
+          error={errors.mobile}
           placeholder="+91 98765 43210"
         />
 
         <button
           type="button"
           onClick={onContinue}
-          disabled={!canContinue}
           className="w-full bg-[#0F6E56] text-white font-medium text-[15px] px-6 py-3.5 rounded-full hover:bg-[#0d5c48] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           Continue →
@@ -490,10 +642,11 @@ function Step1({
 function Step2({
   oneLiner,
   setOneLiner,
-  oneLinerTooShort,
   oneLinerLen,
   url,
   setUrl,
+  onBlur,
+  errors,
   docs,
   dragOver,
   setDragOver,
@@ -503,16 +656,16 @@ function Step2({
   fileError,
   submitting,
   submitError,
-  canSubmit,
   onBack,
   onSubmit,
 }: {
   oneLiner: string;
   setOneLiner: (v: string) => void;
-  oneLinerTooShort: boolean;
   oneLinerLen: number;
   url: string;
   setUrl: (v: string) => void;
+  onBlur: (field: FieldName, value: string) => void;
+  errors: IntakeErrors;
   docs: UploadedDoc[];
   dragOver: boolean;
   setDragOver: (v: boolean) => void;
@@ -522,7 +675,6 @@ function Step2({
   fileError: string;
   submitting: boolean;
   submitError: string;
-  canSubmit: boolean;
   onBack: () => void;
   onSubmit: (e: React.FormEvent) => void;
 }) {
@@ -570,13 +722,21 @@ function Step2({
               maxLength={ONE_LINER_MAX}
               value={oneLiner}
               onChange={(e) => setOneLiner(e.target.value)}
+              onBlur={() => onBlur("oneLiner", oneLiner)}
               placeholder="Describe your product in one sentence…"
-              className="w-full rounded-lg border border-[#D9D5C8] bg-white px-4 py-3 text-sm text-[#0E1411] placeholder:text-[#6B766F] focus:outline-none focus:border-[#0F6E56] focus:ring-1 focus:ring-[#0F6E56] resize-none transition-colors"
-              required
+              className={`w-full rounded-lg bg-white px-4 py-3 text-sm text-[#0E1411] placeholder:text-[#6B766F] focus:outline-none focus:ring-1 resize-none transition-colors ${
+                errors.oneLiner
+                  ? "border-2 border-[#993C1D] focus:border-[#993C1D] focus:ring-[#993C1D]"
+                  : "border border-[#D9D5C8] focus:border-[#0F6E56] focus:ring-[#0F6E56]"
+              }`}
             />
-            {oneLinerTooShort && (
-              <p className="text-xs text-[#993C1D] mt-1.5">
-                A little more detail helps — aim for {ONE_LINER_MIN} characters minimum.
+            {errors.oneLiner && (
+              <p
+                data-field-error="oneLiner"
+                className="text-sm text-[#993C1D] mt-1.5 flex items-start gap-1"
+              >
+                <span aria-hidden>⚠</span>
+                <span>{errors.oneLiner}</span>
               </p>
             )}
           </div>
@@ -733,12 +893,27 @@ function Step2({
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
+              onBlur={() => onBlur("url", url)}
               placeholder="https://yourproduct.com"
-              className="w-full rounded-lg border border-[#D9D5C8] bg-white px-4 py-3 text-sm text-[#0E1411] placeholder:text-[#6B766F] focus:outline-none focus:border-[#0F6E56] focus:ring-1 focus:ring-[#0F6E56] transition-colors"
+              className={`w-full rounded-lg bg-white px-4 py-3 text-sm text-[#0E1411] placeholder:text-[#6B766F] focus:outline-none focus:ring-1 transition-colors ${
+                errors.url
+                  ? "border-2 border-[#993C1D] focus:border-[#993C1D] focus:ring-[#993C1D]"
+                  : "border border-[#D9D5C8] focus:border-[#0F6E56] focus:ring-[#0F6E56]"
+              }`}
             />
-            <p className="text-xs text-[#6B766F] mt-1.5">
-              We&apos;ll read your site to cross-check your description — helps catch features you might have missed.
-            </p>
+            {errors.url ? (
+              <p
+                data-field-error="url"
+                className="text-sm text-[#993C1D] mt-1.5 flex items-start gap-1"
+              >
+                <span aria-hidden>⚠</span>
+                <span>{errors.url}</span>
+              </p>
+            ) : (
+              <p className="text-xs text-[#6B766F] mt-1.5">
+                We&apos;ll read your site to cross-check your description — helps catch features you might have missed.
+              </p>
+            )}
           </div>
 
           {submitError && (
@@ -757,7 +932,7 @@ function Step2({
             </button>
             <button
               type="submit"
-              disabled={submitting || !canSubmit}
+              disabled={submitting}
               className="flex-1 bg-[#0F6E56] text-white font-medium text-[15px] px-6 py-3.5 rounded-full hover:bg-[#0d5c48] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               {submitting ? (
@@ -784,8 +959,10 @@ function Field({
   type = "text",
   value,
   onChange,
+  onBlur,
   placeholder,
   helper,
+  error,
 }: {
   id: string;
   label: string;
@@ -794,8 +971,10 @@ function Field({
   type?: string;
   value: string;
   onChange: (v: string) => void;
+  onBlur?: () => void;
   placeholder?: string;
   helper?: string;
+  error?: string;
 }) {
   return (
     <div>
@@ -811,11 +990,25 @@ function Field({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
         placeholder={placeholder}
-        required={required}
-        className="w-full rounded-lg border border-[#D9D5C8] bg-white px-4 py-3 text-sm text-[#0E1411] placeholder:text-[#6B766F] focus:outline-none focus:border-[#0F6E56] focus:ring-1 focus:ring-[#0F6E56] transition-colors"
+        className={`w-full rounded-lg bg-white px-4 py-3 text-sm text-[#0E1411] placeholder:text-[#6B766F] focus:outline-none focus:ring-1 transition-colors ${
+          error
+            ? "border-2 border-[#993C1D] focus:border-[#993C1D] focus:ring-[#993C1D]"
+            : "border border-[#D9D5C8] focus:border-[#0F6E56] focus:ring-[#0F6E56]"
+        }`}
       />
-      {helper && <p className="text-xs text-[#6B766F] mt-1.5">{helper}</p>}
+      {error ? (
+        <p
+          data-field-error={id}
+          className="text-sm text-[#993C1D] mt-1.5 flex items-start gap-1"
+        >
+          <span aria-hidden>⚠</span>
+          <span>{error}</span>
+        </p>
+      ) : (
+        helper && <p className="text-xs text-[#6B766F] mt-1.5">{helper}</p>
+      )}
     </div>
   );
 }

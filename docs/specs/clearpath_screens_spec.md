@@ -152,6 +152,16 @@ All screens:
 
 **Components:** Form card, textarea with char counter, URL input with protocol helper, email input, checkbox, primary button, DPDP notice.
 
+**Field error states (v4 Patch 6):**
+- **default**: neutral border (`#D9D5C8`), white bg
+- **focus**: teal border (`#0F6E56`), white bg, 1px teal ring
+- **error**: coral border (`#993C1D`), 2px wide; coral focus ring; white bg
+- **error text** renders directly below the input: `text-sm text-[#993C1D]` with a leading `⚠` icon. On keystroke the matching error clears (don't keep it shown while the user types a correction).
+
+Validation runs on blur (first blur onwards) and on submit (all fields at once). On submit with errors: the first erroring field in page order is focused + scrolled into view; all erroring fields show their coral state simultaneously. If the first error lives in step 1 (name / email / mobile), the form returns to step 1 before scrolling.
+
+Error messages (copy): see `clearpath_copy_scope.md` §2.3.
+
 **Copy guidance:**
 - Keep form copy conversational. Avoid "Please provide..." — use "What does your product do?"
 - Placeholder text should read like an example, not instructions.

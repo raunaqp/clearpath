@@ -882,8 +882,170 @@ async function testPrefetchOnMount() {
   else fail("prefetch assess on Q7", "Q7 prefetch target not /assess/{id}");
 }
 
+type IntakeFields = {
+  name?: string;
+  email?: string;
+  mobile?: string;
+  one_liner?: string;
+  url?: string;
+};
+
+async function submitIntake(fields: IntakeFields): Promise<{
+  status: number;
+  body: Record<string, unknown>;
+}> {
+  const body = {
+    name: "Patch 6 verify",
+    email: "patch6@clearpath.test",
+    one_liner:
+      "AI-powered medical scribe that transcribes doctor-patient consultations",
+    ...fields,
+  };
+  const res = await fetch(`${BASE}/api/intake`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const out = (await res.json()) as Record<string, unknown>;
+  return { status: res.status, body: out };
+}
+
+async function testEmptyNameSubmit() {
+  console.log("\n[30] Empty name on submit → 422 with name error");
+  const r = await submitIntake({ name: "   " });
+  if (r.status === 422 && /name/i.test(String(r.body.error ?? ""))) {
+    pass("empty name blocked", `status=422 error="${r.body.error}"`);
+  } else {
+    fail("empty name blocked", `status=${r.status} error=${String(r.body.error)}`);
+  }
+  if (r.body.assessmentId) {
+    await supabase
+      .from("assessments")
+      .delete()
+      .eq("id", String(r.body.assessmentId));
+  }
+}
+
+async function testInvalidEmailSubmit() {
+  console.log("\n[31] Invalid email on submit → 422 with email error");
+  const r = await submitIntake({ email: "abc" });
+  const err = String(r.body.error ?? "");
+  if (r.status === 422 && /email|valid email/i.test(err)) {
+    pass("invalid email blocked", `status=422 error="${err}"`);
+  } else {
+    fail("invalid email blocked", `status=${r.status} error=${err}`);
+  }
+}
+
+async function testKeystrokeClearsError() {
+  console.log("\n[32] Keystroke clears field error (source inspection)");
+  const src = fs.readFileSync(path.resolve("app/start/page.tsx"), "utf8");
+  const hasClearError = /clearError\(\s*"name"\s*\)|clearError\(field\)/.test(
+    src
+  );
+  // setters wired with clearError: setName={(v) => { setName(v); clearError("name"); }}
+  const setterWrapsClear = /setName=\{\s*\(v\)\s*=>\s*\{[\s\S]{0,120}clearError\(\s*"name"/.test(
+    src
+  );
+  if (hasClearError && setterWrapsClear) {
+    pass(
+      "onChange clears error",
+      "setters call clearError() on keystroke; error gone before next blur"
+    );
+  } else {
+    fail(
+      "keystroke clears error",
+      `hasClearError=${hasClearError} setterWrapsClear=${setterWrapsClear}`
+    );
+  }
+}
+
+async function testMobile9Digits() {
+  console.log("\n[33] Mobile with 9 digits → error");
+  const r = await submitIntake({ mobile: "123456789" });
+  const err = String(r.body.error ?? "");
+  if (r.status === 422 && /10.digit mobile/i.test(err)) {
+    pass("9-digit mobile blocked", `error="${err}"`);
+  } else {
+    fail("9-digit mobile blocked", `status=${r.status} error=${err}`);
+  }
+}
+
+async function testMobile10Digits() {
+  console.log("\n[34] Mobile with 10 digits → accepted");
+  const r = await submitIntake({ mobile: "9876543210" });
+  if (r.status === 201 && typeof r.body.assessmentId === "string") {
+    pass("10-digit mobile accepted", `id=${String(r.body.assessmentId)}`);
+    await supabase
+      .from("assessments")
+      .delete()
+      .eq("id", String(r.body.assessmentId));
+  } else {
+    fail("10-digit mobile accepted", `status=${r.status} body=${JSON.stringify(r.body)}`);
+  }
+}
+
+async function testMobileEmpty() {
+  console.log("\n[35] Mobile empty (optional) → accepted");
+  const r = await submitIntake({ mobile: "" });
+  if (r.status === 201 && typeof r.body.assessmentId === "string") {
+    pass("empty mobile accepted", "optional field tolerates empty");
+    await supabase
+      .from("assessments")
+      .delete()
+      .eq("id", String(r.body.assessmentId));
+  } else {
+    fail("empty mobile accepted", `status=${r.status} body=${JSON.stringify(r.body)}`);
+  }
+}
+
+async function testOneLinerUnder20() {
+  console.log("\n[36] One-liner under 20 chars → error 'add more detail'");
+  const r = await submitIntake({ one_liner: "short thing" });
+  const err = String(r.body.error ?? "");
+  if (r.status === 422 && /more detail|at least 20/i.test(err)) {
+    pass("short one-liner blocked", `error="${err}"`);
+  } else {
+    fail("short one-liner blocked", `status=${r.status} error=${err}`);
+  }
+}
+
+async function testOneLinerStartsWithEG() {
+  console.log('[37] One-liner starting with "E.g." → placeholder error');
+  const r = await submitIntake({
+    one_liner:
+      'E.g. "AI tool that flags early Alzheimer\'s from MRI scans for radiologists"',
+  });
+  const err = String(r.body.error ?? "");
+  if (r.status === 422 && /replace the example text/i.test(err)) {
+    pass("E.g. prefix blocked", `error="${err}"`);
+  } else {
+    fail("E.g. prefix blocked", `status=${r.status} error=${err}`);
+  }
+}
+
+async function testAllValidFields() {
+  console.log("\n[38] All valid fields → 201");
+  const r = await submitIntake({
+    name: "Valid User",
+    email: "valid@clearpath.test",
+    mobile: "9876543210",
+    one_liner:
+      "AI-powered scribe that transcribes doctor-patient consultations and integrates with EMRs",
+  });
+  if (r.status === 201 && typeof r.body.assessmentId === "string") {
+    pass("all valid → 201", `id=${String(r.body.assessmentId)}`);
+    await supabase
+      .from("assessments")
+      .delete()
+      .eq("id", String(r.body.assessmentId));
+  } else {
+    fail("all valid → 201", `status=${r.status} body=${JSON.stringify(r.body)}`);
+  }
+}
+
 async function main() {
-  console.log("Feature 4 — wizard + conflict disclosure (19 checks)");
+  console.log("Feature 4 — wizard + intake validation (28 checks)");
   console.log("=".repeat(70));
   await testNoConflict();
   await testLowSeverity();
@@ -908,6 +1070,15 @@ async function main() {
   await testQ7AwaitedSubmit();
   await testQ7AutoSkipAwaited();
   await testPrefetchOnMount();
+  await testEmptyNameSubmit();
+  await testInvalidEmailSubmit();
+  await testKeystrokeClearsError();
+  await testMobile9Digits();
+  await testMobile10Digits();
+  await testMobileEmpty();
+  await testOneLinerUnder20();
+  await testOneLinerStartsWithEG();
+  await testAllValidFields();
 
   console.log("\n" + "=".repeat(70));
   const passed = results.filter((r) => r.pass).length;

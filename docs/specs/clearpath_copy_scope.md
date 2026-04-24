@@ -651,48 +651,62 @@ Progress: Uploading {filename}... {pct}%
 Success: ✓ {filename} uploaded ({pages} pages)
 ```
 
-## 2.3 Other form fields
+## 2.3 Other form fields (v4 Patch 6 — validate on blur + on submit)
 
-**Name:**
+Validation runs on blur (once the user has interacted with a field) and on submit (all fields regardless). On blur the error shows directly below the input with a ⚠ icon and coral-bordered input. On keystroke, the matching error clears. On submit with any errors, the page scrolls to the first erroring field and all erroring fields show their state simultaneously.
+
+**Name (required):**
 ```
 Label: Your name
-Placeholder: —
-Error (empty): Please tell us your name
+Placeholder: Dr. Priya Sharma
+Error (empty): Please enter your name
 ```
 
-**Email:**
+**Email (required):**
 ```
 Label: Your email
 Placeholder: founder@yourcompany.com
-Helper: We'll email your Readiness Card link within 5 minutes.
-Error (empty): We need an email to send your card
-Error (invalid): This doesn't look like a valid email
+Helper: We'll send your Readiness Card here. No spam.
+Error (empty): Please enter your email
+Error (invalid format): Please enter a valid email, e.g. abc@xyz.com
 ```
 
 **Mobile (optional):**
 ```
-Label: Mobile number (optional)
+Label: Mobile (optional)
 Placeholder: +91 98765 43210
-Helper: Only if you'd like WhatsApp updates — we won't call you
+Validation (when filled): exactly 10 digits (a leading +91 prefix is
+  tolerated for display — stripped before the length check).
+Error (wrong length): Please enter a 10-digit mobile number
 ```
 
-**One-liner:**
+**One-liner (required, 20–300 chars, no placeholder leak):**
 ```
 Label: What does your product do?
-Placeholder: E.g. "AI tool that flags early-stage Alzheimer's from MRI scans for radiologists"
-Helper: One sentence. What the product does, for whom, using what approach.
-Character counter: {n} / 200 chars
-Error (empty): Tell us what your product does in one sentence
-Error (too short): A bit more detail helps — aim for 20+ characters
-Error (too long): Keep it to 200 characters or less
+Placeholder: Describe your product in one sentence…
+Helper (above the box): One sentence. What the product does, for
+  whom, using what approach.
+  E.g. "AI tool that flags early Alzheimer's from MRI scans for
+  radiologists"
+Counter: {n} / 300 chars
+Error (empty): Please describe what your product does
+Error (too short): Please add more detail (at least 20 characters)
+Error (too long): Keep it to 300 characters or under.
+Error (starts with "E.g."): Please replace the example text with
+  your own product description
 ```
+
+The last error blocks the placeholder example text from being
+submitted verbatim (either pasted in by accident or used as a quick
+test value).
 
 **Website (optional):**
 ```
 Label: Product website (optional)
-Placeholder: https://
-Helper: We'll fetch your homepage to cross-check your description
-Error (invalid): That doesn't look like a valid URL
+Placeholder: https://yourproduct.com
+Helper: We'll read your site to cross-check your description —
+  helps catch features you might have missed.
+Error (invalid): Enter a valid URL starting with http:// or https://
 ```
 
 **Recommendation line (above submit):**

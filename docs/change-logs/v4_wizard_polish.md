@@ -246,7 +246,10 @@ Unchanged (existing expanded helper is correct).
 
 ---
 
-## Patch 6 — Field error styling
+## Patch 6 — Field error styling **[APPLIED]**
+
+> Shipped alongside Bug A. Per-field validators live in `lib/intake/validation.ts`; the /start page now shows coral error styling with inline ⚠ text below each field, validates on blur + on submit, scrolls to the first erroring field, and blocks the `E.g.` placeholder prefix both client-side and server-side. See also §2.3 of the copy scope for the updated error messages.
+
 
 ### Affects: `docs/specs/clearpath_screens_spec.md` Screen 2
 
