@@ -1,53 +1,75 @@
 -- Run this in Supabase Dashboard → SQL Editor
+-- Aligned with clearpath_build_plan v3 §2c. Safe to run on an empty DB —
+-- drops prior tables so naming/keys match the plan exactly.
 
-create table if not exists assessments (
-  id                uuid primary key default gen_random_uuid(),
-  created_at        timestamptz default now(),
-  company_name      text,
-  product_name      text,
-  one_liner         text not null,
-  url               text,
-  email             text not null,
-  newsletter_opt_in boolean default false,
-  status            text default 'draft',      -- draft | processing | completed | abandoned
-  product_type      text,                       -- product | platform | hardware_software | regulator | investor
-  scoped_feature    text,
-  wizard_answers    jsonb,
-  readiness_card    jsonb,
-  share_token       text unique
-);
+drop table if exists tier3_waitlist cascade;
+drop table if exists tier1_draft_packs cascade;
+drop table if exists tier2_draft_packs cascade;
+drop table if exists orders cascade;
+drop table if exists assessments cascade;
 
-create table if not exists orders (
+create table assessments (
   id                    uuid primary key default gen_random_uuid(),
   created_at            timestamptz default now(),
+  updated_at            timestamptz default now(),
+  name                  text not null,
+  email                 text not null,
+  mobile                text,
+  one_liner             text not null,
+  url                   text,
+  url_fetched_content   text,
+  uploaded_docs         jsonb,                      -- [{filename, storage_path, size_bytes, sha256}]
+  product_type          text,                       -- product | platform | hardware_software | export_only | regulator | investor
+  wizard_answers        jsonb,
+  readiness_card        jsonb,
+  share_token           text unique,
+  cache_key             text,
+  cache_version         int default 1,
+  status                text default 'draft',       -- draft | routing | wizard | completed | rejected | abandoned
+  meta                  jsonb
+);
+
+create index idx_assessments_cache_key    on assessments(cache_key);
+create index idx_assessments_email        on assessments(email);
+create index idx_assessments_share_token  on assessments(share_token);
+
+create table orders (
+  id                    uuid primary key default gen_random_uuid(),
   assessment_id         uuid references assessments(id),
-  tier                  text,                   -- tier_1_draft | tier_3_concierge
+  tier                  text not null,              -- tier_2_draft_pack | tier_3_concierge
   razorpay_payment_id   text,
-  status                text default 'pending', -- pending | paid | delivered | refunded
-  amount_paid           numeric
+  status                text not null default 'pending', -- pending | paid | generating | delivered | failed | refunded
+  amount_paid           numeric,
+  created_at            timestamptz default now(),
+  delivered_at          timestamptz
 );
 
-create table if not exists tier1_draft_packs (
-  id            uuid primary key default gen_random_uuid(),
-  created_at    timestamptz default now(),
-  order_id      uuid references orders(id),
-  draft_pack    jsonb,
-  pdf_url       text,
-  delivered_at  timestamptz
+create table tier2_draft_packs (
+  id                    uuid primary key default gen_random_uuid(),
+  order_id              uuid references orders(id),
+  assessment_id         uuid references assessments(id),
+  draft_pack_json       jsonb,
+  pdf_url               text,
+  forms_zip_url         text,
+  guide_pdf_url         text,
+  delivered_at          timestamptz
 );
 
-create table if not exists tier3_waitlist (
-  id                      uuid primary key default gen_random_uuid(),
-  created_at              timestamptz default now(),
-  assessment_id           uuid references assessments(id),
-  email                   text not null,
-  target_submission_date  date,
-  notes                   text,
-  status                  text default 'waitlist' -- waitlist | contacted | active | completed
+create table tier3_waitlist (
+  id                    uuid primary key default gen_random_uuid(),
+  assessment_id         uuid references assessments(id),
+  name                  text not null,
+  email                 text not null,
+  product_name          text,
+  cdsco_app_number      text,
+  target_date           date,
+  context               text,
+  status                text default 'waitlist',    -- waitlist | contacted | active | completed
+  created_at            timestamptz default now()
 );
 
--- Enable RLS (Row Level Security) — service role bypasses this anyway
-alter table assessments enable row level security;
-alter table orders enable row level security;
-alter table tier1_draft_packs enable row level security;
-alter table tier3_waitlist enable row level security;
+-- Enable RLS (service role bypasses this)
+alter table assessments        enable row level security;
+alter table orders             enable row level security;
+alter table tier2_draft_packs  enable row level security;
+alter table tier3_waitlist     enable row level security;

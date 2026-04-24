@@ -3,6 +3,15 @@ import { z } from "zod";
 import { getServiceClient } from "@/lib/supabase";
 
 const schema = z.object({
+  name: z.string().trim().min(1, "Please tell us your name."),
+  email: z.string().email("Enter a valid email address."),
+  mobile: z
+    .string()
+    .trim()
+    .optional()
+    .refine((v) => !v || /^\+?\d[\d\s-]{7,14}$/.test(v), {
+      message: "Enter a valid mobile number.",
+    }),
   one_liner: z
     .string()
     .min(20, "Please tell us a bit more — at least 20 characters.")
@@ -13,8 +22,6 @@ const schema = z.object({
     .refine((v) => !v || v === "" || /^https?:\/\/.+\..+/.test(v), {
       message: "Enter a valid URL starting with http:// or https://",
     }),
-  email: z.string().email("Enter a valid email address."),
-  newsletter_opt_in: z.boolean().optional().default(false),
 });
 
 export async function POST(req: NextRequest) {
@@ -31,16 +38,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: first.message }, { status: 422 });
   }
 
-  const { one_liner, url, email, newsletter_opt_in } = parsed.data;
+  const { name, email, mobile, one_liner, url } = parsed.data;
 
   const supabase = getServiceClient();
   const { data, error } = await supabase
     .from("assessments")
     .insert({
+      name,
+      email,
+      mobile: mobile || null,
       one_liner,
       url: url || null,
-      email,
-      newsletter_opt_in,
       status: "draft",
     })
     .select("id")

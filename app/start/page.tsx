@@ -1,20 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import posthog from "posthog-js";
 
 export default function StartPage() {
   const router = useRouter();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [mobile, setMobile] = useState("");
   const [oneLiner, setOneLiner] = useState("");
   const [url, setUrl] = useState("");
-  const [email, setEmail] = useState("");
-  const [newsletter, setNewsletter] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const tooShort = oneLiner.length > 0 && oneLiner.length < 20;
+
+  useEffect(() => {
+    try {
+      posthog.capture("intake_form_started");
+    } catch {}
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -22,17 +29,22 @@ export default function StartPage() {
     setLoading(true);
 
     try {
-      posthog.capture("intake_submitted", { has_url: !!url, newsletter });
+      posthog.capture("intake_form_submitted", {
+        has_url: !!url,
+        docs_uploaded_count: 0,
+        one_liner_length: oneLiner.length,
+      });
     } catch {}
 
     const res = await fetch("/api/intake", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        name,
+        email,
+        mobile: mobile || undefined,
         one_liner: oneLiner,
         url: url || undefined,
-        email,
-        newsletter_opt_in: newsletter,
       }),
     });
 
@@ -73,6 +85,68 @@ export default function StartPage() {
 
           <form onSubmit={handleSubmit} noValidate>
             <div className="bg-[#FDFCF8] border border-[#D9D5C8] rounded-xl p-6 md:p-8 space-y-6">
+
+              {/* Name */}
+              <div>
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-[#0E1411] mb-1.5"
+                >
+                  Your name
+                  <span className="text-[#993C1D] ml-0.5">*</span>
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Dr. Priya Sharma"
+                  className="w-full rounded-lg border border-[#D9D5C8] bg-white px-4 py-3 text-sm text-[#0E1411] placeholder:text-[#6B766F] focus:outline-none focus:border-[#0F6E56] focus:ring-1 focus:ring-[#0F6E56] transition-colors"
+                  required
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-[#0E1411] mb-1.5"
+                >
+                  Your email
+                  <span className="text-[#993C1D] ml-0.5">*</span>
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="founder@yourcompany.com"
+                  className="w-full rounded-lg border border-[#D9D5C8] bg-white px-4 py-3 text-sm text-[#0E1411] placeholder:text-[#6B766F] focus:outline-none focus:border-[#0F6E56] focus:ring-1 focus:ring-[#0F6E56] transition-colors"
+                  required
+                />
+                <p className="text-xs text-[#6B766F] mt-1.5">
+                  We&apos;ll send your Readiness Card here. No spam.
+                </p>
+              </div>
+
+              {/* Mobile */}
+              <div>
+                <label
+                  htmlFor="mobile"
+                  className="block text-sm font-medium text-[#0E1411] mb-1.5"
+                >
+                  Mobile{" "}
+                  <span className="text-[#6B766F] font-normal">(optional)</span>
+                </label>
+                <input
+                  id="mobile"
+                  type="tel"
+                  value={mobile}
+                  onChange={(e) => setMobile(e.target.value)}
+                  placeholder="+91 98765 43210"
+                  className="w-full rounded-lg border border-[#D9D5C8] bg-white px-4 py-3 text-sm text-[#0E1411] placeholder:text-[#6B766F] focus:outline-none focus:border-[#0F6E56] focus:ring-1 focus:ring-[#0F6E56] transition-colors"
+                />
+              </div>
 
               {/* One-liner */}
               <div>
@@ -133,42 +207,6 @@ export default function StartPage() {
                 </p>
               </div>
 
-              {/* Email */}
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-[#0E1411] mb-1.5"
-                >
-                  Your email
-                  <span className="text-[#993C1D] ml-0.5">*</span>
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="founder@yourcompany.com"
-                  className="w-full rounded-lg border border-[#D9D5C8] bg-white px-4 py-3 text-sm text-[#0E1411] placeholder:text-[#6B766F] focus:outline-none focus:border-[#0F6E56] focus:ring-1 focus:ring-[#0F6E56] transition-colors"
-                  required
-                />
-                <p className="text-xs text-[#6B766F] mt-1.5">
-                  We&apos;ll send your Readiness Card here. No spam.
-                </p>
-              </div>
-
-              {/* Newsletter */}
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={newsletter}
-                  onChange={(e) => setNewsletter(e.target.checked)}
-                  className="mt-0.5 rounded border-[#D9D5C8] accent-[#0F6E56]"
-                />
-                <span className="text-sm text-[#6B766F] leading-relaxed">
-                  Send me weekly updates on Indian digital health regulation — no fluff, just what changed.
-                </span>
-              </label>
-
               {/* Error */}
               {error && (
                 <p className="text-sm text-[#993C1D] bg-[#FAECE7] border border-[#f0c4b6] rounded-lg px-4 py-3">
@@ -179,7 +217,7 @@ export default function StartPage() {
               {/* Submit */}
               <button
                 type="submit"
-                disabled={loading || oneLiner.length < 20 || !email}
+                disabled={loading || oneLiner.length < 20 || !email || !name.trim()}
                 className="w-full bg-[#0F6E56] text-white font-medium text-[15px] px-6 py-3.5 rounded-full hover:bg-[#0d5c48] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >
                 {loading ? (
