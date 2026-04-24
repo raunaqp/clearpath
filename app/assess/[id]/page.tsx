@@ -5,6 +5,8 @@ import { runPreRouter, type PreRouterPdf } from "@/lib/engine/pre-router";
 import { fetchUrl } from "@/lib/engine/fetch-url";
 import { downloadPdfAsBase64 } from "@/lib/engine/download-pdf";
 import { checkPdfCache, savePdfSummary } from "@/lib/engine/pdf-cache";
+import type { WizardAnswers } from "@/lib/wizard/types";
+import { totalSteps } from "@/lib/wizard/questions";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +25,20 @@ type AssessmentRow = {
   status: string;
   share_token: string | null;
   product_type: string | null;
+  wizard_answers: WizardAnswers | null;
 };
+
+function firstUnansweredStep(answers: WizardAnswers | null): number {
+  const a = answers ?? {};
+  const total = totalSteps();
+  for (let i = 1; i <= total; i++) {
+    const key = `q${i}` as keyof WizardAnswers;
+    const v = a[key];
+    if (v === undefined || v === null) return i;
+    if (Array.isArray(v) && v.length === 0) return i;
+  }
+  return 1;
+}
 
 export default async function AssessPage({
   params,
@@ -35,7 +50,9 @@ export default async function AssessPage({
 
   const { data: assessment, error } = await supabase
     .from("assessments")
-    .select("id, one_liner, url, uploaded_docs, status, share_token, product_type")
+    .select(
+      "id, one_liner, url, uploaded_docs, status, share_token, product_type, wizard_answers"
+    )
     .eq("id", id)
     .maybeSingle<AssessmentRow>();
 
@@ -51,14 +68,24 @@ export default async function AssessPage({
     redirect(`/declined/${id}`);
   }
 
-  // First time through: run the pre-router
+  // First time through: run the pre-router. Then fall through to wizard redirect.
   if (assessment.status === "draft") {
     const outcome = await runPreRouterFlow(assessment);
     if (outcome === "rejected") redirect(`/declined/${id}`);
-    // else fall through to routing_complete render below
+    // else: status is now routing_complete; fall through.
   }
 
-  // routing_complete — feature 5 not built yet, show a holding card
+  // routing_complete / wizard → jump into the wizard at the first unanswered question.
+  if (
+    assessment.status === "routing_complete" ||
+    assessment.status === "wizard" ||
+    assessment.status === "draft" // just processed
+  ) {
+    const step = firstUnansweredStep(assessment.wizard_answers);
+    redirect(`/wizard/${id}/q/${step}`);
+  }
+
+  // wizard_complete — feature 5 not built yet, show a holding card.
   return <EngineComingPanel productType={assessment.product_type} />;
 }
 
