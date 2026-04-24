@@ -187,7 +187,7 @@ async function runPdfUploadPath() {
   const putRes = await fetch(signedUrl, {
     method: "PUT",
     headers: { "Content-Type": "application/pdf" },
-    body: pdfBuf,
+    body: new Uint8Array(pdfBuf.buffer, pdfBuf.byteOffset, pdfBuf.byteLength),
   });
   if (!putRes.ok) {
     fail("pdf upload", `PUT status=${putRes.status}`);
