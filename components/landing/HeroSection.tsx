@@ -48,11 +48,12 @@ export default function HeroSection() {
           </span>
         </h1>
 
-        {/* Subhead */}
+        {/* Subhead — Change 2: explicit regulation naming */}
         <p className="text-[18px] text-[#6B766F] max-w-2xl leading-relaxed mb-10">
-          ClearPath tells founders in 5 minutes what a regulatory consultant
-          would take 3 months and ₹3 lakh to tell them — whether their product
-          needs CDSCO approval, and what the fastest path looks like.
+          CDSCO&apos;s Medical Device Rules 2017 and the Oct 2025 SaMD draft changed
+          what counts as a medical device. ClearPath tells you in 5 minutes
+          whether your product is in scope — and what the fastest path to
+          compliance looks like.
         </p>
 
         {/* CTA */}
@@ -65,12 +66,17 @@ export default function HeroSection() {
             Get your readiness card — free
           </Link>
           <span className="text-sm text-[#6B766F]">
-            5 minutes. No sign-up. Screenshot-worthy verdict.
+            5 minutes. No sign-up required. Share-ready verdict.
           </span>
         </div>
 
+        {/* Expert trust strip — Change 1 */}
+        <p className="text-[11px] text-[#6B766F] font-mono tracking-[0.12em] uppercase mt-5">
+          Backed by experts from ABDM · Regulatory Officials · Indian healthtech founders
+        </p>
+
         {/* Trust strip */}
-        <p className="text-[12px] text-[#6B766F] font-mono tracking-wide mt-6">
+        <p className="text-[12px] text-[#6B766F] font-mono tracking-wide mt-2">
           Built on real CDSCO submissions · Aligned to the Oct 2025 SaMD draft
           · Tested on 15+ Indian healthtech products
         </p>

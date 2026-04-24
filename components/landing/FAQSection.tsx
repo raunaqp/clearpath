@@ -34,6 +34,11 @@ const faqs = [
       "Your submission is used only to generate your Readiness Card and Draft Pack. Uploaded files are stored encrypted and deleted after 90 days. We never share your data. ClearPath is built to DPDP Act 2023 standards.",
   },
   {
+    question: "Will my uploaded documents stay private?",
+    answer:
+      "Yes. Any PDFs you upload during intake are stored encrypted in Supabase, accessible only via signed URLs, and deleted after 90 days. We never share uploaded documents with third parties or other customers. See our Privacy Policy for details.",
+  },
+  {
     question: "Do you file the application for me?",
     answer:
       "No. ClearPath generates submission-ready content. You or your consultant file it with CDSCO. The ₹50K Concierge tier includes expert review and guidance, but the founder or their team remains the applicant.",

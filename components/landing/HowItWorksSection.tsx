@@ -4,36 +4,6 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import posthog from "posthog-js";
 
-const CHECK = (
-  <svg
-    className="w-4 h-4 flex-shrink-0 text-[#0F6E56]"
-    viewBox="0 0 16 16"
-    fill="none"
-    aria-hidden="true"
-  >
-    <path
-      d="M3 8l3.5 3.5L13 4.5"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-
-function BulletList({ items }: { items: string[] }) {
-  return (
-    <ul className="space-y-2 mt-4">
-      {items.map((item) => (
-        <li key={item} className="flex items-start gap-2 text-sm text-[#0E1411]">
-          {CHECK}
-          <span>{item}</span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 const steps = [
   {
     label: "Land",
@@ -104,85 +74,6 @@ export default function HowItWorksSection() {
           <p className="mt-2 text-[#6B766F] text-base md:text-lg">
             Three stages. Each one earns the next.
           </p>
-        </div>
-
-        {/* Three tier cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Card 1 — Free */}
-          <div className="rounded-xl border border-[#0F6E56] bg-[#E1F5EE] p-6 flex flex-col">
-            <span className="font-mono text-xs tracking-widest uppercase text-[#0F6E56] mb-3">
-              Stage 1 · Free
-            </span>
-            <h3 className="font-serif text-2xl text-[#0E1411]">
-              Readiness Card
-            </h3>
-            <p className="italic text-[#6B766F] text-sm mt-1">
-              5-minute clarity
-            </p>
-            <BulletList
-              items={[
-                "Risk · High / Medium / Low",
-                "Readiness score · /10",
-                "Likely CDSCO class (if applicable)",
-                "Top 3 gaps to fix first",
-                "Time-to-approval estimate",
-              ]}
-            />
-            <p className="mt-auto pt-5 italic text-sm text-[#0F6E56]">
-              Shareable. Screenshot-worthy. Honest about uncertainty.
-            </p>
-          </div>
-
-          {/* Card 2 — ₹499 */}
-          <div className="rounded-xl border border-[#BA7517] bg-[#FAEEDA] p-6 flex flex-col">
-            <span className="font-mono text-xs tracking-widest uppercase text-[#BA7517] mb-3">
-              Stage 2 · ₹499
-            </span>
-            <h3 className="font-serif text-2xl text-[#0E1411]">
-              Regulatory Draft Pack
-            </h3>
-            <p className="italic text-[#6B766F] text-sm mt-1">
-              Delivered in ~10 minutes
-            </p>
-            <BulletList
-              items={[
-                "Structured application draft",
-                "Section-wise content (intended use, risk, clinical context)",
-                "Checklist mapped to CDSCO submission structure",
-                "Relevant CDSCO forms (MD-12, MD-9 etc.)",
-                "Pathway + realistic timeline",
-              ]}
-            />
-            <p className="mt-auto pt-5 italic text-sm text-[#633806]">
-              Not auto-filled official forms. Content your consultant or
-              regulator can work with.
-            </p>
-          </div>
-
-          {/* Card 3 — ₹50K */}
-          <div className="rounded-xl border border-[#993C1D] bg-[#FAECE7] p-6 flex flex-col">
-            <span className="font-mono text-xs tracking-widest uppercase text-[#993C1D] mb-3">
-              Stage 3 · ₹50,000
-            </span>
-            <h3 className="font-serif text-2xl text-[#0E1411]">
-              Submission Concierge
-            </h3>
-            <p className="italic text-[#6B766F] text-sm mt-1">
-              Expert-reviewed · 2–3 weeks
-            </p>
-            <BulletList
-              items={[
-                "Document refinement by Indian regulatory experts",
-                "Classification validation",
-                "QMS checklist guidance (ISO 13485, IEC 62304)",
-                "Clinical validation plan",
-                "Submission support · 1 iteration",
-              ]}
-            />
-            <p className="mt-auto pt-5 italic text-sm text-[#993C1D]">
-              Join the waitlist for the launch cohort.
-            </p>
-          </div>
         </div>
 
         {/* Horizontal stepper */}

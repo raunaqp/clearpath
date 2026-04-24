@@ -7,7 +7,7 @@ const moats = [
   {
     title: "Trained on 15+ real products, validated with experts",
     description:
-      "Calibrated on 15 real Indian healthtechs — CerviAI filings, EkaScribe, Neodocs, Niramai, Forus, plus Karnataka Medtech Cluster network review.",
+      "Calibrated on 15 real Indian healthtechs — CerviAI filings, EkaScribe, Neodocs, Niramai, Forus Health. Reviewed with ABDM architects and founders who have filed CDSCO applications.",
   },
   {
     title: "Founder-first UX",
@@ -27,7 +27,7 @@ const moats = [
   {
     title: "Expert-in-loop concierge",
     description:
-      "Stage 3 leverages Indian regulatory experts. Software can't fully replace human review at ₹50K value. The network is the defensibility.",
+      "Stage 3 leverages 20–30 Indian regulatory experts. Software doesn't replace human judgement at ₹50K value. The network is the defensibility.",
   },
 ];
 
