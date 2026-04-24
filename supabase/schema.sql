@@ -5,6 +5,7 @@
 drop table if exists tier3_waitlist cascade;
 drop table if exists tier1_draft_packs cascade;
 drop table if exists tier2_draft_packs cascade;
+drop table if exists pdf_content_cache cascade;
 drop table if exists orders cascade;
 drop table if exists assessments cascade;
 
@@ -68,8 +69,18 @@ create table tier3_waitlist (
   created_at            timestamptz default now()
 );
 
+create table pdf_content_cache (
+  pdf_sha256        text primary key,
+  extracted_summary text not null,
+  token_count       int,
+  created_at        timestamptz default now(),
+  last_used_at      timestamptz default now(),
+  hit_count         int default 1
+);
+
 -- Enable RLS (service role bypasses this)
 alter table assessments        enable row level security;
 alter table orders             enable row level security;
 alter table tier2_draft_packs  enable row level security;
 alter table tier3_waitlist     enable row level security;
+alter table pdf_content_cache  enable row level security;

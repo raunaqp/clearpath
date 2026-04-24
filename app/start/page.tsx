@@ -459,9 +459,12 @@ function Step2({
               <span className="text-[#993C1D] ml-0.5">*</span>
             </label>
             <div className="flex items-start justify-between gap-3 mb-2">
-              <p className="text-xs text-[#6B766F] leading-relaxed">
-                One sentence. What the product does, for whom, using what approach.
-              </p>
+              <div className="text-xs text-[#6B766F] leading-relaxed space-y-1">
+                <p>One sentence. What the product does, for whom, using what approach.</p>
+                <p className="italic text-[#8a918b]">
+                  E.g. &ldquo;AI tool that flags early Alzheimer&apos;s from MRI scans for radiologists&rdquo;
+                </p>
+              </div>
               <p
                 className={`text-xs shrink-0 tabular-nums ${
                   oneLinerLen > ONE_LINER_MAX - 20 ? "text-[#BA7517]" : "text-[#6B766F]"
@@ -476,7 +479,7 @@ function Step2({
               maxLength={ONE_LINER_MAX}
               value={oneLiner}
               onChange={(e) => setOneLiner(e.target.value)}
-              placeholder='E.g. "AI tool that flags early Alzheimer&apos;s from MRI scans for radiologists"'
+              placeholder="Describe your product in one sentence…"
               className="w-full rounded-lg border border-[#D9D5C8] bg-white px-4 py-3 text-sm text-[#0E1411] placeholder:text-[#6B766F] focus:outline-none focus:border-[#0F6E56] focus:ring-1 focus:ring-[#0F6E56] resize-none transition-colors"
               required
             />
@@ -533,12 +536,24 @@ function Step2({
               />
               <p className="text-sm text-[#0E1411]">
                 {atCap ? (
-                  "Remove a file to add another"
-                ) : (
+                  <span className="text-[#6B766F]">
+                    You&apos;ve added {MAX_FILES} files. Remove one to add another.
+                  </span>
+                ) : docs.length === 0 ? (
                   <>
                     Drop PDFs here or{" "}
                     <span className="underline underline-offset-2 text-[#0F6E56]">
                       click to select
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    Add another —{" "}
+                    <span className="underline underline-offset-2 text-[#0F6E56]">
+                      click to select
+                    </span>{" "}
+                    <span className="text-[#6B766F]">
+                      ({docs.length} of {MAX_FILES} added)
                     </span>
                   </>
                 )}
@@ -555,22 +570,40 @@ function Step2({
                 {docs.map((d) => (
                   <li
                     key={d.id}
-                    className="bg-white border border-[#D9D5C8] rounded-lg px-3 py-2 text-xs"
+                    className={`rounded-lg px-3 py-2 text-xs border ${
+                      d.status === "uploaded"
+                        ? "bg-[#EAF3EF] border-[#0F6E56]/40"
+                        : d.status === "failed"
+                        ? "bg-[#FAECE7] border-[#f0c4b6]"
+                        : "bg-white border-[#D9D5C8]"
+                    }`}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[#0E1411] truncate" title={d.filename}>
-                          {d.filename}
-                        </p>
-                        <p className="text-[#6B766F]">
-                          {fmtSize(d.size_bytes)} · {d.page_count}{" "}
-                          {d.page_count === 1 ? "page" : "pages"}
-                          {d.status === "uploading" && ` · ${Math.round(d.progress)}%`}
-                          {d.status === "uploaded" && " · uploaded"}
-                          {d.status === "failed" && (
-                            <span className="text-[#993C1D]"> · {d.error || "failed"}</span>
-                          )}
-                        </p>
+                      <div className="min-w-0 flex-1 flex items-start gap-2">
+                        {d.status === "uploaded" && (
+                          <span
+                            aria-hidden
+                            className="mt-0.5 shrink-0 w-4 h-4 rounded-full bg-[#0F6E56] text-white text-[10px] leading-[16px] text-center font-bold"
+                          >
+                            ✓
+                          </span>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[#0E1411] truncate" title={d.filename}>
+                            {d.filename}
+                          </p>
+                          <p className="text-[#6B766F]">
+                            {fmtSize(d.size_bytes)} · {d.page_count}{" "}
+                            {d.page_count === 1 ? "page" : "pages"}
+                            {d.status === "uploading" && ` · ${Math.round(d.progress)}%`}
+                            {d.status === "uploaded" && (
+                              <span className="text-[#0F6E56]"> · uploaded</span>
+                            )}
+                            {d.status === "failed" && (
+                              <span className="text-[#993C1D]"> · {d.error || "failed"}</span>
+                            )}
+                          </p>
+                        </div>
                       </div>
                       <button
                         type="button"
