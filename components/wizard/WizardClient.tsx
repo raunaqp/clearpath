@@ -8,6 +8,7 @@ import RadioCard from "./RadioCard";
 import CheckboxCard from "./CheckboxCard";
 import WizardNav from "./WizardNav";
 import Q2FollowupCard from "./Q2FollowupCard";
+import { useToast } from "./WizardToastRoot";
 import { getQuestion, totalSteps } from "@/lib/wizard/questions";
 import type { WizardAnswers, DataSensitivity } from "@/lib/wizard/types";
 
@@ -40,6 +41,7 @@ export default function WizardClient({
   const router = useRouter();
   const total = totalSteps();
   const question = getQuestion(currentStep);
+  const { showToast } = useToast();
 
   const [answer, setAnswer] = useState<string | string[] | undefined>(() => {
     if (!question) return undefined;
@@ -49,8 +51,10 @@ export default function WizardClient({
     return typeof v === "string" ? v : undefined;
   });
   const [skipped] = useState<number[]>(initialSkipped);
+  // `busy` is only used when we MUST block — i.e. the Q2 follow-up
+  // check (which decides the routing target). Optimistic paths never
+  // set busy because they route immediately.
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
   const [q2Phrases, setQ2Phrases] = useState<string[] | null>(null);
   const stepStartedAt = useRef<number>(Date.now());
   const wizardStartedAt = useRef<number>(Date.now());
@@ -83,11 +87,12 @@ export default function WizardClient({
   // when unanswered, so a separate Skip would be a redundant click.
   const showSkip = question ? !question.required && !isLastStep : false;
 
-  const saveAnswer = useCallback(
-    async (
-      step: number,
-      partial: Partial<WizardAnswers>
-    ): Promise<boolean> => {
+  /**
+   * Awaited save — still used by the Q2 follow-up resolver where we
+   * want to write q2_defended / q2='drives' before advancing.
+   */
+  const saveAnswerAwaited = useCallback(
+    async (step: number, partial: Partial<WizardAnswers>): Promise<boolean> => {
       const res = await fetch("/api/wizard/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -102,6 +107,74 @@ export default function WizardClient({
     [assessmentId]
   );
 
+  /**
+   * Fire-and-forget save. The closure captures (step, partial) at call
+   * time so Retry re-fires the ORIGINAL answer, not a stale snapshot of
+   * current wizard state. On failure, a toast appears at the layout
+   * level (survives page navigation).
+   *
+   * Drop-off edge case (documented): if the user closes the tab while a
+   * save is in flight — or after ignoring a failed toast — they resume
+   * at the last SUCCESSFULLY persisted question, one step behind their
+   * visible position. They re-answer one question, flow continues.
+   */
+  const saveAnswerBackground = useCallback(
+    (step: number, partial: Partial<WizardAnswers>) => {
+      const fire = async (): Promise<void> => {
+        const res = await fetch("/api/wizard/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            assessment_id: assessmentId,
+            step,
+            answer: partial,
+          }),
+        });
+        if (!res.ok) throw new Error(`save failed: ${res.status}`);
+      };
+      fire().catch(() => {
+        showToast("Couldn't save your answer. Retry?", fire);
+      });
+    },
+    [assessmentId, showToast]
+  );
+
+  /**
+   * Fire-and-forget wizard completion.
+   */
+  const completeWizardBackground = useCallback(
+    (finalSkipped: number[], wizardStartMs: number) => {
+      const snapshot = finalSkipped.slice();
+      const fire = async (): Promise<void> => {
+        const res = await fetch("/api/wizard/complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            assessment_id: assessmentId,
+            skipped: snapshot,
+          }),
+        });
+        if (!res.ok) throw new Error(`complete failed: ${res.status}`);
+        const answered = ([1, 2, 3, 4, 5, 6, 7] as number[]).filter(
+          (n) => !snapshot.includes(n)
+        ).length;
+        try {
+          posthog.capture("wizard_completed", {
+            product_type: productType,
+            time_total_seconds: Math.round((Date.now() - wizardStartMs) / 1000),
+            answered_count: answered,
+            skipped_count: snapshot.length,
+            conflict_encountered: conflictEncountered,
+          });
+        } catch {}
+      };
+      fire().catch(() => {
+        showToast("Couldn't finalise your submission. Retry?", fire);
+      });
+    },
+    [assessmentId, productType, conflictEncountered, showToast]
+  );
+
   const advanceTo = useCallback(
     (nextStep: number) => {
       router.push(`/wizard/${assessmentId}/q/${nextStep}`);
@@ -109,92 +182,44 @@ export default function WizardClient({
     [assessmentId, router]
   );
 
-  const completeWizard = useCallback(
-    async (
-      finalSkipped: number[],
-      wizardStartMs: number
-    ): Promise<boolean> => {
-      const res = await fetch("/api/wizard/complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          assessment_id: assessmentId,
-          skipped: finalSkipped,
-        }),
-      });
-      if (!res.ok) return false;
-      const answered = ([1, 2, 3, 4, 5, 6, 7] as number[]).filter(
-        (n) => !finalSkipped.includes(n)
-      ).length;
-      try {
-        posthog.capture("wizard_completed", {
-          product_type: productType,
-          time_total_seconds: Math.round((Date.now() - wizardStartMs) / 1000),
-          answered_count: answered,
-          skipped_count: finalSkipped.length,
-          conflict_encountered: conflictEncountered,
-        });
-      } catch {}
-      return true;
-    },
-    [assessmentId, productType, conflictEncountered]
-  );
-
   const handleNext = useCallback(async () => {
-    if (!question || busy) return;
+    if (!question) return;
 
-    // Q7 special: Generate button is always enabled. If the user hasn't
-    // picked an option, treat the click as skip+submit (step 7 added to
-    // wizard_skipped_questions, wizard marked complete).
+    const stepCompletedSeconds = Math.round(
+      (Date.now() - stepStartedAt.current) / 1000
+    );
+
+    // ── Q7 unanswered → auto-skip + complete optimistically.
     if (isLastStep && !canContinue) {
-      setBusy(true);
-      setError("");
       try {
         posthog.capture("wizard_step_skipped", { step_number: currentStep });
       } catch {}
       const finalSkipped = Array.from(
         new Set([...skipped, currentStep])
       ).sort((a, b) => a - b);
-      const finished = await completeWizard(
-        finalSkipped,
-        wizardStartedAt.current
-      );
-      if (!finished) {
-        setError("Couldn't finalise. Try again.");
-        setBusy(false);
-        return;
-      }
+      completeWizardBackground(finalSkipped, wizardStartedAt.current);
       router.push(`/assess/${assessmentId}`);
       return;
     }
 
     if (!canContinue) return;
-    setBusy(true);
-    setError("");
 
     const partial: Partial<WizardAnswers> =
       question.kind === "checkbox"
         ? ({ [`q${currentStep}`]: answer as DataSensitivity[] } as Partial<WizardAnswers>)
         : ({ [`q${currentStep}`]: answer } as Partial<WizardAnswers>);
 
-    const ok = await saveAnswer(currentStep, partial);
-    if (!ok) {
-      setError("Couldn't save. Try again.");
-      setBusy(false);
-      return;
-    }
-
-    try {
-      posthog.capture("wizard_step_completed", {
-        step_number: currentStep,
-        time_on_step_seconds: Math.round(
-          (Date.now() - stepStartedAt.current) / 1000
-        ),
-      });
-    } catch {}
-
-    // Q2 branch: check for decision-support mismatch
-    if (currentStep === 2 && answer === "informs_only") {
+    // ── Q2 informs_only → MUST await the follow-up check (decides routing).
+    // Save fires in parallel (optimistic).
+    if (currentStep === 2 && answer === "informs_only" && !busy) {
+      setBusy(true);
+      saveAnswerBackground(currentStep, partial);
+      try {
+        posthog.capture("wizard_step_completed", {
+          step_number: currentStep,
+          time_on_step_seconds: stepCompletedSeconds,
+        });
+      } catch {}
       try {
         const res = await fetch("/api/wizard/check-q2-followup", {
           method: "POST",
@@ -206,21 +231,29 @@ export default function WizardClient({
           if (data.show_followup && data.extracted_phrases.length > 0) {
             setQ2Phrases(data.extracted_phrases);
             setBusy(false);
-            return; // don't advance yet
+            return;
           }
         }
       } catch {
-        // Network fail: let the user through rather than block.
+        // Let the user through on network failure.
       }
+      setBusy(false);
+      advanceTo(3);
+      return;
     }
 
+    // ── Optimistic path for Q1, Q3–Q7 answered.
+    try {
+      posthog.capture("wizard_step_completed", {
+        step_number: currentStep,
+        time_on_step_seconds: stepCompletedSeconds,
+      });
+    } catch {}
+    saveAnswerBackground(currentStep, partial);
+
+    // Q7 answered → also fire completion + route to /assess.
     if (isLastStep) {
-      const finished = await completeWizard(skipped, wizardStartedAt.current);
-      if (!finished) {
-        setError("Couldn't finalise. Try again.");
-        setBusy(false);
-        return;
-      }
+      completeWizardBackground(skipped, wizardStartedAt.current);
       router.push(`/assess/${assessmentId}`);
       return;
     }
@@ -232,10 +265,10 @@ export default function WizardClient({
     canContinue,
     answer,
     currentStep,
-    saveAnswer,
     isLastStep,
-    completeWizard,
     skipped,
+    saveAnswerBackground,
+    completeWizardBackground,
     advanceTo,
     assessmentId,
     router,
@@ -246,50 +279,30 @@ export default function WizardClient({
     advanceTo(currentStep - 1);
   }, [currentStep, advanceTo]);
 
-  const handleSkip = useCallback(async () => {
-    if (!question || busy) return;
-    if (question.required) return;
-    setBusy(true);
-    setError("");
+  const handleSkip = useCallback(() => {
+    // handleSkip only fires for Q4–Q6 (showSkip excludes Q1–Q3 and Q7).
+    // No answer to save; just mark step as skipped and advance.
+    if (!question) return;
+    if (question.required || isLastStep) return;
     try {
       posthog.capture("wizard_step_skipped", { step_number: currentStep });
     } catch {}
-    const nextSkipped = Array.from(new Set([...skipped, currentStep])).sort(
-      (a, b) => a - b
-    );
-    if (isLastStep) {
-      const finished = await completeWizard(
-        nextSkipped,
-        wizardStartedAt.current
-      );
-      if (!finished) {
-        setError("Couldn't finalise. Try again.");
-        setBusy(false);
-        return;
-      }
-      router.push(`/assess/${assessmentId}`);
-      return;
-    }
+    // Note: we don't persist `skipped` here step-by-step — it's
+    // collected and submitted on wizard_complete. Since navigating
+    // mounts a fresh WizardClient, the local `skipped` is reset to
+    // initialSkipped each mount. Acceptable: the complete endpoint
+    // accepts the final array at Q7 submit, and the navigation
+    // forward-only pattern means we typically reach Q7 in one session.
     advanceTo(currentStep + 1);
-  }, [
-    question,
-    busy,
-    currentStep,
-    skipped,
-    isLastStep,
-    completeWizard,
-    advanceTo,
-    assessmentId,
-    router,
-  ]);
+  }, [question, isLastStep, currentStep, advanceTo]);
 
-  // Keyboard shortcuts: Enter, Escape, 1-4 (or more for checkbox toggles)
+  // Keyboard shortcuts: Enter, Escape, 1-N (digit keys select options)
   useEffect(() => {
     function handler(e: KeyboardEvent) {
       if (!question) return;
       const t = e.target as HTMLElement | null;
       if (t && ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName)) return;
-      if (e.key === "Enter" && canContinue && !busy) {
+      if (e.key === "Enter" && !busy && (canContinue || isLastStep)) {
         e.preventDefault();
         void handleNext();
         return;
@@ -299,7 +312,6 @@ export default function WizardClient({
         handleBack();
         return;
       }
-      // Number keys select options by index
       const idx = parseInt(e.key, 10);
       if (!Number.isNaN(idx) && idx >= 1 && idx <= question.options.length) {
         e.preventDefault();
@@ -319,7 +331,7 @@ export default function WizardClient({
     }
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [question, canContinue, busy, currentStep, handleNext, handleBack]);
+  }, [question, canContinue, busy, isLastStep, currentStep, handleNext, handleBack]);
 
   if (!question) {
     return (
@@ -338,14 +350,15 @@ export default function WizardClient({
           extractedPhrases={q2Phrases}
           sourceLabel={sourceLabel}
           onKeepInforms={async () => {
-            await saveAnswer(2, {
+            // Q2 resolution writes q2_defended; route after write completes.
+            await saveAnswerAwaited(2, {
               q2: "informs_only",
               q2_defended: true,
             });
             advanceTo(3);
           }}
           onChangeToDrives={async () => {
-            await saveAnswer(2, { q2: "drives" });
+            await saveAnswerAwaited(2, { q2: "drives" });
             advanceTo(3);
           }}
         />
@@ -427,12 +440,6 @@ export default function WizardClient({
         </p>
       )}
 
-      {error && (
-        <p className="text-sm text-[#993C1D] bg-[#FAECE7] border border-[#f0c4b6] rounded-lg px-4 py-3 mb-4">
-          {error}
-        </p>
-      )}
-
       <WizardNav
         onBack={currentStep > 1 ? handleBack : undefined}
         onNext={handleNext}
@@ -442,6 +449,7 @@ export default function WizardClient({
         }
         // Q7 Generate is always enabled (auto-skips if unanswered).
         // Q1–Q6 Next stays disabled until an answer is picked.
+        // `busy` only blocks during the Q2 follow-up check.
         nextDisabled={busy || (!isLastStep && !canContinue)}
         showSkip={showSkip}
       />

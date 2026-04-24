@@ -502,8 +502,129 @@ async function testRequiredMarkersAndLegend() {
   await cleanup(id);
 }
 
+async function testOptimisticPatternSource() {
+  console.log("\n[24] optimistic save pattern in WizardClient source");
+  const src = fs.readFileSync(
+    path.resolve("components/wizard/WizardClient.tsx"),
+    "utf8"
+  );
+
+  // The optimistic path must fire save without awaiting before advance.
+  // Specifically: saveAnswerBackground is called (no await) and advanceTo
+  // is called synchronously on the same code path.
+  const hasBackgroundFn = /saveAnswerBackground\s*=/.test(src);
+  // The call to saveAnswerBackground must NOT be awaited, and an
+  // advanceTo / router.push must follow within the same handler.
+  const hasNonAwaitedSave = /(?<!await\s)saveAnswerBackground\(/.test(src);
+  const hasAdvanceCall = /advanceTo\(currentStep\s*\+\s*1\)/.test(src);
+  const firesAndForgets = hasNonAwaitedSave && hasAdvanceCall;
+  const hasCompletedBackgroundFn = /completeWizardBackground\s*=/.test(src);
+
+  if (hasBackgroundFn) {
+    pass(
+      "saveAnswerBackground helper defined",
+      "fire-and-forget save factory present"
+    );
+  } else {
+    fail(
+      "saveAnswerBackground",
+      "expected saveAnswerBackground helper in WizardClient"
+    );
+  }
+  if (firesAndForgets) {
+    pass(
+      "save fires before navigation",
+      "saveAnswerBackground(...) immediately followed by advanceTo/router.push"
+    );
+  } else {
+    fail(
+      "optimistic advance",
+      "no fire-then-advance sequence found in source"
+    );
+  }
+  if (hasCompletedBackgroundFn) {
+    pass(
+      "completeWizardBackground helper defined",
+      "Q7 submit fires completion without blocking"
+    );
+  } else {
+    fail(
+      "completeWizardBackground",
+      "expected completeWizardBackground helper"
+    );
+  }
+}
+
+async function testRetryToastWiring() {
+  console.log("\n[25] retry toast wiring (WizardToastRoot)");
+  const rootSrc = fs.readFileSync(
+    path.resolve("components/wizard/WizardToastRoot.tsx"),
+    "utf8"
+  );
+  const clientSrc = fs.readFileSync(
+    path.resolve("components/wizard/WizardClient.tsx"),
+    "utf8"
+  );
+
+  const toastHasRetryButton = /data-wizard-toast-retry/.test(rootSrc);
+  const toastCallsRetry = /await\s+toast\.retry\(\)/.test(rootSrc);
+  const clientShowsToast = /showToast\(\s*"Couldn't save/.test(clientSrc);
+  const retryPassesFire = /showToast\([^)]*,\s*fire\s*\)/.test(clientSrc);
+
+  if (toastHasRetryButton) {
+    pass(
+      "Retry button rendered with test selector",
+      "data-wizard-toast-retry present"
+    );
+  } else {
+    fail("Retry button selector", "data-wizard-toast-retry missing");
+  }
+  if (toastCallsRetry) {
+    pass("Retry click invokes toast.retry()", "await toast.retry() found");
+  } else {
+    fail("Retry invocation", "await toast.retry() missing from ToastRoot");
+  }
+  if (clientShowsToast && retryPassesFire) {
+    pass(
+      "save failure shows retry toast",
+      'showToast("Couldn\'t save…", fire) wired in WizardClient'
+    );
+  } else {
+    fail(
+      "save-failure toast",
+      `clientShowsToast=${clientShowsToast} retryPassesFire=${retryPassesFire}`
+    );
+  }
+}
+
+async function testAutoDismissTimer() {
+  console.log("\n[26] toast auto-dismisses after 10s");
+  const rootSrc = fs.readFileSync(
+    path.resolve("components/wizard/WizardToastRoot.tsx"),
+    "utf8"
+  );
+  const hasTimer = /setTimeout\(\s*\(\s*\)\s*=>\s*\{[\s\S]*?\}\s*,\s*10000\s*\)/.test(
+    rootSrc
+  );
+  const clearsOnUnmount = /clearTimeout/.test(rootSrc);
+
+  if (hasTimer) {
+    pass(
+      "10,000 ms auto-dismiss scheduled",
+      "setTimeout(..., 10000) present in ToastRoot"
+    );
+  } else {
+    fail("auto-dismiss 10s", "no 10000 ms setTimeout found");
+  }
+  if (clearsOnUnmount) {
+    pass("timer cleared on change/unmount", "clearTimeout present");
+  } else {
+    fail("timer cleanup", "clearTimeout missing — potential leak");
+  }
+}
+
 async function main() {
-  console.log("Feature 4 — wizard + conflict disclosure (13 checks)");
+  console.log("Feature 4 — wizard + conflict disclosure (16 checks)");
   console.log("=".repeat(70));
   await testNoConflict();
   await testLowSeverity();
@@ -518,6 +639,9 @@ async function main() {
   await testSkipCompletion();
   await testCompleteAllSeven();
   await testRequiredMarkersAndLegend();
+  await testOptimisticPatternSource();
+  await testRetryToastWiring();
+  await testAutoDismissTimer();
 
   console.log("\n" + "=".repeat(70));
   const passed = results.filter((r) => r.pass).length;

@@ -677,16 +677,25 @@ All 7 questions + options in `clearpath_copy_scope.md` §4.2–4.8:
 
 Skippable from Q4 onward (flag incomplete in meta).
 
-## 4b — State saves on every Next click
+## 4b — State saves on every Next click (optimistic)
 
 ```ts
-await supabase.from('assessments').update({ 
-  wizard_answers: { q1, q2, q2_followup, q3, q4, q5, q6, q7 }, 
-  status: 'wizard' 
+await supabase.from('assessments').update({
+  wizard_answers: { q1, q2, q2_followup, q3, q4, q5, q6, q7 },
+  status: 'wizard'
 }).eq('id', assessmentId);
 ```
 
-Drop-off → resume at last completed question.
+**Optimistic navigation pattern (v4 Patch 2):**
+
+1. On Next click, route IMMEDIATELY to the next question — no awaiting the save.
+2. In parallel, fire `POST /api/wizard/save` as fire-and-forget. The save closure captures the answer snapshot at click time (not current state).
+3. On save success: silent.
+4. On save failure: a bottom-of-page toast appears — `Couldn't save your answer — Retry?`. The Retry button re-fires the same captured save; success dismisses the toast. Auto-dismiss after 10s if ignored.
+5. Only one toast visible at a time — newest replaces older.
+6. Drop-off edge case: if the user closes the tab while a save is still in flight (or after ignoring a failed toast), they resume at the last SUCCESSFULLY persisted question — i.e. one step behind where they were actually sitting. Acceptable: they re-answer one question, flow continues.
+7. **Q2 follow-up exception**: when the user picks `informs_only` on Q2, the client still awaits `/api/wizard/check-q2-followup` before routing, because the check decides whether to render the inline follow-up or advance to Q3. Save fires in parallel (optimistic); follow-up check is the only blocking piece.
+8. **Q7 Generate**: routes to `/assess/{id}` immediately; final save + `/api/wizard/complete` + `wizard_completed` event fire in background. If the final complete fails, the toast appears on `/assess/{id}` (the user can retry from there — in practice they typically reach the placeholder panel and see the toast briefly).
 
 ## 4c — Q2 follow-up logic
 
