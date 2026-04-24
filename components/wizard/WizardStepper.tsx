@@ -1,5 +1,10 @@
 import type { JSX } from "react";
 
+/**
+ * Seven equal-width segments with small gaps between them. Completed
+ * and current segments fill teal; upcoming segments fill light neutral.
+ * Full bar spans the container width.
+ */
 export default function WizardStepper({
   currentStep,
   totalSteps = 7,
@@ -16,39 +21,17 @@ export default function WizardStepper({
       aria-valuenow={currentStep}
       aria-valuemin={1}
       aria-valuemax={totalSteps}
-      className="flex items-center gap-2 sm:gap-3"
+      className="flex w-full gap-1"
     >
       {steps.map((n) => {
-        const isPast = n < currentStep;
-        const isCurrent = n === currentStep;
-        const isFuture = n > currentStep;
-
-        if (isCurrent) {
-          return (
-            <span
-              key={n}
-              aria-hidden
-              className="w-[10px] h-[10px] rounded-full bg-[#0F6E56] ring-2 ring-[#0F6E56]/20 ring-offset-1 ring-offset-[#F7F6F2]"
-            />
-          );
-        }
-
-        if (isPast) {
-          return (
-            <span
-              key={n}
-              aria-hidden
-              className="w-2 h-2 rounded-full bg-[#0F6E56]"
-            />
-          );
-        }
-
-        // isFuture
+        const reached = n <= currentStep;
         return (
-          <span
+          <div
             key={n}
             aria-hidden
-            className={`w-2 h-2 rounded-full bg-[#D9D5C8] ${isFuture ? "" : ""}`}
+            className={`h-1.5 flex-1 rounded-[2px] transition-colors ${
+              reached ? "bg-[#0F6E56]" : "bg-[#E5E5E5]"
+            }`}
           />
         );
       })}

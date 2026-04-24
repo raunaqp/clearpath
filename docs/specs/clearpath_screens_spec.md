@@ -284,7 +284,7 @@ All screens:
 ┌───────────────────────────────────────────────────┐
 │                                                    │
 │   {Product name} · Question 1 of 7                 │
-│   [□ □ □ □ □ □ □]                                  │
+│   [|        |        |        |        |        ]  │  ← 7 segments, all upcoming
 │                                                    │
 │   ┌─────────────────────────────────────────────┐ │
 │   │                                              │ │
@@ -350,7 +350,8 @@ All screens:
 ```
 ┌─────────────────────────────────────────────────┐
 │   NeuroScan · Question 2 of 7                   │  ← progress header (teal)
-│   [■ ■ □ □ □ □ □]                                │  ← stepper dots
+│   [████████|████████|         |         |       │  ← 7 equal-width segments
+│    |         |         |         ]               │    teal for reached, #E5E5E5 upcoming
 │                                                  │
 │   How much does your product influence          │  ← question H2
 │   clinical decisions?                            │
@@ -381,7 +382,7 @@ All screens:
 └─────────────────────────────────────────────────┘
 ```
 
-**Components:** Progress stepper (7 dots), H2 question, helper text, radio card list, nav buttons.
+**Components:** Progress stepper (7 equal-width segments with 4px gaps between them, 6px tall, 2px rounded corners; reached segments filled teal `#0F6E56`, upcoming segments `#E5E5E5`; full bar spans container width — clearer spatial progress cue than floating dots, reads better at 375px), H2 question, helper text, radio card list, nav buttons.
 
 **Interactions:**
 - Selecting an option → card fills with teal border + light teal background, checkmark appears.
