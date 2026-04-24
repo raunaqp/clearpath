@@ -1025,13 +1025,32 @@ Options:
 ○ Already filed with CDSCO (iteration / follow-up)
 ```
 
+**Q7 navigation is exceptional.** There is NO "Skip this question" link. The single primary button reads `Generate my Readiness Card →`.
+
+- If Q7 is answered when the user clicks Generate → normal save, mark wizard complete, submit.
+- If Q7 is unanswered when the user clicks Generate → auto-mark step 7 as skipped in `meta.wizard_skipped_questions`, fire `wizard_step_skipped{step_number:7}`, mark wizard complete, submit. **No Skip link is ever shown on Q7** — the Generate button doubles as skip-and-submit when the user hasn't picked an option.
+
 ## 4.9 Wizard navigation
 
 ```
 Back button: ← Back
 Next button: Next →
-Submit (last question): Generate my Readiness Card →
+Skip link (Q4–Q6 only): Skip this question
+Submit button (Q7 only): Generate my Readiness Card →
+Required-question legend (below each question card): * indicates a required question
 ```
+
+**Per-question button pattern (locked):**
+
+| Step | Required? | Back | Skip | Primary |
+|------|-----------|------|------|---------|
+| Q1 | yes (`*`) | hidden | — | `Next →` (disabled until answered) |
+| Q2 | yes (`*`) | ✓ | — | `Next →` (disabled until answered) |
+| Q3 | yes (`*`) | ✓ | — | `Next →` (disabled until answered) |
+| Q4 | no | ✓ | `Skip this question` | `Next →` (disabled until answered) |
+| Q5 | no | ✓ | `Skip this question` | `Next →` (disabled until answered) |
+| Q6 | no | ✓ | `Skip this question` | `Next →` (disabled until answered) |
+| Q7 | no | ✓ | — (none) | `Generate my Readiness Card →` (always enabled; auto-skips if unanswered) |
 
 ---
 

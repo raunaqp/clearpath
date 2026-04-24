@@ -87,42 +87,38 @@ Technical:
 
 ---
 
-## Patch 3 — Skip/Next/Mandatory pattern
+## Patch 3 — Skip/Next/Mandatory pattern (adjusted post-smoke-test)
 
-### Affects: `docs/specs/clearpath_build_plan.md` §4 + `docs/specs/clearpath_copy_scope.md` §4.2–4.8
+### Affects: `docs/specs/clearpath_build_plan.md` §4 + `docs/specs/clearpath_copy_scope.md` §4.2–4.9
 
 **Mandatory vs optional questions:**
-- Q1, Q2, Q3: required (no skip)
-- Q4, Q5, Q6, Q7: optional (skip available)
+- Q1, Q2, Q3: **required** — `*` marker on the question title, no Skip link, Next disabled until answered
+- Q4, Q5, Q6: **optional** — no marker, Skip link AND Next both visible; both advance
+- Q7: **optional but handled differently** — no marker, **no Skip link**, only a primary `Generate my Readiness Card →` button. The button is always enabled. If Q7 is unanswered when clicked, it auto-marks step 7 as skipped (`meta.wizard_skipped_questions` includes 7, fires `wizard_step_skipped{step_number:7}`) and completes the wizard. If Q7 is answered when clicked, it saves normally and completes.
 
 **Question title format:**
 - Required: `* What clinical state does your product address?`
 - Optional: `How many users do you expect in Year 1?`
 
-The `*` is red (#993C1D) and precedes the question text.
+The `*` is coral (`#993C1D`) and precedes the question text.
 
-Below the question, small legend: `* indicates a required question`
+**Legend below every question card:** small muted italic text `* indicates a required question`.
 
-**Navigation below each question:**
+**Navigation pattern (locked table):**
 
-For Q1–Q3 (required):
-```
-[ ← Back ]         [ Next → ]
-```
-Next disabled until an option is selected.
+| Step | Required? | Back | Skip link | Primary button |
+|------|-----------|------|-----------|----------------|
+| Q1 | yes (`*`) | hidden | — | `Next →` (disabled until answered) |
+| Q2 | yes (`*`) | ✓ | — | `Next →` (disabled until answered) |
+| Q3 | yes (`*`) | ✓ | — | `Next →` (disabled until answered) |
+| Q4 | no | ✓ | `Skip this question` | `Next →` (disabled until answered) |
+| Q5 | no | ✓ | `Skip this question` | `Next →` (disabled until answered) |
+| Q6 | no | ✓ | `Skip this question` | `Next →` (disabled until answered) |
+| Q7 | no | ✓ | — (none) | `Generate my Readiness Card →` (always enabled; auto-skips if unanswered) |
 
-For Q4–Q7 (optional):
-```
-[ ← Back ]         [ Skip this question ]  [ Next → ]
-```
-Skip is a text link (teal, underlined, medium weight). Next is a solid button. Both advance — skip marks the question as skipped in `meta.wizard_skipped_questions[]`.
+**Why the Q7 exception:** the Generate button is the terminal action of the wizard. Forcing an explicit Skip link would make the user click twice ("Skip this question" then "Generate") for the same submit action. Folding auto-skip into Generate keeps Q7 one-click whether answered or not.
 
-Final question Q7:
-```
-[ ← Back ]         [ Skip this question ]  [ Generate my Readiness Card → ]
-```
-
-**Copy scope update:** update §4.2 through §4.8 to prepend `*` in the "Question:" line for Q1–Q3.
+**Copy scope update:** update §4.2–§4.4 to prepend `*` in the "Question:" line for Q1–Q3. §4.5–§4.7 (Q4–Q6) stay unmarked. §4.8 (Q7) gets an explicit "no Skip link, Generate doubles as skip-and-submit when unanswered" clarification.
 
 ---
 

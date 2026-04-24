@@ -386,9 +386,13 @@ All screens:
 
 **Interactions:**
 - Selecting an option → card fills with teal border + light teal background, checkmark appears.
-- Next button enabled once option selected.
+- Next button enabled once option selected (exception below for Q7).
 - Back navigates to previous question without losing state.
+- Q1–Q3 are required (prefixed with `*` in the question title). No Skip link; Next stays disabled until an option is selected.
+- Q4–Q6 are optional. Below Back and Next sits a "Skip this question" text link (teal, underlined). Both Skip and Next advance; Skip records `step_number` into `meta.wizard_skipped_questions` and fires `wizard_step_skipped`.
+- Q7 is optional but treated differently. **No Skip link.** The single primary button reads `Generate my Readiness Card →` and is always enabled. If the user has chosen an option, it saves normally and submits. If the user hasn't, it fires `wizard_step_skipped{step_number:7}` and submits with Q7 recorded as skipped.
 - Q2 special: if user picks "inform" but scrape shows decision-support language, trigger Q2 follow-up screen before Next.
+- Legend below the question card (every step): small muted italic text `* indicates a required question`.
 
 **Q2 follow-up screen:**
 ```

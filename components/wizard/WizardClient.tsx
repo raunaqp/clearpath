@@ -79,7 +79,9 @@ export default function WizardClient({
   }, [question, answer]);
 
   const isLastStep = currentStep === total;
-  const showSkip = question ? !question.required : false;
+  // Q7 (last step) hides the Skip link — the Generate button auto-skips
+  // when unanswered, so a separate Skip would be a redundant click.
+  const showSkip = question ? !question.required && !isLastStep : false;
 
   const saveAnswer = useCallback(
     async (
@@ -139,7 +141,34 @@ export default function WizardClient({
   );
 
   const handleNext = useCallback(async () => {
-    if (!question || busy || !canContinue) return;
+    if (!question || busy) return;
+
+    // Q7 special: Generate button is always enabled. If the user hasn't
+    // picked an option, treat the click as skip+submit (step 7 added to
+    // wizard_skipped_questions, wizard marked complete).
+    if (isLastStep && !canContinue) {
+      setBusy(true);
+      setError("");
+      try {
+        posthog.capture("wizard_step_skipped", { step_number: currentStep });
+      } catch {}
+      const finalSkipped = Array.from(
+        new Set([...skipped, currentStep])
+      ).sort((a, b) => a - b);
+      const finished = await completeWizard(
+        finalSkipped,
+        wizardStartedAt.current
+      );
+      if (!finished) {
+        setError("Couldn't finalise. Try again.");
+        setBusy(false);
+        return;
+      }
+      router.push(`/assess/${assessmentId}`);
+      return;
+    }
+
+    if (!canContinue) return;
     setBusy(true);
     setError("");
 
@@ -388,7 +417,9 @@ export default function WizardClient({
         nextLabel={
           isLastStep ? "Generate my Readiness Card →" : "Next →"
         }
-        nextDisabled={!canContinue || busy}
+        // Q7 Generate is always enabled (auto-skips if unanswered).
+        // Q1–Q6 Next stays disabled until an answer is picked.
+        nextDisabled={busy || (!isLastStep && !canContinue)}
         showSkip={showSkip}
       />
     </div>
