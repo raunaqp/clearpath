@@ -1,0 +1,12 @@
+-- Bucket `readiness_cards` must be created MANUALLY in the Supabase
+-- dashboard before the first /api/card/{token}/pdf request can succeed.
+--
+-- Settings to apply when creating:
+--   Name:                readiness_cards
+--   Public:              false
+--   File size limit:     5 MB
+--   Allowed MIME types:  application/pdf
+--
+-- This file is intentionally a comment-only marker so we have a record
+-- of the manual step in version control alongside the rest of the
+-- feature's migrations. There is no SQL to run here.

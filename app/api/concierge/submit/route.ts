@@ -1,17 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getServiceClient } from "@/lib/supabase";
-import { CONTEXT_MAX_WORDS, daysUntil } from "@/lib/concierge/validation";
+import {
+  CONTEXT_MAX_WORDS,
+  JOURNEY_STAGE_LABELS,
+  JOURNEY_STAGE_VALUES,
+  type JourneyStage,
+} from "@/lib/concierge/validation";
 
 const FOUNDER_EMAIL = "founder@clearpath.in";
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "ClearPath <noreply@clearpath.in>";
+const FROM_EMAIL =
+  process.env.RESEND_FROM_EMAIL ?? "ClearPath <noreply@clearpath.in>";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Please enter your name"),
   email: z
     .string()
     .trim()
-    .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please enter a valid email, e.g. abc@xyz.com"),
+    .regex(
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+      "Please enter a valid email, e.g. abc@xyz.com"
+    ),
   mobile: z
     .string()
     .trim()
@@ -24,16 +33,18 @@ const schema = z.object({
       },
       { message: "Please enter a 10-digit mobile number" }
     ),
-  product_name: z.string().trim().min(1, "Please enter the product name").max(200),
-  cdsco_application_number: z.string().trim().max(80).optional(),
-  target_submission_date: z
+  product_name: z
     .string()
     .trim()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Please pick a valid date"),
+    .min(1, "Please enter the product name")
+    .max(200),
+  journey_stage: z.enum(JOURNEY_STAGE_VALUES, {
+    message: "Please pick how long you've been on this journey",
+  }),
   context: z
     .string()
     .trim()
-    .min(1, "Please share a brief context")
+    .min(1, "Please share what challenges you're facing")
     .refine((v) => v.split(/\s+/).length <= CONTEXT_MAX_WORDS, {
       message: `Keep it to ${CONTEXT_MAX_WORDS} words or under.`,
     }),
@@ -60,8 +71,7 @@ export async function POST(req: NextRequest) {
     email,
     mobile,
     product_name,
-    cdsco_application_number,
-    target_submission_date,
+    journey_stage,
     context,
     source_assessment_id,
     prefilled,
@@ -76,8 +86,7 @@ export async function POST(req: NextRequest) {
       email,
       mobile: mobile || null,
       product_name,
-      cdsco_application_number: cdsco_application_number || null,
-      target_submission_date,
+      journey_stage,
       context,
       source_assessment_id: source_assessment_id ?? null,
       prefilled: !!prefilled,
@@ -102,8 +111,7 @@ export async function POST(req: NextRequest) {
     email,
     mobile: mobile || null,
     product_name,
-    cdsco_application_number: cdsco_application_number || null,
-    target_submission_date,
+    journey_stage,
     context,
     source_assessment_id: source_assessment_id ?? null,
     prefilled: !!prefilled,
@@ -114,7 +122,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(
     {
       id: data.id,
-      days_to_target: daysUntil(target_submission_date),
+      journey_stage,
     },
     { status: 201 }
   );
@@ -126,8 +134,7 @@ type EmailPayload = {
   email: string;
   mobile: string | null;
   product_name: string;
-  cdsco_application_number: string | null;
-  target_submission_date: string;
+  journey_stage: JourneyStage;
   context: string;
   source_assessment_id: string | null;
   prefilled: boolean;
@@ -153,14 +160,13 @@ Name:                  ${p.name}
 Email:                 ${p.email}
 Mobile:                ${p.mobile ?? "(not provided)"}
 Product:               ${p.product_name}
-CDSCO app number:      ${p.cdsco_application_number ?? "(not provided)"}
-Target submission:     ${p.target_submission_date}
+Journey stage:         ${JOURNEY_STAGE_LABELS[p.journey_stage]}
 Prefilled from card:   ${p.prefilled ? "yes" : "no"}
 Source assessment:     ${sourceLink}
 Waitlist row id:       ${p.waitlistId}
 
-Context
--------
+Challenges
+----------
 ${p.context}
 `;
 

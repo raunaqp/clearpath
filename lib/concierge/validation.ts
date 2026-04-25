@@ -10,6 +10,34 @@ export const CONTEXT_MAX_WORDS = 200;
 export const PRODUCT_NAME_MAX = 200;
 export const CDSCO_APP_MAX = 80;
 
+export const JOURNEY_STAGE_VALUES = [
+  "not_started",
+  "0_3_months",
+  "3_6_months",
+  "6_12_months",
+  "12_24_months",
+  "over_24_months",
+] as const;
+
+export type JourneyStage = (typeof JOURNEY_STAGE_VALUES)[number];
+
+export const JOURNEY_STAGE_LABELS: Record<JourneyStage, string> = {
+  not_started: "Not started yet",
+  "0_3_months": "0–3 months",
+  "3_6_months": "3–6 months",
+  "6_12_months": "6–12 months",
+  "12_24_months": "12–24 months",
+  over_24_months: "24+ months",
+};
+
+export function validateJourneyStage(v: string): string | null {
+  if (!v) return "Please pick how long you've been on this journey";
+  if (!(JOURNEY_STAGE_VALUES as readonly string[]).includes(v)) {
+    return "Please pick a valid option";
+  }
+  return null;
+}
+
 export { EMAIL_REGEX, validateEmail, validateMobile, validateName };
 
 export function validateProductName(v: string): string | null {
@@ -65,8 +93,7 @@ export type ConciergeErrors = Partial<{
   email: string;
   mobile: string;
   product_name: string;
-  cdsco_application_number: string;
-  target_submission_date: string;
+  journey_stage: string;
   context: string;
 }>;
 
@@ -75,8 +102,7 @@ export type ConciergeValues = {
   email: string;
   mobile: string;
   product_name: string;
-  cdsco_application_number: string;
-  target_submission_date: string;
+  journey_stage: string;
   context: string;
 };
 
@@ -90,10 +116,8 @@ export function runAllValidations(values: ConciergeValues): ConciergeErrors {
   if (m) errors.mobile = m;
   const p = validateProductName(values.product_name);
   if (p) errors.product_name = p;
-  const c = validateCdscoApplicationNumber(values.cdsco_application_number);
-  if (c) errors.cdsco_application_number = c;
-  const t = validateTargetDate(values.target_submission_date);
-  if (t) errors.target_submission_date = t;
+  const j = validateJourneyStage(values.journey_stage);
+  if (j) errors.journey_stage = j;
   const ctx = validateContext(values.context);
   if (ctx) errors.context = ctx;
   return errors;

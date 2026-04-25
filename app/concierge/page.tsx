@@ -35,8 +35,7 @@ export default async function ConciergePage({
         email: (data.email as string) ?? "",
         mobile: (data.mobile as string) ?? "",
         product_name: data.one_liner ? displayName(data.one_liner as string) : "",
-        cdsco_application_number: "",
-        target_submission_date: "",
+        journey_stage: "",
         context: "",
       };
     }
@@ -77,8 +76,7 @@ function empty(): ConciergeInitialValues {
     email: "",
     mobile: "",
     product_name: "",
-    cdsco_application_number: "",
-    target_submission_date: "",
+    journey_stage: "",
     context: "",
   };
 }

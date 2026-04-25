@@ -7,16 +7,17 @@ import posthog from "posthog-js";
 import {
   CONTEXT_MAX_WORDS,
   countWords,
-  daysUntil,
+  JOURNEY_STAGE_LABELS,
+  JOURNEY_STAGE_VALUES,
   runAllValidations,
-  validateCdscoApplicationNumber,
   validateContext,
   validateEmail,
+  validateJourneyStage,
   validateMobile,
   validateName,
   validateProductName,
-  validateTargetDate,
   type ConciergeErrors,
+  type JourneyStage,
 } from "@/lib/concierge/validation";
 
 export type ConciergeInitialValues = {
@@ -24,8 +25,7 @@ export type ConciergeInitialValues = {
   email: string;
   mobile: string;
   product_name: string;
-  cdsco_application_number: string;
-  target_submission_date: string;
+  journey_stage: string;
   context: string;
 };
 
@@ -34,8 +34,7 @@ type FieldName =
   | "email"
   | "mobile"
   | "product_name"
-  | "cdsco_application_number"
-  | "target_submission_date"
+  | "journey_stage"
   | "context";
 
 export function ConciergeForm({
@@ -53,8 +52,7 @@ export function ConciergeForm({
   const [email, setEmail] = useState(initial.email);
   const [mobile, setMobile] = useState(initial.mobile);
   const [productName, setProductName] = useState(initial.product_name);
-  const [cdscoApp, setCdscoApp] = useState(initial.cdsco_application_number);
-  const [targetDate, setTargetDate] = useState(initial.target_submission_date);
+  const [journeyStage, setJourneyStage] = useState(initial.journey_stage);
   const [context, setContext] = useState(initial.context);
 
   const [errors, setErrors] = useState<ConciergeErrors>({});
@@ -91,10 +89,8 @@ export function ConciergeForm({
           return validateMobile(value);
         case "product_name":
           return validateProductName(value);
-        case "cdsco_application_number":
-          return validateCdscoApplicationNumber(value);
-        case "target_submission_date":
-          return validateTargetDate(value);
+        case "journey_stage":
+          return validateJourneyStage(value);
         case "context":
           return validateContext(value);
       }
@@ -134,8 +130,7 @@ export function ConciergeForm({
       email,
       mobile,
       product_name: productName,
-      cdsco_application_number: cdscoApp,
-      target_submission_date: targetDate,
+      journey_stage: journeyStage,
       context,
     });
     if (Object.keys(allErrors).length > 0) {
@@ -145,8 +140,7 @@ export function ConciergeForm({
         "email",
         "mobile",
         "product_name",
-        "cdsco_application_number",
-        "target_submission_date",
+        "journey_stage",
         "context",
       ];
       const first = order.find((f) => f in allErrors);
@@ -160,7 +154,7 @@ export function ConciergeForm({
       posthog.capture("concierge_form_submitted", {
         assessment_id: sourceAssessmentId ?? null,
         prefilled,
-        days_to_target: daysUntil(targetDate),
+        journey_stage: journeyStage,
       });
     } catch {}
 
@@ -174,8 +168,7 @@ export function ConciergeForm({
           email,
           mobile: mobile || undefined,
           product_name: productName,
-          cdsco_application_number: cdscoApp || undefined,
-          target_submission_date: targetDate,
+          journey_stage: journeyStage,
           context,
           source_assessment_id: sourceAssessmentId ?? undefined,
           prefilled,
@@ -278,45 +271,71 @@ export function ConciergeForm({
           placeholder="Your product name"
         />
 
-        <Field
-          id="cdsco_application_number"
-          label="CDSCO application number"
-          optional
-          value={cdscoApp}
-          onChange={(v) => {
-            setCdscoApp(v);
-            clearError("cdsco_application_number");
-          }}
-          onBlur={() =>
-            handleBlur("cdsco_application_number", cdscoApp)
-          }
-          error={errors.cdsco_application_number}
-          helper="If you've already filed. Format: MD-12/XXX/2025"
-          placeholder="MD-12/XXX/2025"
-        />
+        {/* Journey stage radio group */}
+        <fieldset id="journey_stage" data-field-error="journey_stage">
+          <legend className="block text-sm font-medium text-[#0E1411] mb-1.5">
+            Since when have you been on this regulatory journey?
+            <span className="text-[#993C1D] ml-0.5">*</span>
+          </legend>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {JOURNEY_STAGE_VALUES.map((value) => {
+              const checked = journeyStage === value;
+              return (
+                <label
+                  key={value}
+                  htmlFor={`journey_stage_${value}`}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors ${
+                    checked
+                      ? "border-2 border-[#0F6E56] bg-[#EAF3EF]"
+                      : "border border-[#D9D5C8] bg-white hover:bg-[#FAFAF7]"
+                  }`}
+                >
+                  <input
+                    id={`journey_stage_${value}`}
+                    type="radio"
+                    name="journey_stage"
+                    value={value}
+                    checked={checked}
+                    onChange={() => {
+                      setJourneyStage(value);
+                      clearError("journey_stage");
+                    }}
+                    onBlur={() => handleBlur("journey_stage", value)}
+                    className="sr-only"
+                  />
+                  <span
+                    aria-hidden
+                    className={`inline-flex w-4 h-4 rounded-full shrink-0 ${
+                      checked
+                        ? "bg-[#0F6E56] ring-4 ring-[#0F6E56]/20"
+                        : "border border-[#D9D5C8] bg-white"
+                    }`}
+                  />
+                  <span className="text-sm text-[#0E1411]">
+                    {JOURNEY_STAGE_LABELS[value as JourneyStage]}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+          {errors.journey_stage && (
+            <p
+              data-field-error="journey_stage"
+              className="text-sm text-[#993C1D] mt-1.5 flex items-start gap-1"
+            >
+              <span aria-hidden>⚠</span>
+              <span>{errors.journey_stage}</span>
+            </p>
+          )}
+        </fieldset>
 
-        <Field
-          id="target_submission_date"
-          label="Target submission/response date"
-          required
-          type="date"
-          value={targetDate}
-          onChange={(v) => {
-            setTargetDate(v);
-            clearError("target_submission_date");
-          }}
-          onBlur={() => handleBlur("target_submission_date", targetDate)}
-          error={errors.target_submission_date}
-          helper="When do you need to respond to CDSCO, or file fresh?"
-        />
-
-        {/* Context textarea */}
+        {/* Challenges textarea */}
         <div>
           <label
             htmlFor="context"
             className="block text-sm font-medium text-[#0E1411] mb-1"
           >
-            Brief context
+            What challenges are you facing today?
             <span className="text-[#993C1D] ml-0.5">*</span>
           </label>
           <div className="flex items-start justify-between gap-3 mb-2">

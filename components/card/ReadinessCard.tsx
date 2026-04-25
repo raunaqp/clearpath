@@ -28,6 +28,7 @@ export function ReadinessCard({
   card,
   assessmentId,
   shareUrl,
+  shareToken,
   abdmAlreadyCaptured,
   dpdpAlreadyCaptured,
   onAbdmSubmit,
@@ -39,6 +40,7 @@ export function ReadinessCard({
   card: ReadinessCardType;
   assessmentId: string;
   shareUrl: string;
+  shareToken: string;
   abdmAlreadyCaptured: boolean;
   dpdpAlreadyCaptured: boolean;
   onAbdmSubmit: (message: string) => Promise<void>;
@@ -121,7 +123,11 @@ export function ReadinessCard({
 
       <hr className="border-t border-[#D9D5C8] my-6" />
 
-      <ShareRow shareUrl={shareUrl} />
+      <ShareRow
+        shareUrl={shareUrl}
+        shareToken={shareToken}
+        productName={productName}
+      />
 
       <p className="text-xs text-[#6B766F] mt-6 font-mono leading-relaxed">
         Card ID: {shortId} · Generated: {generatedDate} · ClearPath — not legal

@@ -1,8 +1,19 @@
 import type { JSX } from "react";
 import WizardStepper from "./WizardStepper";
+import { JourneyProgress } from "@/components/layout/JourneyProgress";
 
+/**
+ * Mobile/tablet wizard header. Hidden on lg+ where the right-pane
+ * vertical stepper takes over. Renders the unified two-tier journey
+ * progress + the legacy horizontal segments below.
+ *
+ * `productDisplayName` is retained on the prop signature for caller
+ * compatibility but is no longer rendered (UX change — generic
+ * "ASSESSMENT · QUESTION X OF 7" reads cleaner than the per-product
+ * concatenation).
+ */
 export default function WizardHeader({
-  productDisplayName,
+  productDisplayName: _productDisplayName,
   currentStep,
   totalSteps = 7,
 }: {
@@ -10,14 +21,14 @@ export default function WizardHeader({
   currentStep: number;
   totalSteps?: number;
 }): JSX.Element {
+  void _productDisplayName;
   return (
     <div className="lg:hidden">
-      <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517]">
-        {productDisplayName} · Question {currentStep} of {totalSteps}
-      </p>
-      <div className="mt-3">
-        <WizardStepper currentStep={currentStep} totalSteps={totalSteps} />
-      </div>
+      <JourneyProgress
+        phase="assessment"
+        sub={{ current: currentStep, total: totalSteps }}
+      />
+      <WizardStepper currentStep={currentStep} totalSteps={totalSteps} />
     </div>
   );
 }

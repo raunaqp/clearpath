@@ -173,10 +173,15 @@ export default async function AssessPage({
     }
 
     if (result.kind === "wait") {
+      async function handleStuckRetry(): Promise<void> {
+        "use server";
+        await retrySynthesis(id);
+      }
       return (
         <AssessShell>
           <SynthesizerWaitingPanel
             ageSeconds={Math.floor(result.runningSinceMs / 1000)}
+            onRetry={handleStuckRetry}
           />
         </AssessShell>
       );

@@ -57,6 +57,7 @@ export function ReadinessCardContainer({
       card={card}
       assessmentId={assessmentId}
       shareUrl={shareUrl}
+      shareToken={shareToken}
       abdmAlreadyCaptured={abdmAlreadyCaptured}
       dpdpAlreadyCaptured={dpdpAlreadyCaptured}
       showAbdmBlock={showAbdmBlock}

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import posthog from "posthog-js";
 import { GlobalHeader } from "@/components/layout/GlobalHeader";
+import { JourneyProgress } from "@/components/layout/JourneyProgress";
 import { countPdfPages, sha256Hex } from "@/lib/pdf-utils";
 import {
   validateEmail,
@@ -458,15 +459,10 @@ function StartPageInner() {
             </div>
           )}
 
-          {/* Step header */}
-          <div className="flex items-center gap-2 mb-4">
-            <StepDot filled active={step === 1} onClick={step === 2 ? goToStep1 : undefined} />
-            <div className="flex-1 h-px bg-[#D9D5C8]" />
-            <StepDot filled={step === 2} active={step === 2} />
-          </div>
-          <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-4">
-            Step {step} of 2
-          </p>
+          <JourneyProgress
+            phase="intake"
+            sub={{ current: step, total: 2 }}
+          />
 
           {step === 1 && (
             <Step1
@@ -523,25 +519,6 @@ function StartPageInner() {
         </div>
       </main>
     </div>
-  );
-}
-
-function StepDot({
-  filled,
-  active,
-  onClick,
-}: {
-  filled: boolean;
-  active?: boolean;
-  onClick?: () => void;
-}) {
-  const size = active ? "w-3.5 h-3.5" : "w-2.5 h-2.5";
-  const bg = filled ? "bg-[#0F6E56]" : "bg-[#D9D5C8]";
-  const base = `rounded-full transition-all ${size} ${bg}`;
-  return onClick ? (
-    <button type="button" onClick={onClick} className={base + " cursor-pointer"} aria-label="Go to step 1" />
-  ) : (
-    <span className={base} />
   );
 }
 

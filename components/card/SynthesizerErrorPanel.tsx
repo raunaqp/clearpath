@@ -72,10 +72,11 @@ export function SynthesizerErrorPanel({
     <div className="min-h-[60vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md text-center">
         <h1 className="font-serif text-[clamp(24px,3vw,32px)] leading-tight text-[#0E1411] mb-3">
-          We hit a snag generating your Readiness Card.
+          Generation taking longer than expected.
         </h1>
         <p className="text-[#6B766F] text-base mb-6 leading-relaxed">
-          Don&apos;t worry — your data is saved.
+          Your data is saved — nothing lost. Try again, or email us if
+          this keeps happening.
         </p>
 
         {canRetry ? (
