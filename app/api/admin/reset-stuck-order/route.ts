@@ -23,30 +23,32 @@ export async function POST(req: NextRequest) {
   const supabase = getServiceClient();
   const now = new Date().toISOString();
 
-  // CAS: only flip if currently pending_verification.
+  // CAS: only flip if currently 'generating'. The UI is responsible for
+  // gating *when* to show the reset button (stuck row state, or post-
+  // failure banner). The endpoint itself just refuses if the order is
+  // already in a different state — typically because the kill-mid-flight
+  // generation actually completed.
   const { data, error } = await supabase
     .from("tier2_orders")
-    .update({
-      status: "verified",
-      verified_at: now,
-      verified_by: "admin",
-      updated_at: now,
-    })
+    .update({ status: "verified", updated_at: now })
     .eq("id", parsed.data.order_id)
-    .eq("status", "pending_verification")
+    .eq("status", "generating")
     .select("id, status")
     .maybeSingle<{ id: string; status: string }>();
 
   if (error) {
-    console.error("verify-order update failed:", error);
+    console.error("reset-stuck-order update failed:", error);
     return NextResponse.json(
-      { error: "Could not verify order. Please try again." },
+      { error: "Could not reset order. Please try again." },
       { status: 500 }
     );
   }
   if (!data) {
     return NextResponse.json(
-      { error: "Order not in pending_verification state." },
+      {
+        error:
+          "Order not in 'generating' state — it may have completed. Refresh and check.",
+      },
       { status: 409 }
     );
   }

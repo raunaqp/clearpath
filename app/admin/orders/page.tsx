@@ -28,7 +28,7 @@ export default async function AdminOrdersPage({
   let query = supabase
     .from("tier2_orders")
     .select(
-      "id, status, created_at, amount_inr, payment_screenshot_url, transaction_id, email_sent_to, assessment_id, draft_pack_pdf_url, verified_at, delivered_at"
+      "id, status, created_at, updated_at, amount_inr, payment_screenshot_url, transaction_id, email_sent_to, assessment_id, draft_pack_pdf_url, verified_at, delivered_at"
     )
     .order("created_at", { ascending: false });
 

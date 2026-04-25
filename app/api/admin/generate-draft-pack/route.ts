@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
   // clicks will see 409.
   const { data: locked, error: casErr } = await supabase
     .from("tier2_orders")
-    .update({ status: "generating" })
+    .update({ status: "generating", updated_at: new Date().toISOString() })
     .eq("id", orderId)
     .eq("status", "verified")
     .select("id")
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     // Revert lock so admin can retry (or run the CLI).
     await supabase
       .from("tier2_orders")
-      .update({ status: "verified" })
+      .update({ status: "verified", updated_at: new Date().toISOString() })
       .eq("id", orderId)
       .eq("status", "generating");
 

@@ -296,6 +296,7 @@ export async function generateDraftPack(
       status: "delivered",
       delivered_at: now,
       draft_pack_pdf_url: pdfUrl,
+      updated_at: now,
     })
     .eq("id", order.id);
   if (updErr) {
