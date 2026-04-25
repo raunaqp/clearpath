@@ -27,7 +27,11 @@ create table assessments (
   cache_key             text,
   cache_version         int default 1,
   status                text default 'draft',       -- draft | routing | wizard | completed | rejected | abandoned
-  meta                  jsonb
+  meta                  jsonb,
+  -- Feature 5 tracking columns (also in supabase/migration-feature-5.sql for in-place updates)
+  tier2_intent_clicked      timestamptz,
+  abdm_intent_captured_at   timestamptz,
+  dpdp_intent_captured_at   timestamptz
 );
 
 create index idx_assessments_cache_key    on assessments(cache_key);
