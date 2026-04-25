@@ -6,8 +6,7 @@ import { ReadinessCircle } from "./ReadinessCircle";
 import { RegulationSnapshot } from "./RegulationSnapshot";
 import { RiskTintedSurface } from "./RiskTintedSurface";
 import { ShareRow } from "./ShareRow";
-import { Tier2CTABlock } from "./Tier2CTABlock";
-import { Tier3SecondaryLink } from "./Tier3SecondaryLink";
+import { Tier23ButtonRow } from "./Tier23ButtonRow";
 import { TimelineBlock } from "./TimelineBlock";
 import { TopGapsList } from "./TopGapsList";
 import { VerdictBlock } from "./VerdictBlock";
@@ -16,7 +15,6 @@ import { WhyRegulatedBlock } from "./WhyRegulatedBlock";
 
 function formatToday(): string {
   const today = new Date();
-  // Locale-stable, short, human-readable: "24 Apr 2026"
   return today.toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
@@ -55,11 +53,11 @@ export function ReadinessCard({
 
   return (
     <RiskTintedSurface riskLevel={card.risk.level}>
-      <div className="bg-white rounded-xl border border-[#D9D5C8] p-6 sm:p-8">
+      <div className="bg-white rounded-xl border border-[#D9D5C8] px-5 sm:px-6 md:px-8 py-6 sm:py-8">
+        {/* 1. Header (eyebrow + product + device type) */}
         <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-3">
           REGULATORY RISK PROFILE
         </p>
-
         <h1 className="font-serif text-[clamp(24px,3vw,36px)] leading-tight text-[#0E1411] mb-1">
           {productName}
         </h1>
@@ -67,6 +65,7 @@ export function ReadinessCard({
           {card.classification.device_type}
         </p>
 
+        {/* 2. Score + Badge Row */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-6 mb-8">
           <ReadinessCircle
             score={card.readiness.score}
@@ -83,10 +82,43 @@ export function ReadinessCard({
           </div>
         </div>
 
+        {/* 3-5. Verdict + Why regulated + Top gaps */}
         <div className="space-y-7">
           <VerdictBlock verdict={card.verdict} />
           <WhyRegulatedBlock whyRegulated={card.why_regulated} />
           <TopGapsList gaps={card.top_gaps} />
+        </div>
+
+        {/* 6. Tier 2/3 row (combined, equal hierarchy) — wellness path
+            shows the carve-out block instead, since Tier 2 doesn't apply */}
+        <div className="mt-7">
+          {isWellness ? (
+            <WellnessCarveOutBlock regulations={card.regulations} />
+          ) : (
+            <Tier23ButtonRow assessmentId={assessmentId} />
+          )}
+        </div>
+
+        {/* 7. DPDP intent block (moved up — was after ABDM) */}
+        {showDpdpBlock && (
+          <DPDPGapBlock
+            assessmentId={assessmentId}
+            alreadyCaptured={dpdpAlreadyCaptured}
+            onSubmit={onDpdpSubmit}
+          />
+        )}
+
+        {/* 8. ABDM intent block (moved down — was mid-card) */}
+        {showAbdmBlock && (
+          <ABDMGapBlock
+            assessmentId={assessmentId}
+            alreadyCaptured={abdmAlreadyCaptured}
+            onSubmit={onAbdmSubmit}
+          />
+        )}
+
+        {/* 9. Regulation snapshot + 10. Timeline (reference depth at bottom) */}
+        <div className="mt-7 space-y-7">
           <RegulationSnapshot regulations={card.regulations} />
           <TimelineBlock
             low={card.timeline.estimate_months_low}
@@ -97,39 +129,17 @@ export function ReadinessCard({
         </div>
       </div>
 
-      {isWellness ? (
-        <WellnessCarveOutBlock regulations={card.regulations} />
-      ) : (
-        <Tier2CTABlock assessmentId={assessmentId} />
-      )}
-
-      {showAbdmBlock && (
-        <ABDMGapBlock
-          assessmentId={assessmentId}
-          alreadyCaptured={abdmAlreadyCaptured}
-          onSubmit={onAbdmSubmit}
+      {/* 11. ShareRow (Download PDF + secondary copy link) */}
+      <div className="mt-6">
+        <ShareRow
+          shareUrl={shareUrl}
+          shareToken={shareToken}
+          productName={productName}
         />
-      )}
+      </div>
 
-      {showDpdpBlock && (
-        <DPDPGapBlock
-          assessmentId={assessmentId}
-          alreadyCaptured={dpdpAlreadyCaptured}
-          onSubmit={onDpdpSubmit}
-        />
-      )}
-
-      <Tier3SecondaryLink assessmentId={assessmentId} />
-
-      <hr className="border-t border-[#D9D5C8] my-6" />
-
-      <ShareRow
-        shareUrl={shareUrl}
-        shareToken={shareToken}
-        productName={productName}
-      />
-
-      <p className="text-xs text-[#6B766F] mt-6 font-mono leading-relaxed">
+      {/* 12. Disclaimer footer */}
+      <p className="text-xs text-[#6B766F] mt-6 font-mono leading-relaxed text-center">
         Card ID: {shortId} · Generated: {generatedDate} · ClearPath — not legal
         advice
       </p>

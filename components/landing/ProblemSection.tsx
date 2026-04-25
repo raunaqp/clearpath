@@ -25,7 +25,7 @@ export default function ProblemSection() {
   return (
     <section ref={ref} className="py-20 md:py-28" id="problem">
       <div className="max-w-[1240px] mx-auto px-6 md:px-8">
-        <h2 className="font-serif font-normal text-[clamp(28px,3.6vw,52px)] leading-[1.08] tracking-[-0.02em] text-[#0E1411] mb-4">
+        <h2 className="font-serif font-normal text-3xl sm:text-4xl tracking-tight text-[#0E1411] mb-4">
           The regulatory maze — 9 regulations, 6 bodies
         </h2>
         <p className="text-[17px] italic text-[#6B766F] max-w-2xl leading-relaxed mb-12">

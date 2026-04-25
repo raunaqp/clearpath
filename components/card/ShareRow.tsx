@@ -71,43 +71,41 @@ export function ShareRow({
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-3 flex-wrap">
-        <button
-          type="button"
-          onClick={handleDownload}
-          disabled={downloading}
-          className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium text-white bg-[#0F6E56] hover:bg-[#0d5c48] disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-        >
-          {downloading ? (
-            <>
-              <span
-                aria-hidden
-                className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin"
-              />
-              <span>Generating PDF…</span>
-            </>
-          ) : (
-            <>
-              <span aria-hidden>⬇</span>
-              <span>Download PDF</span>
-            </>
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="text-sm text-[#6B766F] hover:text-[#0F6E56] underline underline-offset-2"
-        >
-          {copied ? "Link copied ✓" : "or copy share link"}
-        </button>
-      </div>
+    <div className="flex flex-col items-center gap-3">
+      <button
+        type="button"
+        onClick={handleDownload}
+        disabled={downloading}
+        className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-medium text-white bg-[#0F6E56] hover:bg-[#0d5c48] disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+      >
+        {downloading ? (
+          <>
+            <span
+              aria-hidden
+              className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin"
+            />
+            <span>Generating PDF…</span>
+          </>
+        ) : (
+          <>
+            <span aria-hidden>⬇</span>
+            <span>Download PDF</span>
+          </>
+        )}
+      </button>
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="text-sm text-[#6B766F] hover:text-[#0F6E56] underline underline-offset-2"
+      >
+        {copied ? "Link copied ✓" : "or copy share link"}
+      </button>
       {downloadError && (
-        <p className="text-xs text-[#993C1D]" role="alert">
+        <p className="text-xs text-[#993C1D] text-center" role="alert">
           {downloadError}
         </p>
       )}
-      <p className="text-xs text-[#6B766F] leading-relaxed">
+      <p className="text-xs text-[#6B766F] leading-relaxed text-center max-w-md">
         The PDF is branded for sharing with co-founders, regulators, or
         investors. Link valid 90 days.
       </p>

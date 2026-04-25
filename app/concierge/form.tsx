@@ -211,7 +211,7 @@ export function ConciergeForm({
         </div>
       )}
 
-      <div className="bg-[#FDFCF8] border border-[#D9D5C8] rounded-xl p-6 md:p-8 space-y-6">
+      <div className="bg-[#FDFCF8] border border-[#D9D5C8] rounded-xl p-5 sm:p-6 md:p-8 space-y-4 sm:space-y-5 md:space-y-6">
         <Field
           id="name"
           label="Your name"
@@ -390,7 +390,7 @@ export function ConciergeForm({
         <button
           type="submit"
           disabled={submitting}
-          className="w-full bg-[#0F6E56] text-white font-medium text-[15px] px-6 py-3.5 rounded-full hover:bg-[#0d5c48] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+          className="w-full sm:w-auto sm:self-start bg-[#0F6E56] text-white font-medium text-[15px] px-6 py-3.5 rounded-full hover:bg-[#0d5c48] disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center justify-center gap-2"
         >
           {submitting ? (
             <>

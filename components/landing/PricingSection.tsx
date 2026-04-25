@@ -74,7 +74,7 @@ export default function PricingSection() {
           <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-4">
             Pricing
           </p>
-          <h2 className="font-serif font-normal text-[clamp(28px,4vw,44px)] leading-[1.1] tracking-[-0.02em] text-[#0E1411]">
+          <h2 className="font-serif font-normal text-3xl sm:text-4xl tracking-tight text-[#0E1411]">
             Priced so a founder decides,<br className="hidden sm:block" /> not a procurement team.
           </h2>
           <p className="mt-4 text-[#6B766F] text-base md:text-lg max-w-xl mx-auto">

@@ -41,7 +41,7 @@ export default function MoatsSection() {
       <div className="max-w-[1240px] mx-auto">
         {/* Heading */}
         <div className="text-center mb-12">
-          <h2 className="font-serif text-3xl md:text-4xl text-[#0E1411] tracking-tight">
+          <h2 className="font-serif font-normal text-3xl sm:text-4xl tracking-tight text-[#0E1411]">
             Why ClearPath — not a consultant, not a search
           </h2>
           <p className="mt-2 text-[#6B766F] text-base md:text-lg max-w-xl mx-auto">

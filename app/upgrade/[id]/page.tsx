@@ -107,7 +107,7 @@ export default async function UpgradePage({
               within 2 hours, worst case 6 hours.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mb-10">
               {PILLARS.map((pillar) => (
                 <div
                   key={pillar.label}

@@ -38,7 +38,7 @@ export default function FounderSection() {
         <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-6">
           Who built this
         </p>
-        <h2 className="font-serif font-normal text-[clamp(28px,4vw,44px)] leading-[1.1] tracking-[-0.02em] text-[#0E1411] max-w-2xl mb-14">
+        <h2 className="font-serif font-normal text-3xl sm:text-4xl tracking-tight text-[#0E1411] max-w-2xl mb-14">
           Built by founders who&apos;ve reviewed real CDSCO submissions.
         </h2>
 

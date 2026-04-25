@@ -30,7 +30,7 @@ export default function HowItWorksSection() {
     <section id="how-it-works" ref={ref} className="py-20 px-6 md:px-8 bg-[#F7F6F2]">
       <div className="max-w-[1240px] mx-auto">
         <div className="text-center mb-12">
-          <h2 className="font-serif text-3xl md:text-4xl text-[#0E1411] tracking-tight">
+          <h2 className="font-serif font-normal text-3xl sm:text-4xl tracking-tight text-[#0E1411]">
             Clarity → Draft → Submission
           </h2>
           <p className="mt-2 text-[#6B766F] text-base md:text-lg">

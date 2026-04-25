@@ -44,12 +44,12 @@ export default async function ConciergePage({
   return (
     <div className="min-h-screen bg-[#F7F6F2] flex flex-col">
       <GlobalHeader />
-      <main className="flex-1 px-4 sm:px-6 lg:px-8 pt-8 lg:pt-12 pb-12">
+      <main className="flex-1 px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 lg:pt-12 pb-12">
         <div className="w-full max-w-3xl mx-auto">
-          <h1 className="font-serif font-normal text-[clamp(28px,4vw,40px)] leading-[1.1] tracking-[-0.02em] text-[#0E1411] mb-2">
+          <h1 className="font-serif font-normal text-2xl sm:text-3xl lg:text-[40px] leading-[1.1] tracking-[-0.02em] text-[#0E1411] mb-2">
             Get an expert on your case
           </h1>
-          <p className="text-[#6B766F] text-base mb-8 leading-relaxed">
+          <p className="text-[#6B766F] text-sm sm:text-base mb-6 sm:mb-8 leading-relaxed">
             ₹50,000 for 12 months · Indian regulatory experts review your
             submission. 1 iteration included.
           </p>

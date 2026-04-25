@@ -19,7 +19,7 @@ export default function CTASection() {
   return (
     <section ref={ref} className="bg-[#0E1411] py-24 md:py-32 w-full">
       <div className="max-w-[1240px] mx-auto px-6 md:px-8 text-center">
-        <h2 className="font-serif font-normal text-[clamp(32px,5vw,48px)] leading-[1.1] tracking-[-0.02em] text-white mb-4">
+        <h2 className="font-serif font-normal text-3xl sm:text-4xl tracking-tight text-white mb-4">
           Know where you stand in 5 minutes.
         </h2>
         <p className="text-[#9AA69F] text-[17px] mb-10">

@@ -109,36 +109,59 @@ export function PaymentForm({
 
   return (
     <section className="rounded-xl bg-white border border-[#D9D5C8] p-5 sm:p-7">
-      <h2 className="font-serif text-2xl text-[#0E1411] mb-1">Pay ₹499</h2>
-      <p className="text-sm text-[#6B766F] mb-5">
-        Scan the QR with any UPI app, or copy the UPI ID below.
-      </p>
+      <div className="text-center mb-5">
+        <h2 className="font-serif text-2xl text-[#0E1411] mb-1">Pay ₹499</h2>
+        <p className="text-sm text-[#6B766F]">
+          Scan the QR with any UPI app, or copy the UPI ID below.
+        </p>
+      </div>
 
-      <div className="flex flex-col sm:flex-row gap-5 items-start mb-6">
-        <div className="rounded-lg bg-white p-3 border border-[#D9D5C8]">
-          <QRCodeSVG value={UPI_URL} size={200} bgColor="#FFFFFF" fgColor="#0E1411" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center mb-6">
+        <div className="flex flex-col items-center gap-2">
+          <div className="rounded-lg bg-white p-3 border border-[#D9D5C8]">
+            <QRCodeSVG
+              value={UPI_URL}
+              size={200}
+              bgColor="#FFFFFF"
+              fgColor="#0E1411"
+            />
+          </div>
+          <p className="text-xs text-[#6B766F]">Scan to pay ₹{AMOUNT_INR}</p>
         </div>
-        <div className="flex-1 min-w-0 w-full">
-          <p className="text-xs uppercase tracking-wider text-[#6B766F] mb-1">
-            UPI ID
-          </p>
-          <p className="font-mono text-sm text-[#0E1411] mb-3 break-all">
-            {UPI_ID}
-          </p>
+        <div className="flex flex-col gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-wider text-[#6B766F] mb-1">
+              UPI ID
+            </p>
+            <p className="font-mono text-sm text-[#0E1411] break-all">
+              {UPI_ID}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-wider text-[#6B766F] mb-1">
+              Name
+            </p>
+            <p className="font-mono text-sm text-[#0E1411]">ClearPath</p>
+          </div>
+          <div>
+            <p className="text-xs uppercase tracking-wider text-[#6B766F] mb-1">
+              Amount
+            </p>
+            <p className="font-mono text-sm text-[#0E1411]">₹{AMOUNT_INR}</p>
+          </div>
           <button
             type="button"
             onClick={copyUpi}
-            className="inline-flex items-center justify-center rounded-full border border-[#0F6E56] text-[#0F6E56] hover:bg-[#0F6E56] hover:text-white font-medium text-sm px-4 py-1.5 transition-colors"
+            className="self-start inline-flex items-center justify-center rounded-full border border-[#0F6E56] text-[#0F6E56] hover:bg-[#0F6E56] hover:text-white font-medium text-sm px-4 py-1.5 transition-colors"
           >
             {copied ? "Copied ✓" : "Copy UPI ID"}
           </button>
-          <p className="text-xs text-[#6B766F] mt-3">Amount: ₹{AMOUNT_INR}</p>
         </div>
       </div>
 
       <hr className="border-t border-[#D9D5C8] my-6" />
 
-      <p className="text-sm text-[#0E1411] font-medium mb-4">
+      <p className="text-sm text-[#0E1411] font-medium mb-4 text-center">
         After paying, share proof below.
       </p>
 
@@ -197,14 +220,16 @@ export function PaymentForm({
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={handleSubmit}
-        disabled={submitting}
-        className="inline-flex items-center justify-center rounded-full bg-[#0F6E56] hover:bg-[#0d5c48] disabled:opacity-60 disabled:cursor-not-allowed text-white font-medium text-[15px] px-6 py-3 transition-colors"
-      >
-        {submitting ? "Submitting…" : "Submit payment proof →"}
-      </button>
+      <div className="flex justify-center">
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={submitting}
+          className="inline-flex items-center justify-center rounded-full bg-[#0F6E56] hover:bg-[#0d5c48] disabled:opacity-60 disabled:cursor-not-allowed text-white font-medium text-[15px] px-6 py-3 transition-colors"
+        >
+          {submitting ? "Submitting…" : "Submit payment proof →"}
+        </button>
+      </div>
 
       {error && (
         <p className="text-sm text-[#993C1D] mt-3" role="alert">
@@ -212,7 +237,7 @@ export function PaymentForm({
         </p>
       )}
 
-      <p className="text-xs text-[#6B766F] mt-4">
+      <p className="text-xs text-[#6B766F] mt-4 text-center">
         We&apos;ll email your Draft Pack to{" "}
         <span className="font-medium text-[#0E1411]">{email}</span> within 6
         hours.
