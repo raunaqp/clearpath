@@ -45,12 +45,18 @@ const tierTexts: Record<string, string> = {
   concierge: "Join waitlist →",
 };
 
+const tierDestinations: Record<string, string> = {
+  free: "/start",
+  draft_pack: "/start",
+  concierge: "/concierge",
+};
+
 function trackCta(tier: string) {
   try {
     posthog.capture("cta_clicked", {
       cta_location: tierLocations[tier],
       cta_text: tierTexts[tier],
-      destination: "/start",
+      destination: tierDestinations[tier] ?? "/start",
     });
   } catch {}
 }
@@ -164,7 +170,7 @@ export default function PricingSection() {
             <div className="mt-auto pt-6">
               <p className="text-[28px] font-serif text-[#0E1411] mb-3">₹50,000</p>
               <Link
-                href="/start"
+                href="/concierge"
                 onClick={() => trackCta("concierge")}
                 className="block text-center bg-[#FAECE7] text-[#993C1D] font-medium text-sm px-5 py-3 rounded-full hover:bg-[#f5d5cb] transition-colors"
               >

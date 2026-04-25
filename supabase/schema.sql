@@ -61,17 +61,25 @@ create table tier2_draft_packs (
 );
 
 create table tier3_waitlist (
-  id                    uuid primary key default gen_random_uuid(),
-  assessment_id         uuid references assessments(id),
-  name                  text not null,
-  email                 text not null,
-  product_name          text,
-  cdsco_app_number      text,
-  target_date           date,
-  context               text,
-  status                text default 'waitlist',    -- waitlist | contacted | active | completed
-  created_at            timestamptz default now()
+  id                        uuid primary key default gen_random_uuid(),
+  created_at                timestamptz default now(),
+  name                      text not null,
+  email                     text not null,
+  mobile                    text,
+  product_name              text not null,
+  cdsco_application_number  text,
+  target_submission_date    date not null,
+  context                   text not null,
+  status                    text default 'waitlist',    -- waitlist | contacted | active | completed
+  assigned_expert_email     text,
+  contacted_at              timestamptz,
+  notes                     text,
+  source_assessment_id      uuid references assessments(id),
+  prefilled                 boolean default false
 );
+
+create index idx_tier3_waitlist_created_at        on tier3_waitlist (created_at desc);
+create index idx_tier3_waitlist_status_created_at on tier3_waitlist (status, created_at desc);
 
 create table pdf_content_cache (
   pdf_sha256        text primary key,

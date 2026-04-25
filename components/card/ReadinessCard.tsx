@@ -117,7 +117,7 @@ export function ReadinessCard({
         />
       )}
 
-      <Tier3SecondaryLink />
+      <Tier3SecondaryLink assessmentId={assessmentId} />
 
       <hr className="border-t border-[#D9D5C8] my-6" />
 
