@@ -34,7 +34,7 @@ export function QuestionContextPane({
   return (
     <aside
       aria-label="Wizard progress and context"
-      className="hidden lg:flex w-80 shrink-0 flex-col border-l border-[#E5E7EB] bg-white"
+      className="hidden xl:flex w-80 shrink-0 flex-col border-l border-[#E5E7EB] bg-white"
     >
       <div className="p-6 flex-1">
         <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#6B7280] mb-4">

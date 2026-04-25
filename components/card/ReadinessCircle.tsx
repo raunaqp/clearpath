@@ -39,13 +39,11 @@ export function ReadinessCircle({
   return (
     <div className="shrink-0">
       <div
-        className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full border flex items-baseline justify-center ${style}`}
+        className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full border flex items-center justify-center ${style}`}
       >
-        <span className="font-serif text-3xl sm:text-4xl leading-none tabular-nums">
-          {score}
-        </span>
-        <span className="font-serif text-base leading-none opacity-80">
-          /10
+        <span className="font-serif tabular-nums leading-none whitespace-nowrap">
+          <span className="text-3xl sm:text-4xl">{score}</span>
+          <span className="text-base opacity-80">/10</span>
         </span>
       </div>
     </div>

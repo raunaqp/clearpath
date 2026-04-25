@@ -550,11 +550,11 @@ function Step1({
       <h1 className="font-serif font-normal text-[clamp(28px,4vw,40px)] leading-[1.1] tracking-[-0.02em] text-[#0E1411] mb-2">
         Tell us about yourself
       </h1>
-      <p className="text-[#6B766F] text-base mb-8 leading-relaxed">
+      <p className="text-[#6B766F] text-sm sm:text-base mb-5 sm:mb-8 leading-relaxed">
         We&apos;ll email your Readiness Card here. Takes 30 seconds.
       </p>
 
-      <div className="bg-[#FDFCF8] border border-[#D9D5C8] rounded-xl p-6 md:p-8 space-y-6">
+      <div className="bg-[#FDFCF8] border border-[#D9D5C8] rounded-xl p-5 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
         <Field
           id="name"
           label="Your name"
@@ -655,12 +655,12 @@ function Step2({
       <h1 className="font-serif font-normal text-[clamp(28px,4vw,40px)] leading-[1.1] tracking-[-0.02em] text-[#0E1411] mb-2">
         Tell us about your product
       </h1>
-      <p className="text-[#6B766F] text-base mb-8 leading-relaxed">
+      <p className="text-[#6B766F] text-sm sm:text-base mb-5 sm:mb-8 leading-relaxed">
         We&apos;ll analyse it against 9 Indian regulations in about 5 minutes — free.
       </p>
 
       <form onSubmit={onSubmit} noValidate>
-        <div className="bg-[#FDFCF8] border border-[#D9D5C8] rounded-xl p-6 md:p-8 space-y-6">
+        <div className="bg-[#FDFCF8] border border-[#D9D5C8] rounded-xl p-5 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
 
           {/* One-liner with helper + counter ABOVE the box */}
           <div>

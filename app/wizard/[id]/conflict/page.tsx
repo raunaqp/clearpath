@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getServiceClient } from "@/lib/supabase";
 import ConflictDisclosureCard from "@/components/wizard/ConflictDisclosureCard";
-import { JourneyProgress } from "@/components/layout/JourneyProgress";
 
 export const dynamic = "force-dynamic";
 
@@ -69,11 +68,6 @@ export default async function WizardConflictPage({
   return (
     <main className="flex-1 flex items-start justify-center px-4 sm:px-6 pt-8 lg:pt-12 pb-12">
       <div className="w-full max-w-3xl">
-        <JourneyProgress
-          phase="assessment"
-          sub={{ current: 0, total: 7 }}
-          bottomTierLabel="ASSESSMENT · CONFLICT REVIEW"
-        />
         <ConflictDisclosureCard
           assessmentId={id}
           severity={narrowedSeverity}

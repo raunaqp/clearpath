@@ -23,7 +23,7 @@ export default function WizardHeader({
 }): JSX.Element {
   void _productDisplayName;
   return (
-    <div className="lg:hidden">
+    <div className="xl:hidden">
       <JourneyProgress
         phase="assessment"
         sub={{ current: currentStep, total: totalSteps }}

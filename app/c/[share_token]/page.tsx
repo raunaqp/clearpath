@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 type AssessmentRow = {
   id: string;
   share_token: string;
+  email: string;
   readiness_card: unknown;
   abdm_intent_captured_at: string | null;
   dpdp_intent_captured_at: string | null;
@@ -26,7 +27,7 @@ export default async function CardPage({
   const { data, error } = await supabase
     .from("assessments")
     .select(
-      "id, share_token, readiness_card, abdm_intent_captured_at, dpdp_intent_captured_at"
+      "id, share_token, email, readiness_card, abdm_intent_captured_at, dpdp_intent_captured_at"
     )
     .eq("share_token", share_token)
     .eq("status", "completed")
@@ -65,6 +66,7 @@ export default async function CardPage({
             assessmentId={data.id}
             shareToken={share_token}
             shareUrl={shareUrl}
+            email={data.email}
             abdmAlreadyCaptured={!!data.abdm_intent_captured_at}
             dpdpAlreadyCaptured={!!data.dpdp_intent_captured_at}
             showAbdmBlock={showAbdmBlock}

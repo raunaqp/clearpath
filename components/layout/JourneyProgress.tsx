@@ -57,9 +57,9 @@ export function JourneyProgress({
   })();
 
   return (
-    <div className="mb-6">
+    <div className="mb-4 sm:mb-6">
       {/* Top tier: two phase chips, joined by a connector */}
-      <div className="flex items-center gap-3 mb-3">
+      <div className="flex items-center gap-3 mb-2 sm:mb-3">
         <PhaseChip
           label={PHASE_LABELS.intake}
           state={

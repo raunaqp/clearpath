@@ -1,18 +1,23 @@
 "use client";
 
+import { useState } from "react";
 import posthog from "posthog-js";
 import { ReadinessCard } from "./ReadinessCard";
+import { IntentConfirmationModal } from "./IntentConfirmationModal";
 import {
   captureAbdmIntent,
   captureDpdpIntent,
 } from "@/app/c/[share_token]/actions";
 import type { ReadinessCard as ReadinessCardType } from "@/lib/schemas/readiness-card";
 
+type ModalState = { type: "abdm" | "dpdp" } | null;
+
 export function ReadinessCardContainer({
   card,
   assessmentId,
   shareToken,
   shareUrl,
+  email,
   abdmAlreadyCaptured,
   dpdpAlreadyCaptured,
   showAbdmBlock,
@@ -23,12 +28,15 @@ export function ReadinessCardContainer({
   assessmentId: string;
   shareToken: string;
   shareUrl: string;
+  email: string;
   abdmAlreadyCaptured: boolean;
   dpdpAlreadyCaptured: boolean;
   showAbdmBlock: boolean;
   showDpdpBlock: boolean;
   isWellness: boolean;
 }) {
+  const [modal, setModal] = useState<ModalState>(null);
+
   async function handleAbdmSubmit(message: string) {
     try {
       posthog.capture("abdm_intent_submitted", {
@@ -39,6 +47,7 @@ export function ReadinessCardContainer({
       // telemetry only — never block the action
     }
     await captureAbdmIntent(assessmentId, shareToken, message);
+    setModal({ type: "abdm" });
   }
 
   async function handleDpdpSubmit() {
@@ -50,21 +59,30 @@ export function ReadinessCardContainer({
       // telemetry only
     }
     await captureDpdpIntent(assessmentId, shareToken);
+    setModal({ type: "dpdp" });
   }
 
   return (
-    <ReadinessCard
-      card={card}
-      assessmentId={assessmentId}
-      shareUrl={shareUrl}
-      shareToken={shareToken}
-      abdmAlreadyCaptured={abdmAlreadyCaptured}
-      dpdpAlreadyCaptured={dpdpAlreadyCaptured}
-      showAbdmBlock={showAbdmBlock}
-      showDpdpBlock={showDpdpBlock}
-      isWellness={isWellness}
-      onAbdmSubmit={handleAbdmSubmit}
-      onDpdpSubmit={handleDpdpSubmit}
-    />
+    <>
+      <ReadinessCard
+        card={card}
+        assessmentId={assessmentId}
+        shareUrl={shareUrl}
+        shareToken={shareToken}
+        abdmAlreadyCaptured={abdmAlreadyCaptured}
+        dpdpAlreadyCaptured={dpdpAlreadyCaptured}
+        showAbdmBlock={showAbdmBlock}
+        showDpdpBlock={showDpdpBlock}
+        isWellness={isWellness}
+        onAbdmSubmit={handleAbdmSubmit}
+        onDpdpSubmit={handleDpdpSubmit}
+      />
+      <IntentConfirmationModal
+        open={modal !== null}
+        type={modal?.type ?? "abdm"}
+        email={email}
+        onClose={() => setModal(null)}
+      />
+    </>
   );
 }

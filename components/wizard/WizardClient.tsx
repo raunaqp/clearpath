@@ -427,7 +427,7 @@ export default function WizardClient({
         totalSteps={total}
       />
 
-      <h1 className="font-serif font-normal text-[clamp(24px,3.4vw,32px)] leading-[1.15] tracking-[-0.01em] text-[#0E1411] mt-6 mb-2">
+      <h1 className="font-serif font-normal text-2xl sm:text-3xl xl:text-4xl leading-[1.15] tracking-[-0.01em] text-[#0E1411] mt-4 mb-2">
         {question.required && (
           <>
             <span
@@ -442,12 +442,12 @@ export default function WizardClient({
         {question.prompt}
       </h1>
       {question.helper && (
-        <p className="text-[#6B766F] text-sm leading-relaxed mb-6 italic">
+        <p className="text-[#6B766F] text-sm leading-relaxed mb-5 italic">
           {question.helper}
         </p>
       )}
 
-      <div className="space-y-3 mb-8">
+      <div className="space-y-2 sm:space-y-3 mb-8">
         {question.options.map((opt, i) =>
           question.kind === "radio" ? (
             <RadioCard

@@ -64,13 +64,14 @@ export default async function WizardStepPage({
   const initialAnswers: WizardAnswers = data.wizard_answers ?? {};
   const initialSkipped = meta.wizard_skipped_questions ?? [];
 
-  // Two-pane on lg+ (1024px+): left = question card, right = context pane.
-  // Below lg: single column; the WizardClient's own horizontal stepper
-  // handles progress visibility on mobile/tablet.
+  // Two-pane on xl+ (1280px+): left = question card, right = context pane.
+  // Below xl: single column with horizontal stepper. The 1024-1279 band
+  // sits in the single-column path because at 1024 the right pane only
+  // leaves 704px on the left, which feels cramped.
   return (
     <main className="flex-1 flex justify-center">
       <div className="w-full max-w-6xl flex">
-        <div className="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 pt-8 lg:pt-12 pb-12">
+        <div className="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 xl:px-10 pt-6 sm:pt-8 lg:pt-12 xl:pt-16 pb-12">
           <div className="mx-auto w-full max-w-3xl">
             <WizardClient
               assessmentId={id}

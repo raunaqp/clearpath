@@ -35,7 +35,7 @@ export default function HeroSection() {
   const ref = useSectionTracking("hero");
 
   return (
-    <section ref={ref} className="pt-20 pb-16 md:pt-28 md:pb-24 border-b border-[#E8E4D6]">
+    <section ref={ref} className="pt-12 pb-12 md:pt-28 md:pb-24 border-b border-[#E8E4D6]">
       <div className="max-w-[1240px] mx-auto px-6 md:px-8">
         <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-6">
           Indian Digital Health · Regulatory Readiness
@@ -48,7 +48,7 @@ export default function HeroSection() {
           </span>
         </h1>
 
-        <p className="text-[18px] text-[#6B766F] max-w-2xl leading-relaxed mb-10">
+        <p className="text-base sm:text-[18px] text-[#6B766F] max-w-2xl leading-relaxed mb-6 sm:mb-10">
           CDSCO&apos;s Medical Device Rules 2017 and the Oct 2025 SaMD draft changed
           what counts as a medical device. ClearPath tells you in 5 minutes
           whether your product is in scope — and what the fastest path to
@@ -76,7 +76,7 @@ export default function HeroSection() {
           · Tested on 15+ Indian healthtech products
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-14">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-10 md:mt-14">
           {stats.map((s) => (
             <div
               key={s.number}

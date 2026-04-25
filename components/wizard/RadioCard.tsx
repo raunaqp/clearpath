@@ -23,7 +23,7 @@ export default function RadioCard({
       role="radio"
       aria-checked={selected}
       onClick={onSelect}
-      className={`w-full min-h-[64px] rounded-xl px-4 py-3 text-left flex items-start gap-3 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0F6E56] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F6F2] ${containerClasses}`}
+      className={`w-full min-h-[64px] rounded-xl px-4 sm:px-5 xl:px-6 py-3 xl:py-4 text-left flex items-start gap-3 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0F6E56] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F6F2] ${containerClasses}`}
     >
       <span
         aria-hidden
@@ -37,11 +37,11 @@ export default function RadioCard({
       </span>
 
       <span className="flex-1 min-w-0">
-        <span className="block text-[15px] font-medium text-[#0E1411] leading-snug">
+        <span className="block text-[15px] xl:text-base font-medium text-[#0E1411] leading-snug">
           {label}
         </span>
         {description && (
-          <span className="block text-sm text-[#6B766F] mt-1 leading-relaxed">
+          <span className="block text-sm xl:text-[15px] text-[#6B766F] mt-1 leading-relaxed">
             {description}
           </span>
         )}
