@@ -13,7 +13,6 @@ import {
 
 const MODEL = "claude-opus-4-7";
 const MAX_TOKENS = 4000;
-const TEMPERATURE = 0.3;
 const STRICT_SUFFIX =
   "\n\nReturn STRICT JSON ONLY. No preamble. No trailing text.";
 
@@ -107,10 +106,11 @@ export async function runSynthesizer(
     const systemText =
       SYNTHESIZER_SYSTEM_PROMPT + (attempt === 2 ? STRICT_SUFFIX : "");
 
+    // Note: temperature is deprecated for Opus 4.7 — model uses
+    // its own internal sampling. See Anthropic API changelog.
     const response = await client.messages.create({
       model: MODEL,
       max_tokens: MAX_TOKENS,
-      temperature: TEMPERATURE,
       system: [
         {
           type: "text",

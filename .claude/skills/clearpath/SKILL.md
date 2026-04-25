@@ -80,7 +80,7 @@ Every prompt file in `prompts/` follows:
 ### Temperature guidance
 
 - Classification / routing: `0.2`
-- Engine synthesis: `0.3`
+- Note: Opus 4.7 deprecated the temperature parameter. Don't pass it. The model's internal sampling is non-configurable via API.
 - Draft content generation: `0.7`
 - Never `1.0` — regulatory content should not be creative
 
