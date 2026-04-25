@@ -28,7 +28,7 @@ const faqs = [
   {
     question: "What's in the ₹50K Submission Concierge?",
     answer:
-      "Document refinement by Indian regulatory experts, classification re-validation, QMS checklist guidance (ISO 13485), clinical validation plan review, and 1 iteration within 2–3 weeks. Join the waitlist — we're onboarding the first cohort now.",
+      "Document refinement by Indian regulatory experts, classification re-validation, QMS checklist guidance (ISO 13485), clinical validation plan review, and 1 iteration — delivered as a 12-month engagement. Join the waitlist — we're onboarding the first cohort now.",
   },
   {
     question: "Is my data safe?",

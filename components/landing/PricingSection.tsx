@@ -156,7 +156,7 @@ export default function PricingSection() {
               Submission Concierge
             </h3>
             <p className="italic text-[#6B766F] text-sm mt-1">
-              Expert-reviewed · 2–3 weeks
+              Expert-reviewed · 12-month engagement
             </p>
             <BulletList
               items={[
