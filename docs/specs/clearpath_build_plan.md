@@ -957,7 +957,7 @@ On submit:
 2. Email customer within 48h
 3. Calendly link for kickoff call
 4. Razorpay link sent manually if fit confirmed
-5. Expert review 2–3 weeks
+5. Expert review · 12-month engagement
 
 **Full automated flow (Razorpay + expert routing) is Phase 2.**
 

@@ -5,10 +5,19 @@ import { runPreRouter, type PreRouterPdf } from "@/lib/engine/pre-router";
 import { fetchUrl } from "@/lib/engine/fetch-url";
 import { downloadPdfAsBase64 } from "@/lib/engine/download-pdf";
 import { checkPdfCache, savePdfSummary } from "@/lib/engine/pdf-cache";
+import { runSynthesisForAssessment } from "@/lib/engine/run-synthesis";
 import type { WizardAnswers } from "@/lib/wizard/types";
 import { totalSteps } from "@/lib/wizard/questions";
+import {
+  SynthesizerErrorPanel,
+  type SynthesizerErrorType,
+} from "@/components/card/SynthesizerErrorPanel";
+import { SynthesizerWaitingPanel } from "@/components/card/SynthesizerWaitingPanel";
+import { retrySynthesis } from "./actions";
 
 export const dynamic = "force-dynamic";
+
+const MAX_SYNTHESIZER_RETRIES = 3;
 
 type UploadedDoc = {
   filename: string;
@@ -107,7 +116,71 @@ export default async function AssessPage({
     redirect(`/wizard/${id}/q/${step}`);
   }
 
-  // wizard_complete — feature 5 not built yet, show a holding card.
+  // synthesizer_error — show panel + retry button. Don't auto-retry on
+  // every page load; the user clicks retry explicitly.
+  if (assessment.status === "synthesizer_error") {
+    const meta = (assessment.meta ?? {}) as Record<string, unknown>;
+    const errMeta = meta.synthesizer_error as
+      | { retry_count?: number; error_type?: string }
+      | undefined;
+    const retryCount =
+      typeof errMeta?.retry_count === "number" ? errMeta.retry_count : 0;
+    const errorType =
+      (errMeta?.error_type as SynthesizerErrorType | undefined) ?? "unknown";
+
+    async function handleRetry(): Promise<void> {
+      "use server";
+      await retrySynthesis(id);
+    }
+
+    return (
+      <SynthesizerErrorPanel
+        assessmentId={id}
+        retryCount={retryCount}
+        errorType={errorType}
+        canRetry={retryCount < MAX_SYNTHESIZER_RETRIES}
+        onRetry={handleRetry}
+      />
+    );
+  }
+
+  // wizard_complete | synthesizing — drive (or observe) synthesis. The helper
+  // handles fresh-lock detection (returns "wait") and stale-lock takeover.
+  if (
+    assessment.status === "wizard_complete" ||
+    assessment.status === "synthesizing"
+  ) {
+    const result = await runSynthesisForAssessment(id);
+
+    if (result.kind === "redirect") {
+      redirect(`/c/${result.shareToken}`);
+    }
+
+    if (result.kind === "wait") {
+      return (
+        <SynthesizerWaitingPanel
+          ageSeconds={Math.floor(result.runningSinceMs / 1000)}
+        />
+      );
+    }
+
+    async function handleRetry(): Promise<void> {
+      "use server";
+      await retrySynthesis(id);
+    }
+
+    return (
+      <SynthesizerErrorPanel
+        assessmentId={id}
+        retryCount={result.retryCount}
+        errorType={result.errorType}
+        canRetry={result.retryCount < MAX_SYNTHESIZER_RETRIES}
+        onRetry={handleRetry}
+      />
+    );
+  }
+
+  // Unknown status — fall back to the holding card.
   return <EngineComingPanel productType={assessment.product_type} />;
 }
 

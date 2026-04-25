@@ -174,7 +174,7 @@ step proved it was worth it.
 
 5  ₹50K
    Concierge
-   2–3 weeks
+   12 months
 
 6  Submit
    to CDSCO
@@ -344,7 +344,7 @@ For expert-filled forms + review, see Stage 3.
 ```
 Stage 3 · ₹50,000
 Submission Concierge
-Expert-reviewed · 2–3 weeks
+Expert-reviewed · 12 months
 
 ✓ Document refinement by Indian regulatory experts
 ✓ Classification validation
@@ -1264,7 +1264,7 @@ mobile.
 ──────────────────────
 
 Or want an expert to review + refine before you file?
-Submission Concierge · ₹50,000 · 2-3 weeks →
+Submission Concierge · ₹50,000 for 12 months →
 ```
 
 Tier 3 link is a text link, not a button. Smaller font than Tier 2 CTA. 
@@ -1381,7 +1381,7 @@ What to do next:
      Context and Intended Use sections. These are drafted from your 
      answers and may need refinement.
   2. Paste the drafted content into the relevant CDSCO form sections.
-  3. Consider the Submission Concierge (₹50K, 2–3 weeks) if you 
+  3. Consider the Submission Concierge (₹50K, 12 months) if you 
      want an expert to review + refine before you file.
 
 Your Readiness Card is still accessible at:
@@ -1433,7 +1433,7 @@ Get an expert on your case
 
 **Subhead:**
 ```
-₹50,000 · 2–3 weeks · Indian regulatory experts review your 
+₹50,000 for 12 months · Indian regulatory experts review your 
 submission. 1 iteration included.
 ```
 
@@ -1476,7 +1476,7 @@ Thanks, {name}. Here's what happens next:
   2. The expert will schedule a 30-minute kick-off call.
   3. We'll send a Razorpay link for ₹50,000 — payment is only due 
      after the kick-off call confirms fit.
-  4. Review starts immediately after payment. 2–3 weeks to delivery.
+  4. Review starts immediately after payment. 12-month engagement.
 
 Questions in the meantime? Reply to this email or write to 
 founder@clearpath.in.

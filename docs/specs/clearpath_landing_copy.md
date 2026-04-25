@@ -161,7 +161,7 @@ STAGE 3
 
 Submission Concierge
 
-Expert-reviewed. 2-3 weeks. You get:
+Expert-reviewed. 12 months. You get:
 
 · Document refinement by Indian regulatory experts
 · Classification validation

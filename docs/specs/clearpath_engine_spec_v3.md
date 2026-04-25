@@ -20,7 +20,7 @@ Authoritative spec after calibration on 15+ Indian healthtech products. Supersed
 |------|-------|---------|----------|---------|
 | 1 | Free | Readiness Card | 5 min, on-screen | One-page decision card, screenshot-worthy |
 | 2 | ₹499 | Regulatory Draft Pack | ~10 min, emailed | Draft application content + CDSCO mapping |
-| 3 | ₹25K | Submission Concierge | 2–3 weeks, expert-reviewed | Refined submission pack + 1 iteration |
+| 3 | ₹25K | Submission Concierge | 12 months, expert-reviewed | Refined submission pack + 1 iteration |
 
 Launch plan for GrowthX Weekender: Tier 1 + 2 live. Tier 3 as waitlist for first 2 weeks, then activated once expert panel is set up.
 

@@ -605,7 +605,7 @@ What to do next:
 2. Hand to your regulatory consultant, or use as a
    starting template for CDSCO submission.
 3. Consider Tier 3 Submission Concierge if you want
-   expert review + iteration (2-3 weeks, ₹50K).
+   expert review + iteration (12 months, ₹50K).
 
 Your Readiness Card is still accessible at:
 https://clearpath.in/c/abc123
@@ -700,7 +700,7 @@ Questions? Reply to this email.
 │                                                  │
 │   Get an expert on your case                    │  ← H2
 │                                                  │
-│   ₹50K · 2-3 weeks · Expert-reviewed            │
+│   ₹50K · 12 months · Expert-reviewed            │
 │                                                  │
 │   Process:                                       │
 │   ──────────                                     │

@@ -118,7 +118,7 @@ Six canonical user journeys. Each drives specific product, UX, and content decis
 5. **Payment succeeds.** Loading state: *"Generating your Regulatory Draft Pack... (typically 8–10 minutes)"*.
 6. **Email arrives with PDF.** Subject: *"Your CDSCO Draft Pack for NeuroScan — ready to submit"*.
 7. **Arjun opens PDF.** 18-page document with sections named above, content drafted specifically for his product. Copy tone: professional, regulator-friendly, soft certainty language throughout.
-8. **At the end of PDF:** *"Next steps: hand this to a consultant for ₹50K–₹2L review, or use ClearPath's Submission Concierge (₹50K · 2–3 weeks · expert-reviewed)."*
+8. **At the end of PDF:** *"Next steps: hand this to a consultant for ₹50K–₹2L review, or use ClearPath's Submission Concierge (₹50K · 12 months · expert-reviewed)."*
 
 **Success state.** Arjun has a submission-ready draft he can paste into CDSCO forms or hand to a consultant. Knows exactly what applies and what's next.
 
@@ -140,7 +140,7 @@ Six canonical user journeys. Each drives specific product, UX, and content decis
 **Steps:**
 
 1. **Clicks through to clearpath.in/concierge.**
-2. **Landing explainer:** *"Get an expert regulatory reviewer on your case. 2-3 weeks. ₹50K."*
+2. **Landing explainer:** *"Get an expert regulatory reviewer on your case. 12 months. ₹50K."*
 3. **Process shown:**
    - Day 1: Upload your submission + deficiency letter
    - Day 2-3: Expert assignment + initial read
@@ -163,7 +163,7 @@ Six canonical user journeys. Each drives specific product, UX, and content decis
 7. **Payment: ₹50K via Razorpay.**
 8. **Confirmation screen:** *"Thanks. An expert will reach out within 48 hours. Track progress in your dashboard."*
 9. **Within 48h:** email from named expert: *"Hi Pritha, I'll be working on your case. Review kickoff call scheduled for [date]. Here's what I'll need from you:"*
-10. **Review cycle:** 2–3 weeks as described. Final deliverable delivered via secure portal.
+10. **Review cycle:** 12-month engagement as described. Final deliverable delivered via secure portal.
 
 **Success state.** Pritha has an expert-reviewed response to CDSCO deficiency, filed with confidence, lower probability of second deficiency letter.
 

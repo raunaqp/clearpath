@@ -1,0 +1,74 @@
+import { headers } from "next/headers";
+import { notFound } from "next/navigation";
+import { getServiceClient } from "@/lib/supabase";
+import { ReadinessCardSchema } from "@/lib/schemas/readiness-card";
+import { ReadinessCardContainer } from "@/components/card/ReadinessCardContainer";
+
+export const dynamic = "force-dynamic";
+
+type AssessmentRow = {
+  id: string;
+  share_token: string;
+  readiness_card: unknown;
+  abdm_intent_captured_at: string | null;
+  dpdp_intent_captured_at: string | null;
+};
+
+export default async function CardPage({
+  params,
+}: {
+  params: Promise<{ share_token: string }>;
+}) {
+  const { share_token } = await params;
+  const supabase = getServiceClient();
+
+  const { data, error } = await supabase
+    .from("assessments")
+    .select(
+      "id, share_token, readiness_card, abdm_intent_captured_at, dpdp_intent_captured_at"
+    )
+    .eq("share_token", share_token)
+    .eq("status", "completed")
+    .maybeSingle<AssessmentRow>();
+
+  if (error || !data || data.readiness_card == null) {
+    notFound();
+  }
+
+  const parsed = ReadinessCardSchema.safeParse(data.readiness_card);
+  if (!parsed.success) {
+    notFound();
+  }
+  const card = parsed.data;
+
+  const h = await headers();
+  const host = h.get("host") ?? "clearpath.in";
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  const shareUrl = `${proto}://${host}/c/${share_token}`;
+
+  const isWellness =
+    card.classification.medical_device_status === "wellness_carve_out";
+  const showAbdmBlock =
+    !isWellness && card.regulations.abdm.verdict === "required";
+  const showDpdpBlock =
+    card.regulations.dpdp.verdict === "required" ||
+    card.regulations.dpdp.verdict === "conditional";
+
+  return (
+    <main className="min-h-screen bg-[#F7F6F2] py-10 px-4">
+      <div className="max-w-2xl mx-auto">
+        <ReadinessCardContainer
+          card={card}
+          assessmentId={data.id}
+          shareToken={share_token}
+          shareUrl={shareUrl}
+          abdmAlreadyCaptured={!!data.abdm_intent_captured_at}
+          dpdpAlreadyCaptured={!!data.dpdp_intent_captured_at}
+          showAbdmBlock={showAbdmBlock}
+          showDpdpBlock={showDpdpBlock}
+          isWellness={isWellness}
+        />
+      </div>
+    </main>
+  );
+}

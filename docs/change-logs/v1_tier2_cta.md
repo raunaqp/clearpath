@@ -65,7 +65,7 @@ mobile.
 ──────────────────────
 
 Or want an expert to review + refine before you file?
-Submission Concierge · ₹50,000 · 2-3 weeks →
+Submission Concierge · ₹50,000 for 12 months →
 ```
 
 Tier 3 link is a text link, not a button. Smaller font than Tier 2 CTA. 
