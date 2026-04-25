@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { nameFromEmail } from "@/lib/concierge/validation";
+import { GlobalHeader } from "@/components/layout/GlobalHeader";
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
@@ -14,17 +15,9 @@ export default async function ConciergeConfirmationPage({
 
   return (
     <div className="min-h-screen bg-[#F7F6F2] flex flex-col">
-      <nav className="px-6 py-4 border-b border-[#E8E4D6]">
-        <Link
-          href="/"
-          className="font-serif text-[20px] text-[#0E1411] hover:text-[#0F6E56] transition-colors"
-        >
-          ClearPath
-        </Link>
-      </nav>
-
-      <main className="flex-1 flex items-start justify-center px-4 py-12 md:py-20">
-        <div className="w-full max-w-xl">
+      <GlobalHeader />
+      <main className="flex-1 px-4 sm:px-6 lg:px-8 pt-8 lg:pt-12 pb-12">
+        <div className="w-full max-w-2xl mx-auto">
           <div className="mb-6 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EAF3EF] border border-[#0F6E56]/30">
             <span
               aria-hidden

@@ -19,8 +19,8 @@ export default function AnalysingLoader() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#F7F6F2] flex items-center justify-center px-4">
-      <div className="text-center max-w-sm">
+    <div className="flex-1 flex items-center justify-center px-4 py-12">
+      <div className="text-center max-w-md">
         <div className="w-12 h-12 rounded-full border-2 border-[#D9D5C8] border-t-[#0F6E56] animate-spin mx-auto mb-6" />
         <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-3">
           Analysing your product

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getServiceClient } from "@/lib/supabase";
 import { ReadinessCardSchema } from "@/lib/schemas/readiness-card";
 import { ReadinessCardContainer } from "@/components/card/ReadinessCardContainer";
+import { GlobalHeader } from "@/components/layout/GlobalHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -55,20 +56,23 @@ export default async function CardPage({
     card.regulations.dpdp.verdict === "conditional";
 
   return (
-    <main className="min-h-screen bg-[#F7F6F2] py-10 px-4">
-      <div className="max-w-2xl mx-auto">
-        <ReadinessCardContainer
-          card={card}
-          assessmentId={data.id}
-          shareToken={share_token}
-          shareUrl={shareUrl}
-          abdmAlreadyCaptured={!!data.abdm_intent_captured_at}
-          dpdpAlreadyCaptured={!!data.dpdp_intent_captured_at}
-          showAbdmBlock={showAbdmBlock}
-          showDpdpBlock={showDpdpBlock}
-          isWellness={isWellness}
-        />
-      </div>
-    </main>
+    <div className="min-h-screen bg-[#F7F6F2] flex flex-col">
+      <GlobalHeader />
+      <main className="flex-1 px-4 sm:px-6 lg:px-8 pt-8 lg:pt-12 pb-12">
+        <div className="max-w-4xl mx-auto">
+          <ReadinessCardContainer
+            card={card}
+            assessmentId={data.id}
+            shareToken={share_token}
+            shareUrl={shareUrl}
+            abdmAlreadyCaptured={!!data.abdm_intent_captured_at}
+            dpdpAlreadyCaptured={!!data.dpdp_intent_captured_at}
+            showAbdmBlock={showAbdmBlock}
+            showDpdpBlock={showDpdpBlock}
+            isWellness={isWellness}
+          />
+        </div>
+      </main>
+    </div>
   );
 }

@@ -4,6 +4,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import posthog from "posthog-js";
+import { GlobalHeader } from "@/components/layout/GlobalHeader";
 import { countPdfPages, sha256Hex } from "@/lib/pdf-utils";
 import {
   validateEmail,
@@ -436,17 +437,9 @@ function StartPageInner() {
 
   return (
     <div className="min-h-screen bg-[#F7F6F2] flex flex-col">
-      <nav className="px-6 py-4 border-b border-[#E8E4D6]">
-        <Link
-          href="/"
-          className="font-serif text-[20px] text-[#0E1411] hover:text-[#0F6E56] transition-colors"
-        >
-          ClearPath
-        </Link>
-      </nav>
-
-      <main className="flex-1 flex items-start justify-center px-4 py-12 md:py-20">
-        <div className="w-full max-w-xl">
+      <GlobalHeader />
+      <main className="flex-1 px-4 sm:px-6 lg:px-8 pt-8 lg:pt-12 pb-12">
+        <div className="w-full max-w-3xl mx-auto">
           {resumeId && !prefillError && (
             <div className="mb-5 px-4 py-3 rounded-lg bg-[#EAF3EF] border border-[#0F6E56]/30">
               <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#0F6E56] mb-1">

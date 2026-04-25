@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getServiceClient } from "@/lib/supabase";
 import { UpgradePageViewTracker } from "@/components/upgrade/UpgradePageViewTracker";
+import { GlobalHeader } from "@/components/layout/GlobalHeader";
 import { PaymentForm } from "./PaymentForm";
 import { StatusPanel, type Tier2Order } from "./StatusPanel";
 
@@ -80,12 +81,14 @@ export default async function UpgradePage({
   const cardHref = assessment.share_token ? `/c/${assessment.share_token}` : "/";
 
   return (
-    <main className="min-h-screen bg-[#F7F6F2] px-4 py-12">
-      <UpgradePageViewTracker assessmentId={id} />
-      <div className="max-w-2xl mx-auto">
-        <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-3">
-          Tier 2 — Draft Pack
-        </p>
+    <div className="min-h-screen bg-[#F7F6F2] flex flex-col">
+      <GlobalHeader />
+      <main className="flex-1 px-4 sm:px-6 lg:px-8 pt-8 lg:pt-12 pb-12">
+        <UpgradePageViewTracker assessmentId={id} />
+        <div className="max-w-3xl mx-auto">
+          <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-3">
+            Tier 2 — Draft Pack
+          </p>
 
         {order ? (
           <StatusPanel
@@ -135,9 +138,10 @@ export default async function UpgradePage({
                 ← Back to your Readiness Card
               </a>
             </div>
-          </>
-        )}
-      </div>
-    </main>
+            </>
+          )}
+        </div>
+      </main>
+    </div>
   );
 }

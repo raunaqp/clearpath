@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getServiceClient } from "@/lib/supabase";
 import WizardClient from "@/components/wizard/WizardClient";
+import { QuestionContextPane } from "@/components/layout/QuestionContextPane";
 import { displayName } from "@/lib/wizard/display-name";
 import { totalSteps } from "@/lib/wizard/questions";
 import type { WizardAnswers } from "@/lib/wizard/types";
@@ -52,9 +53,6 @@ export default async function WizardStepPage({
     return <NotFoundPanel message="We couldn't find this assessment." />;
   }
 
-  // Route back through /assess for statuses that need processing or decline.
-  // Conflict gating lives on /assess and /wizard/[id]/conflict — Q pages
-  // always render the question cleanly.
   if (data.status === "draft") redirect(`/assess/${id}`);
   if (data.status === "rejected") redirect(`/declined/${id}`);
 
@@ -66,38 +64,35 @@ export default async function WizardStepPage({
   const initialAnswers: WizardAnswers = data.wizard_answers ?? {};
   const initialSkipped = meta.wizard_skipped_questions ?? [];
 
+  // Two-pane on lg+ (1024px+): left = question card, right = context pane.
+  // Below lg: single column; the WizardClient's own horizontal stepper
+  // handles progress visibility on mobile/tablet.
   return (
-    <div className="min-h-screen bg-[#F7F6F2] flex flex-col">
-      <nav className="px-6 py-4 border-b border-[#E8E4D6]">
-        <Link
-          href="/"
-          className="font-serif text-[20px] text-[#0E1411] hover:text-[#0F6E56] transition-colors"
-        >
-          ClearPath
-        </Link>
-      </nav>
-
-      <main className="flex-1 flex items-start justify-center px-4 py-10 md:py-16">
-        <div className="w-full max-w-xl">
-          <WizardClient
-            assessmentId={id}
-            productDisplayName={productDisplayName}
-            currentStep={step}
-            initialAnswers={initialAnswers}
-            initialSkipped={initialSkipped}
-            productType={data.product_type}
-            conflictEncountered={meta.conflict_detected === true}
-            pdfCount={pdfCount}
-          />
+    <main className="flex-1 flex justify-center">
+      <div className="w-full max-w-6xl flex">
+        <div className="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 pt-8 lg:pt-12 pb-12">
+          <div className="mx-auto w-full max-w-3xl">
+            <WizardClient
+              assessmentId={id}
+              productDisplayName={productDisplayName}
+              currentStep={step}
+              initialAnswers={initialAnswers}
+              initialSkipped={initialSkipped}
+              productType={data.product_type}
+              conflictEncountered={meta.conflict_detected === true}
+              pdfCount={pdfCount}
+            />
+          </div>
         </div>
-      </main>
-    </div>
+        <QuestionContextPane currentStep={step} totalSteps={total} />
+      </div>
+    </main>
   );
 }
 
 function NotFoundPanel({ message }: { message: string }) {
   return (
-    <div className="min-h-screen bg-[#F7F6F2] flex items-center justify-center px-4">
+    <main className="flex-1 flex items-center justify-center px-4 py-12">
       <div className="text-center max-w-md">
         <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#993C1D] mb-3">
           Not found
@@ -112,6 +107,6 @@ function NotFoundPanel({ message }: { message: string }) {
           Start over →
         </Link>
       </div>
-    </div>
+    </main>
   );
 }

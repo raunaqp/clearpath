@@ -11,7 +11,7 @@ export default function WizardHeader({
   totalSteps?: number;
 }): JSX.Element {
   return (
-    <div>
+    <div className="lg:hidden">
       <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517]">
         {productDisplayName} · Question {currentStep} of {totalSteps}
       </p>

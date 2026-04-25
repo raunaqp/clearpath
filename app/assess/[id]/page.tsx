@@ -13,7 +13,17 @@ import {
   type SynthesizerErrorType,
 } from "@/components/card/SynthesizerErrorPanel";
 import { SynthesizerWaitingPanel } from "@/components/card/SynthesizerWaitingPanel";
+import { GlobalHeader } from "@/components/layout/GlobalHeader";
 import { retrySynthesis } from "./actions";
+
+function AssessShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-[#F7F6F2] flex flex-col">
+      <GlobalHeader />
+      {children}
+    </div>
+  );
+}
 
 export const dynamic = "force-dynamic";
 
@@ -75,7 +85,11 @@ export default async function AssessPage({
     .maybeSingle<AssessmentRow>();
 
   if (error || !assessment) {
-    return <NotFoundPanel />;
+    return (
+      <AssessShell>
+        <NotFoundPanel />
+      </AssessShell>
+    );
   }
 
   // Already landed somewhere — route user there
@@ -134,13 +148,15 @@ export default async function AssessPage({
     }
 
     return (
-      <SynthesizerErrorPanel
-        assessmentId={id}
-        retryCount={retryCount}
-        errorType={errorType}
-        canRetry={retryCount < MAX_SYNTHESIZER_RETRIES}
-        onRetry={handleRetry}
-      />
+      <AssessShell>
+        <SynthesizerErrorPanel
+          assessmentId={id}
+          retryCount={retryCount}
+          errorType={errorType}
+          canRetry={retryCount < MAX_SYNTHESIZER_RETRIES}
+          onRetry={handleRetry}
+        />
+      </AssessShell>
     );
   }
 
@@ -158,9 +174,11 @@ export default async function AssessPage({
 
     if (result.kind === "wait") {
       return (
-        <SynthesizerWaitingPanel
-          ageSeconds={Math.floor(result.runningSinceMs / 1000)}
-        />
+        <AssessShell>
+          <SynthesizerWaitingPanel
+            ageSeconds={Math.floor(result.runningSinceMs / 1000)}
+          />
+        </AssessShell>
       );
     }
 
@@ -170,18 +188,24 @@ export default async function AssessPage({
     }
 
     return (
-      <SynthesizerErrorPanel
-        assessmentId={id}
-        retryCount={result.retryCount}
-        errorType={result.errorType}
-        canRetry={result.retryCount < MAX_SYNTHESIZER_RETRIES}
-        onRetry={handleRetry}
-      />
+      <AssessShell>
+        <SynthesizerErrorPanel
+          assessmentId={id}
+          retryCount={result.retryCount}
+          errorType={result.errorType}
+          canRetry={result.retryCount < MAX_SYNTHESIZER_RETRIES}
+          onRetry={handleRetry}
+        />
+      </AssessShell>
     );
   }
 
   // Unknown status — fall back to the holding card.
-  return <EngineComingPanel productType={assessment.product_type} />;
+  return (
+    <AssessShell>
+      <EngineComingPanel productType={assessment.product_type} />
+    </AssessShell>
+  );
 }
 
 async function runPreRouterFlow(
@@ -264,7 +288,7 @@ async function runPreRouterFlow(
 
 function NotFoundPanel() {
   return (
-    <div className="min-h-screen bg-[#F7F6F2] flex items-center justify-center px-4">
+    <div className="flex-1 flex items-center justify-center px-4 py-12">
       <div className="text-center max-w-md">
         <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#993C1D] mb-3">
           Not found
@@ -289,7 +313,7 @@ function NotFoundPanel() {
 
 function EngineComingPanel({ productType }: { productType: string | null }) {
   return (
-    <div className="min-h-screen bg-[#F7F6F2] flex items-center justify-center px-4">
+    <div className="flex-1 flex items-center justify-center px-4 py-12">
       <div className="text-center max-w-md">
         <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#0F6E56] mb-3">
           Pre-routing complete

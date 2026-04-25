@@ -53,19 +53,19 @@ export function ReadinessCard({
 
   return (
     <RiskTintedSurface riskLevel={card.risk.level}>
-      <div className="bg-white rounded-xl border border-[#D9D5C8] p-5 sm:p-7">
+      <div className="bg-white rounded-xl border border-[#D9D5C8] p-6 sm:p-8">
         <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-3">
           REGULATORY RISK PROFILE
         </p>
 
-        <h1 className="font-serif text-[clamp(24px,3.2vw,32px)] leading-tight text-[#0E1411] mb-1">
+        <h1 className="font-serif text-[clamp(24px,3vw,36px)] leading-tight text-[#0E1411] mb-1">
           {productName}
         </h1>
-        <p className="text-sm text-[#6B766F] leading-relaxed mb-6">
+        <p className="text-sm text-[#6B766F] leading-relaxed mb-6 max-w-2xl">
           {card.classification.device_type}
         </p>
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-5 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-6 mb-8">
           <ReadinessCircle
             score={card.readiness.score}
             band={card.readiness.band}
