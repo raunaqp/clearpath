@@ -1,12 +1,5 @@
 // Draft Pack delivery email — Resend-ready template.
-// Pure render-from-data: no Resend client wired yet (Feature 6a will).
-//
-// Usage:
-//   const { subject, text, html } = renderDraftPackEmail({
-//     name: "Asha",
-//     product_name: "AcmeScan AI",
-//     share_token: "abc123",
-//   });
+// Pure render-from-data: returns subject + text + html for caller to ship.
 
 const TEAL_DEEP = "#0F6E56";
 const AMBER = "#BA7517";
@@ -25,6 +18,10 @@ export type DraftPackEmailData = {
   concierge_price_inr?: number;
   /** Optional flag: forms ZIP attached vs missing in v1. */
   forms_zip_available?: boolean;
+  /** When set, the email surfaces a "Download Draft Pack" button pointing here. */
+  pdf_url?: string;
+  /** When true, prepends the Resend / clearpath.in disclosure banner. */
+  include_resend_banner?: boolean;
 };
 
 export type RenderedEmail = {
@@ -41,6 +38,9 @@ const escape = (s: string) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
+const RESEND_BANNER_TEXT =
+  "This email is sent via Resend (onboarding@resend.dev) on behalf of ClearPath. We're setting up our own domain — emails will come from a clearpath.in address next week. Reply directly to raunaq.pradhan@gmail.com if anything is unclear.";
+
 export function renderDraftPackEmail(data: DraftPackEmailData): RenderedEmail {
   const baseUrl = data.base_url ?? "https://clearpath-medtech.vercel.app";
   const cardUrl = `${baseUrl}/c/${data.share_token}`;
@@ -55,10 +55,17 @@ export function renderDraftPackEmail(data: DraftPackEmailData): RenderedEmail {
 
   const subject = `Your CDSCO Draft Pack for ${data.product_name} is ready`;
 
+  const banner = data.include_resend_banner ? RESEND_BANNER_TEXT : null;
+
+  const deliveryLine = data.pdf_url
+    ? `Your Regulatory Draft Pack for ${data.product_name} is ready. Download: ${data.pdf_url}`
+    : `Your Regulatory Draft Pack for ${data.product_name} is attached.`;
+
   const text = [
+    banner ? banner + "\n" : null,
     `Hi ${data.name},`,
     ``,
-    `Your Regulatory Draft Pack for ${data.product_name} is attached.`,
+    deliveryLine,
     ``,
     `Inside:`,
     `- ${data.product_name}_DraftPack.pdf — drafted content for each CDSCO submission section`,
@@ -72,14 +79,35 @@ export function renderDraftPackEmail(data: DraftPackEmailData): RenderedEmail {
     ``,
     `Your Readiness Card: ${cardUrl}`,
     ``,
-    `Questions? Just reply to this email.`,
+    `Questions? Reply to this email or write to raunaq.pradhan@gmail.com.`,
     ``,
     `— ClearPath team`,
     ``,
     `---`,
     `Disclaimer: ClearPath is a regulatory readiness tool, not legal advice.`,
     `Always consult a regulatory expert before submission.`,
-  ].join("\n");
+  ]
+    .filter((line) => line !== null)
+    .join("\n");
+
+  const bannerHtml = banner
+    ? `<tr>
+              <td style="padding:16px 32px 0 32px;">
+                <div style="border-left:3px solid ${AMBER};padding:10px 14px;background:#FFF7E6;font-size:12px;color:${TEXT_DARK};line-height:1.5;">
+                  ${escape(banner)}
+                </div>
+              </td>
+            </tr>`
+    : "";
+
+  const downloadButtonHtml = data.pdf_url
+    ? `<tr>
+              <td style="padding:8px 32px 0 32px;">
+                <a href="${escape(data.pdf_url)}" style="display:inline-block;background:${TEAL_DEEP};color:#FFFFFF;text-decoration:none;font-size:14px;font-weight:600;padding:10px 18px;border-radius:6px;">Download your Draft Pack →</a>
+                <div style="font-size:11px;color:${TEXT_MUTED};margin-top:6px;">Link valid for 90 days. Bookmark or save the PDF locally.</div>
+              </td>
+            </tr>`
+    : "";
 
   const html = `<!doctype html>
 <html lang="en">
@@ -98,6 +126,7 @@ export function renderDraftPackEmail(data: DraftPackEmailData): RenderedEmail {
                 <div style="font-size:11px;color:${TEXT_MUTED};letter-spacing:0.6px;margin-top:2px;">REGULATORY READINESS · INDIA</div>
               </td>
             </tr>
+            ${bannerHtml}
             <tr>
               <td style="padding:24px 32px 8px 32px;">
                 <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;color:${TEAL_DEEP};margin:0 0 12px 0;line-height:1.25;">
@@ -105,12 +134,13 @@ export function renderDraftPackEmail(data: DraftPackEmailData): RenderedEmail {
                 </h1>
                 <p style="font-size:15px;line-height:1.55;margin:0 0 16px 0;">Hi ${escape(data.name)},</p>
                 <p style="font-size:15px;line-height:1.55;margin:0 0 16px 0;">
-                  Your Regulatory Draft Pack for <strong>${escape(data.product_name)}</strong> is attached.
+                  ${data.pdf_url ? `Your Regulatory Draft Pack for <strong>${escape(data.product_name)}</strong> is ready to download.` : `Your Regulatory Draft Pack for <strong>${escape(data.product_name)}</strong> is attached.`}
                 </p>
               </td>
             </tr>
+            ${downloadButtonHtml}
             <tr>
-              <td style="padding:0 32px;">
+              <td style="padding:16px 32px 0 32px;">
                 <div style="border-left:3px solid ${AMBER};padding:12px 14px;background:${BG_WARM};font-size:14px;line-height:1.6;">
                   <strong style="display:block;margin-bottom:6px;">Inside</strong>
                   • ${escape(data.product_name)}_DraftPack.pdf — drafted content for each CDSCO submission section<br />
@@ -131,13 +161,13 @@ export function renderDraftPackEmail(data: DraftPackEmailData): RenderedEmail {
             </tr>
             <tr>
               <td style="padding:8px 32px 24px 32px;">
-                <a href="${escape(cardUrl)}" style="display:inline-block;background:${TEAL_DEEP};color:#FFFFFF;text-decoration:none;font-size:14px;font-weight:600;padding:10px 18px;border-radius:6px;">Open your Readiness Card</a>
+                <a href="${escape(cardUrl)}" style="display:inline-block;background:transparent;color:${TEAL_DEEP};text-decoration:none;font-size:14px;font-weight:600;padding:10px 18px;border:1px solid ${TEAL_DEEP};border-radius:6px;">Open your Readiness Card</a>
                 <div style="font-size:12px;color:${TEXT_MUTED};margin-top:8px;word-break:break-all;">${escape(cardUrl)}</div>
               </td>
             </tr>
             <tr>
               <td style="padding:0 32px 24px 32px;font-size:14px;line-height:1.55;">
-                Questions? Just reply to this email.<br /><br />
+                Questions? Reply to this email or write to raunaq.pradhan@gmail.com.<br /><br />
                 — ClearPath team
               </td>
             </tr>

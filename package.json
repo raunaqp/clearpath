@@ -11,6 +11,8 @@
     "test:f3": "tsx scripts/test-feature-3.ts",
     "test:f4": "tsx scripts/verify/stage-2-wizard.ts",
     "test:f5": "tsx scripts/verify/stage-3-synthesizer.ts",
+    "test:f6a": "tsx scripts/verify/stage-6a-tier2.ts",
+    "generate-draft-pack": "tsx scripts/generate-draft-pack.ts",
     "pdf:test": "tsx scripts/test-pdf.tsx"
   },
   "dependencies": {
