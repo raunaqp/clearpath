@@ -7,6 +7,11 @@ import {
 } from "@react-pdf/renderer";
 import React from "react";
 import type { DraftPackContent } from "@/lib/engine/draft-pack-prompts";
+import type { ReadinessCard } from "@/lib/schemas/readiness-card";
+import {
+  applicableRegulations,
+  type ApplicableRegulation,
+} from "@/lib/cdsco/regulations-reference";
 
 // ClearPath brand
 const TEAL_DEEP = "#0F6E56";
@@ -172,6 +177,52 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: TEXT_DARK,
   },
+  regBlock: {
+    marginBottom: 14,
+    paddingLeft: 10,
+    borderLeftWidth: 2,
+    borderLeftColor: TEAL_DEEP,
+  },
+  regHeader: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    marginBottom: 4,
+  },
+  regName: {
+    fontFamily: "Times-Bold",
+    fontSize: 12,
+    color: TEXT_DARK,
+  },
+  regVerdict: {
+    marginLeft: 8,
+    fontSize: 9,
+    color: AMBER,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  regAuthority: {
+    fontSize: 9,
+    color: TEXT_MUTED,
+    marginBottom: 4,
+  },
+  regBody: {
+    fontSize: 10,
+    color: TEXT_DARK,
+    marginBottom: 3,
+  },
+  regLabel: {
+    fontSize: 9,
+    color: TEXT_MUTED,
+    letterSpacing: 0.4,
+    marginTop: 4,
+    marginBottom: 2,
+  },
+  formsFooter: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 0.5,
+    borderTopColor: RULE,
+  },
 });
 
 export type DraftPackData = {
@@ -226,12 +277,42 @@ const SectionHeader = ({
   </View>
 );
 
+const RegulationBlock = ({ reg }: { reg: ApplicableRegulation }) => (
+  <View style={styles.regBlock} wrap={false}>
+    <View style={styles.regHeader}>
+      <Text style={styles.regName}>{reg.ref.display_name}</Text>
+      <Text style={styles.regVerdict}>· {reg.verdict_label}</Text>
+    </View>
+    <Text style={styles.regAuthority}>
+      {reg.ref.authority} · {reg.ref.url}
+    </Text>
+    <Text style={styles.regLabel}>ACTION</Text>
+    <Text style={styles.regBody}>{reg.rationale}</Text>
+    <Text style={styles.regLabel}>WHERE TO SUBMIT</Text>
+    <Text style={styles.regBody}>{reg.ref.submission_process}</Text>
+    {reg.forms_from_card.length > 0 ? (
+      <>
+        <Text style={styles.regLabel}>FORMS</Text>
+        <Text style={styles.regBody}>{reg.forms_from_card.join(", ")}</Text>
+      </>
+    ) : null}
+    {reg.pathway_note ? (
+      <>
+        <Text style={styles.regLabel}>PATHWAY NOTE</Text>
+        <Text style={styles.regBody}>{reg.pathway_note}</Text>
+      </>
+    ) : null}
+  </View>
+);
+
 export const DraftPackDocument = ({
   data,
   content,
+  regulations,
 }: {
   data: DraftPackData;
   content?: DraftPackContent;
+  regulations?: ReadinessCard["regulations"];
 }) => (
   <Document
     title={`ClearPath Draft Pack — ${data.product_name}`}
@@ -721,6 +802,48 @@ export const DraftPackDocument = ({
       <Bullet>
         <Text>Digital Personal Data Protection Act, 2023.</Text>
       </Bullet>
+      <Footer productName={data.product_name} />
+    </Page>
+
+    {/* 10. Applicable Regulations & Forms */}
+    <Page size="A4" style={styles.page}>
+      <SectionHeader
+        kicker="SECTION 09"
+        title="Applicable Regulations &amp; Forms"
+      />
+      <Text style={styles.body}>
+        Based on your product profile, the following regulations apply.
+        Each entry below shows what you need to do and where to submit.
+      </Text>
+
+      {regulations ? (
+        applicableRegulations(regulations).map((reg) => (
+          <RegulationBlock key={reg.key} reg={reg} />
+        ))
+      ) : (
+        <Placeholder>
+          Regulation analysis not available — generated when a Readiness
+          Card is associated with this Draft Pack.
+        </Placeholder>
+      )}
+
+      <View style={styles.formsFooter} wrap={false}>
+        <Text style={styles.h2}>Forms included in this Draft Pack</Text>
+        <Bullet>MD-7 — Manufacturing license, Class C/D</Bullet>
+        <Bullet>MD-12 — Test license (clinical investigation)</Bullet>
+        <Bullet>MD-14 — Import license</Bullet>
+        <Bullet>MD-22 — Clinical Investigation approval</Bullet>
+        <Text style={styles.h2}>Forms to download from cdsco.gov.in</Text>
+        <Bullet>MD-5 — Manufacturing license, Class A/B (state authority)</Bullet>
+        <Bullet>MD-9 — Manufacturing license, Class C/D (alt route)</Bullet>
+        <Bullet>MD-20 — Export No Objection Certificate</Bullet>
+        <Bullet>MD-23 — Clinical Performance Evaluation for IVDs</Bullet>
+        <Text style={[styles.regLabel, { marginTop: 8 }]}>
+          Forms appended to this PDF as appendices are listed in the
+          appendix separator pages that follow.
+        </Text>
+      </View>
+
       <Footer productName={data.product_name} />
     </Page>
   </Document>

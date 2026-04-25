@@ -30,6 +30,7 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import { generateDraftPackContent } from "../lib/engine/draft-pack";
 import { DraftPackDocument } from "../lib/pdf/draft-pack-template";
 import { renderDraftPackEmail } from "../lib/email/draft-pack-delivery";
+import { ReadinessCardSchema } from "../lib/schemas/readiness-card";
 
 const ORDER_ID_FLAG = "--order-id";
 const DRY_RUN_FLAG = "--dry-run";
@@ -149,6 +150,14 @@ async function main() {
     cardMeta.product_name?.trim() ||
     cardMeta.company_name?.trim() ||
     assessment.one_liner.slice(0, 60);
+
+  const cardParsed = ReadinessCardSchema.safeParse(assessment.readiness_card);
+  if (!cardParsed.success) {
+    console.warn(
+      `  ! readiness_card failed schema validation — Section 09 will fall back to placeholder. (${cardParsed.error.issues[0]?.message ?? "unknown"})`
+    );
+  }
+  const validatedCard = cardParsed.success ? cardParsed.data : null;
   console.log(`  ✓ assessment ${assessment.id} · product="${productName}"`);
 
   step(3, "Call Opus for Draft Pack content");
@@ -180,6 +189,7 @@ async function main() {
         applicant_email: assessment.email,
       },
       content,
+      regulations: validatedCard?.regulations,
     })
   );
   console.log(`  ✓ PDF rendered · ${(pdfBuffer.length / 1024).toFixed(0)} KB`);
