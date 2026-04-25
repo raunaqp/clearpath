@@ -1,7 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getServiceClient } from "@/lib/supabase";
 import { UpgradePageViewTracker } from "@/components/upgrade/UpgradePageViewTracker";
+import { PaymentForm } from "./PaymentForm";
+import { StatusPanel, type Tier2Order } from "./StatusPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,7 @@ type AssessmentRow = {
   id: string;
   share_token: string | null;
   status: string;
+  email: string;
   tier2_intent_clicked: string | null;
 };
 
@@ -45,18 +47,17 @@ export default async function UpgradePage({
   const { id } = await params;
   const supabase = getServiceClient();
 
-  const { data, error } = await supabase
+  const { data: assessment, error } = await supabase
     .from("assessments")
-    .select("id, share_token, status, tier2_intent_clicked")
+    .select("id, share_token, status, email, tier2_intent_clicked")
     .eq("id", id)
     .maybeSingle<AssessmentRow>();
 
-  if (error || !data) {
+  if (error || !assessment) {
     notFound();
   }
 
-  // Idempotent: only stamp once.
-  if (!data.tier2_intent_clicked) {
+  if (!assessment.tier2_intent_clicked) {
     const now = new Date().toISOString();
     await supabase
       .from("assessments")
@@ -65,7 +66,18 @@ export default async function UpgradePage({
       .is("tier2_intent_clicked", null);
   }
 
-  const cardHref = data.share_token ? `/c/${data.share_token}` : "/";
+  const { data: order } = await supabase
+    .from("tier2_orders")
+    .select(
+      "id, status, transaction_id, payment_screenshot_url, draft_pack_pdf_url, delivered_at, created_at, email_sent_to"
+    )
+    .eq("assessment_id", id)
+    .neq("status", "failed")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle<Tier2Order>();
+
+  const cardHref = assessment.share_token ? `/c/${assessment.share_token}` : "/";
 
   return (
     <main className="min-h-screen bg-[#F7F6F2] px-4 py-12">
@@ -74,56 +86,57 @@ export default async function UpgradePage({
         <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-3">
           Tier 2 — Draft Pack
         </p>
-        <h1 className="font-serif text-[clamp(28px,3.6vw,36px)] leading-tight text-[#0E1411] mb-3">
-          The Draft Pack is shipping soon.
-        </h1>
-        <p className="text-[#6B766F] text-base leading-relaxed mb-8">
-          We&apos;ve noted your interest. Here&apos;s what you&apos;ll get
-          when the ₹499 Draft Pack is live.
-        </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-          {PILLARS.map((pillar) => (
-            <div
-              key={pillar.label}
-              className="flex items-start gap-3 rounded-xl bg-white border border-[#D9D5C8] p-4"
-            >
-              <span aria-hidden className="text-xl leading-none mt-0.5">
-                {pillar.icon}
-              </span>
-              <div className="min-w-0">
-                <p className="font-semibold text-[15px] text-[#0E1411] leading-snug">
-                  {pillar.label}
-                </p>
-                <p className="text-sm text-[#6B766F] mt-1 leading-relaxed">
-                  {pillar.detail}
-                </p>
-              </div>
+        {order ? (
+          <StatusPanel
+            initialOrder={order}
+            assessmentId={id}
+            email={assessment.email}
+            cardHref={cardHref}
+          />
+        ) : (
+          <>
+            <h1 className="font-serif text-[clamp(28px,3.6vw,36px)] leading-tight text-[#0E1411] mb-3">
+              Get your Draft Pack — ₹499
+            </h1>
+            <p className="text-[#6B766F] text-base leading-relaxed mb-8">
+              Indian regulatory experts review your submission. Most deliveries
+              within 2 hours, worst case 6 hours.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
+              {PILLARS.map((pillar) => (
+                <div
+                  key={pillar.label}
+                  className="flex items-start gap-3 rounded-xl bg-white border border-[#D9D5C8] p-4"
+                >
+                  <span aria-hidden className="text-xl leading-none mt-0.5">
+                    {pillar.icon}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-[15px] text-[#0E1411] leading-snug">
+                      {pillar.label}
+                    </p>
+                    <p className="text-sm text-[#6B766F] mt-1 leading-relaxed">
+                      {pillar.detail}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        <p className="text-[#0E1411] text-base leading-relaxed mb-8">
-          We&apos;ll email you the moment it&apos;s live.
-        </p>
+            <PaymentForm assessmentId={id} email={assessment.email} />
 
-        <div className="flex flex-col items-start gap-3">
-          <Link
-            href={cardHref}
-            className="inline-flex items-center justify-center rounded-full bg-[#0F6E56] hover:bg-[#0d5c48] text-white font-medium text-[15px] px-6 py-3 transition-colors"
-          >
-            ← Back to your Readiness Card
-          </Link>
-          <p className="text-xs text-[#6B766F]">
-            Questions? Email{" "}
-            <a
-              href="mailto:founder@clearpath.in"
-              className="underline underline-offset-2 hover:text-[#0E1411]"
-            >
-              founder@clearpath.in
-            </a>
-          </p>
-        </div>
+            <div className="mt-8">
+              <a
+                href={cardHref}
+                className="text-sm text-[#6B766F] underline underline-offset-2 hover:text-[#0E1411]"
+              >
+                ← Back to your Readiness Card
+              </a>
+            </div>
+          </>
+        )}
       </div>
     </main>
   );
