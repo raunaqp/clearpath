@@ -10,11 +10,13 @@
     "poc:prerouter": "tsx scripts/poc-prerouter.ts",
     "test:f3": "tsx scripts/test-feature-3.ts",
     "test:f4": "tsx scripts/verify/stage-2-wizard.ts",
-    "test:f5": "tsx scripts/verify/stage-3-synthesizer.ts"
+    "test:f5": "tsx scripts/verify/stage-3-synthesizer.ts",
+    "pdf:test": "tsx scripts/test-pdf.tsx"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.0",
     "@base-ui/react": "^1.4.1",
+    "@react-pdf/renderer": "^4.5.1",
     "@supabase/supabase-js": "^2.104.1",
     "@vercel/analytics": "^2.0.1",
     "class-variance-authority": "^0.7.1",
