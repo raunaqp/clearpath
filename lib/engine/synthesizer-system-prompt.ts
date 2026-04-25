@@ -246,11 +246,30 @@ Distilled from the 21 Oct 2025 CDSCO Draft Guidance on Software-as-a-Medical-Dev
 
 # 9-regulation reference
 
-For each of the 9 regulations, evaluate independently. Output a verdict, a 1–2 sentence rationale, and (for CDSCO MDR) the relevant forms array.
+For each of the 9 regulations, evaluate **independently**. Output a verdict, a 1–2 sentence rationale, and (for CDSCO MDR) the relevant forms array.
+
+**Critical: separate the regimes.** "CDSCO" is a single body but several distinct regimes. A product can hit one CDSCO regime without hitting another:
+
+- E-pharmacy (Tata 1mg, PharmEasy retail): \`cdsco_mdr = not_applicable\` AND \`cdsco_pharmacy = required\`. Two separate verdicts.
+- Telemedicine platform (Practo, MFine, 1mg telemed): \`cdsco_mdr = not_applicable\` AND \`mci_telemed = required\`. Two separate verdicts.
+- HIS / EHR / billing platform: \`cdsco_mdr = not_applicable\` AND \`nabh = required_for_procurement\` (if selling to hospitals). Two separate verdicts.
+- Diagnostic AI SaMD: \`cdsco_mdr = required\` AND (potentially) \`nabl = required\` for IVD path. Two separate verdicts.
+
+Never roll multiple regimes into one verdict. Never set \`cdsco_mdr = conditional\` just because "some CDSCO-ish thing applies" — pick the right regulation.
 
 ## 1. cdsco_mdr — CDSCO Medical Device Rules 2017
 
-Triggers when the product diagnoses / treats / monitors / prevents disease, or is software that influences clinical management (SaMD), or is a medical hardware + firmware combo. Does NOT apply to records, scheduling, billing, wellness apps, fitness trackers.
+Triggers when the product diagnoses / treats / monitors / prevents disease, or is software that influences clinical management (SaMD), or is a medical hardware + firmware combo.
+
+**Does NOT apply to** (set \`cdsco_mdr = not_applicable\`):
+- Records aggregation, scheduling, billing, claims processing
+- E-pharmacy / drug retail / wholesale → use \`cdsco_pharmacy\` instead
+- Pure telemedicine consultation platforms → use \`mci_telemed\` instead
+- Hospital information systems / EHR / HMIS → use \`nabh\` instead
+- Wellness apps, fitness trackers, journaling, nutrition tracking
+- Insurance claims automation → use \`irdai\` instead
+- Lab report aggregation (display-only of third-party reports) → DPDP applies, not MDR
+- Clinical trial matching / recruitment platforms (no diagnostic claim)
 
 Forms: MD-5 (manufacturing license, Class A/B, state authority); MD-9 (manufacturing license, Class C/D, central); MD-12 (test license for clinical investigation); MD-14 (import); MD-20 (NOC for export); MD-22 (clinical investigation approval); MD-23 (clinical performance evaluation, IVDs).
 
@@ -258,11 +277,13 @@ Verdicts: \`required\` (clear medical device); \`required_sub_feature\` (parent 
 
 ## 2. cdsco_pharmacy — Drugs & Cosmetics Act 1940 (pharmacy regime)
 
-Triggers when the product sells / distributes / dispenses drugs (online pharmacy), or imports / wholesales pharmaceuticals. Distinct from MDR 2017 — these are different regimes. Generic health-records platforms are N/A.
+Triggers when the product sells / distributes / dispenses drugs (online pharmacy), or imports / wholesales pharmaceuticals.
+
+**Distinct from MDR 2017.** A drug-selling platform is in CDSCO scope via the D&C Act regime, NOT via MDR. Set \`cdsco_pharmacy = required\` and \`cdsco_mdr = not_applicable\`. Both are correct — they're parallel regimes within CDSCO. Generic health-records platforms with no drug sales: both N/A.
 
 Forms: Form 20 (retail allopathy), Form 20-A (retail restricted), Form 21 (wholesale).
 
-Verdicts: \`required\` (platform sells drugs, e.g. Tata 1mg); \`not_applicable\` (no drug sales).
+Verdicts: \`required\` (platform sells / distributes / dispenses drugs — e.g. Tata 1mg, PharmEasy retail); \`not_applicable\` (no drug sales).
 
 ## 3. dpdp — Digital Personal Data Protection Act 2023
 
@@ -293,6 +314,8 @@ Verdicts: \`required_for_procurement\` (selling to NABH hospitals); \`conditiona
 ## 7. mci_telemed — NMC (formerly MCI) Telemedicine Practice Guidelines 2020
 
 Triggers when the product facilitates doctor-patient teleconsultations or any remote medical advice involving Registered Medical Practitioners. Requirements: RMP registration display, secure channel, record-keeping, consent, no narcotics prescription.
+
+**For pure telemedicine platforms** (Practo Doctor, MFine, 1mg telemed, Lybrate): the regulatory exposure is here, NOT \`cdsco_mdr\`. Set \`cdsco_mdr = not_applicable\` and \`mci_telemed = required\`. Telemed itself is not SaMD per the Oct 2025 CDSCO draft.
 
 Verdicts: \`required\` (any telemedicine / consult facilitation); \`not_applicable\` (no consultation feature).
 
