@@ -48,12 +48,14 @@ export function OrdersTable({
 }) {
   const router = useRouter();
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [cliCommand, setCliCommand] = useState<string | null>(null);
+  const [successNote, setSuccessNote] = useState<string | null>(null);
 
   async function handleVerify(orderId: string) {
     setBusyId(orderId);
     setError(null);
+    setSuccessNote(null);
     try {
       const res = await fetch("/api/admin/verify-order", {
         method: "POST",
@@ -72,21 +74,39 @@ export function OrdersTable({
 
   async function handleGenerate(orderId: string) {
     setBusyId(orderId);
+    setGeneratingId(orderId);
     setError(null);
+    setSuccessNote(null);
     try {
       const res = await fetch("/api/admin/generate-draft-pack", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ order_id: orderId }),
       });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error ?? "Trigger failed.");
-      setCliCommand(body.cli_command as string);
+      const body = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+        step?: string;
+        page_count?: number;
+        email_sent?: boolean;
+        email_recipient?: string;
+      };
+      if (!res.ok || !body.ok) {
+        const stepNote = body.step ? ` (step: ${body.step})` : "";
+        throw new Error(`${body.error ?? "Generation failed."}${stepNote}`);
+      }
+      const emailLine = body.email_sent
+        ? `Emailed to ${body.email_recipient ?? "founder"}.`
+        : "Email skipped — send manually.";
+      setSuccessNote(
+        `Draft Pack delivered (${body.page_count ?? "?"} pages). ${emailLine}`
+      );
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Trigger failed.");
+      setError(e instanceof Error ? e.message : "Generation failed.");
     } finally {
       setBusyId(null);
+      setGeneratingId(null);
     }
   }
 
@@ -103,6 +123,21 @@ export function OrdersTable({
       {error && (
         <div className="rounded-lg bg-[#FAECE7] border border-[#993C1D]/30 px-3 py-2 text-sm text-[#993C1D] mb-4">
           {error}
+        </div>
+      )}
+      {successNote && (
+        <div className="rounded-lg bg-[#EAF3DE] border border-[#3B6D11]/30 px-3 py-2 text-sm text-[#3B6D11] mb-4">
+          {successNote}
+        </div>
+      )}
+      {generatingId && (
+        <div className="rounded-lg bg-[#E1F5EE] border border-[#0F6E56]/30 px-3 py-2 text-sm text-[#0F6E56] mb-4 flex items-center gap-2">
+          <span
+            aria-hidden
+            className="w-3 h-3 rounded-full border-2 border-[#0F6E56]/30 border-t-[#0F6E56] animate-spin"
+          />
+          Generating Draft Pack — this takes 30–60 seconds. Don&apos;t navigate
+          away.
         </div>
       )}
 
@@ -218,12 +253,6 @@ export function OrdersTable({
         </table>
       </div>
 
-      {cliCommand && (
-        <CliCommandDialog
-          command={cliCommand}
-          onClose={() => setCliCommand(null)}
-        />
-      )}
     </div>
   );
 }
@@ -246,60 +275,3 @@ function Td({
   return <td className={`px-3 py-3 ${className ?? ""}`}>{children}</td>;
 }
 
-function CliCommandDialog({
-  command,
-  onClose,
-}: {
-  command: string;
-  onClose: () => void;
-}) {
-  const [copied, setCopied] = useState(false);
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(command);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1800);
-    } catch {
-      // clipboard may be blocked
-    }
-  }
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div className="w-full max-w-lg rounded-xl bg-white border border-[#D9D5C8] p-6">
-        <h2 className="font-serif text-xl text-[#0E1411] mb-2">
-          Generation triggered
-        </h2>
-        <p className="text-sm text-[#6B766F] mb-4">
-          Order is now <code className="font-mono text-[#0E1411]">generating</code>.
-          Run this command from your terminal to actually produce + email
-          the Draft Pack:
-        </p>
-        <pre className="rounded-lg bg-[#F7F6F2] border border-[#D9D5C8] p-3 text-xs text-[#0E1411] overflow-x-auto whitespace-pre-wrap break-all">
-          {command}
-        </pre>
-        <div className="flex gap-2 mt-4 justify-end">
-          <button
-            type="button"
-            onClick={copy}
-            className="inline-flex items-center justify-center rounded-full border border-[#0F6E56] text-[#0F6E56] hover:bg-[#0F6E56] hover:text-white text-sm font-medium px-4 py-1.5 transition-colors"
-          >
-            {copied ? "Copied ✓" : "Copy command"}
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex items-center justify-center rounded-full bg-[#0F6E56] hover:bg-[#0d5c48] text-white text-sm font-medium px-4 py-1.5 transition-colors"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}

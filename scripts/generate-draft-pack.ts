@@ -1,16 +1,14 @@
 /**
- * CLI: npm run generate-draft-pack -- --order-id <uuid>
+ * CLI: npm run generate-draft-pack -- --order-id <uuid> [--dry-run] [--skip-email]
  *
- * 1. Loads env from .env.local
- * 2. Reads tier2_orders + assessments + readiness_card
- * 3. Calls Opus for Draft Pack section content
- * 4. Renders main 10-page PDF via @react-pdf/renderer
- * 5. Appends relevant blank CDSCO forms as appendices (pdf-lib merge)
- * 6. Uploads to draft_packs bucket; signed URL valid 90 days
- * 7. Updates tier2_orders: status=delivered, delivered_at, draft_pack_pdf_url
- * 8. Sends email via Resend with banner + download link
+ * Thin wrapper over `lib/engine/draft-pack-generator.ts`. The same logic
+ * runs server-side from /api/admin/generate-draft-pack — keep them
+ * behaviourally identical.
  *
- * Designed for manual founder runs after admin verifies a payment.
+ * Useful for: manual recovery (CLI exits non-zero on failure so retry
+ * is obvious), debugging (--dry-run writes the merged PDF to disk
+ * without touching DB / Storage / email), or running on a machine
+ * that has RESEND_API_KEY when the deployed function doesn't.
  */
 import * as fs from "fs";
 import * as path from "path";
@@ -25,21 +23,11 @@ if (fs.existsSync(envPath)) {
   }
 }
 
-import React from "react";
-import { createClient } from "@supabase/supabase-js";
-import { renderToBuffer } from "@react-pdf/renderer";
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import { generateDraftPackContent } from "../lib/engine/draft-pack";
-import { DraftPackDocument } from "../lib/pdf/draft-pack-template";
-import { renderDraftPackEmail } from "../lib/email/draft-pack-delivery";
-import { ReadinessCardSchema } from "../lib/schemas/readiness-card";
-import { getRelevantForms, type RelevantForm } from "../lib/cdsco/relevant-forms";
+import { generateDraftPack } from "../lib/engine/draft-pack-generator";
 
 const ORDER_ID_FLAG = "--order-id";
 const DRY_RUN_FLAG = "--dry-run";
 const SKIP_EMAIL_FLAG = "--skip-email";
-const DRAFT_PACKS_BUCKET = "draft_packs";
-const SIGNED_URL_TTL_SECONDS = 90 * 24 * 60 * 60; // 90 days
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
@@ -70,391 +58,50 @@ function parseArgs(): CliArgs {
   };
 }
 
-type Tier2OrderRow = {
-  id: string;
-  status: string;
-  assessment_id: string;
-  email_sent_to: string | null;
-};
-
-type AssessmentRow = {
-  id: string;
-  name: string;
-  email: string;
-  one_liner: string;
-  url_fetched_content: string | null;
-  wizard_answers: Record<string, unknown> | null;
-  readiness_card: unknown;
-  share_token: string | null;
-};
-
-type ReadinessCardMeta = { product_name?: string; company_name?: string };
-
-function step(n: number, label: string) {
-  console.log(`\n[${n}] ${label}`);
-}
-
 async function main() {
   const args = parseArgs();
-  console.log(`▶ Generating Draft Pack for order ${args.orderId}`);
-  if (args.dryRun) console.log("  (dry-run: PDF rendered locally, no DB / Storage / email)");
-  if (args.skipEmail) console.log("  (skip-email: no Resend call)");
+  if (args.dryRun) console.log("(dry-run: no DB / Storage / email writes)");
+  if (args.skipEmail) console.log("(skip-email: no Resend call)");
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !serviceKey) {
-    throw new Error(
-      "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required."
-    );
-  }
-  const supabase = createClient(supabaseUrl, serviceKey, {
-    auth: { persistSession: false },
+  const result = await generateDraftPack({
+    orderId: args.orderId,
+    dryRun: args.dryRun,
+    skipEmail: args.skipEmail,
+    log: (msg) => console.log(msg),
   });
 
-  step(1, "Fetch order");
-  const { data: order, error: orderErr } = await supabase
-    .from("tier2_orders")
-    .select("id, status, assessment_id, email_sent_to")
-    .eq("id", args.orderId)
-    .maybeSingle<Tier2OrderRow>();
-  if (orderErr || !order) {
-    throw new Error(
-      `Order not found: ${orderErr?.message ?? "no row"}`
+  if (!result.ok) {
+    console.error(
+      `\n✗ Generation failed at step "${result.errorStep}": ${result.error}`
     );
-  }
-  console.log(`  ✓ order found · status=${order.status}`);
-  if (order.status !== "generating" && order.status !== "verified") {
-    console.warn(
-      `  ! order status is '${order.status}' (expected 'generating' or 'verified'). Continuing anyway.`
-    );
+    process.exit(1);
   }
 
-  step(2, "Fetch assessment + readiness card");
-  const { data: assessment, error: assErr } = await supabase
-    .from("assessments")
-    .select(
-      "id, name, email, one_liner, url_fetched_content, wizard_answers, readiness_card, share_token"
-    )
-    .eq("id", order.assessment_id)
-    .maybeSingle<AssessmentRow>();
-  if (assErr || !assessment) {
-    throw new Error(`Assessment not found: ${assErr?.message ?? "no row"}`);
-  }
-  if (!assessment.readiness_card) {
-    throw new Error("Assessment has no readiness_card — synthesizer hasn't run.");
-  }
-
-  const cardMeta =
-    typeof assessment.readiness_card === "object" &&
-    assessment.readiness_card !== null
-      ? (assessment.readiness_card as { meta?: ReadinessCardMeta }).meta ?? {}
-      : {};
-  const productName =
-    cardMeta.product_name?.trim() ||
-    cardMeta.company_name?.trim() ||
-    assessment.one_liner.slice(0, 60);
-
-  const cardParsed = ReadinessCardSchema.safeParse(assessment.readiness_card);
-  if (!cardParsed.success) {
-    console.warn(
-      `  ! readiness_card failed schema validation — Section 09 will fall back to placeholder. (${cardParsed.error.issues[0]?.message ?? "unknown"})`
-    );
-  }
-  const validatedCard = cardParsed.success ? cardParsed.data : null;
-  console.log(`  ✓ assessment ${assessment.id} · product="${productName}"`);
-
-  step(3, "Call Opus for Draft Pack content");
-  const { content, costUsd } = await generateDraftPackContent({
-    productName,
-    oneLiner: assessment.one_liner,
-    urlContent: assessment.url_fetched_content,
-    wizardAnswers: assessment.wizard_answers ?? {},
-    readinessCard: assessment.readiness_card,
-  });
-  console.log(
-    `  ✓ content generated · cost ≈ $${costUsd.toFixed(4)} · CDSCO class=${content.risk_classification.cdsco_class}`
-  );
-
-  step(4, "Render PDF");
-  const generated_date = new Date().toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-  const mainPdfBuffer = await renderToBuffer(
-    React.createElement(DraftPackDocument, {
-      data: {
-        product_name: productName,
-        generated_date,
-        assessment_id: assessment.id,
-        share_token: assessment.share_token ?? undefined,
-        applicant_name: assessment.name,
-        applicant_email: assessment.email,
-      },
-      content,
-      regulations: validatedCard?.regulations,
-    })
-  );
-  console.log(
-    `  ✓ main PDF rendered · ${(mainPdfBuffer.length / 1024).toFixed(0)} KB`
-  );
-
-  step(5, "Append relevant blank CDSCO forms");
-  const relevant = validatedCard ? getRelevantForms(validatedCard) : [];
-  const finalPdfBuffer = await appendForms(mainPdfBuffer, relevant);
-
-  if (args.dryRun) {
+  if (result.mode === "dryRun") {
     const out = path.resolve(
       process.cwd(),
-      `draft-pack-${order.id}.pdf`
+      `draft-pack-${result.orderId}.pdf`
     );
-    fs.writeFileSync(out, finalPdfBuffer);
-    console.log(`  ✓ dry-run: wrote PDF to ${out}`);
-    console.log("\nDone (dry-run). No DB / Storage / email actions taken.");
+    fs.writeFileSync(out, result.pdfBuffer);
+    console.log(`\n✓ dry-run complete · wrote PDF to ${out}`);
+    console.log(`  pages=${result.pageCount} · cost ≈ $${result.opusCostUsd.toFixed(4)}`);
+    console.log(`  appendices: ${result.appendedFormIds.join(", ") || "(none)"}`);
     return;
   }
 
-  step(6, "Upload PDF to Storage");
-  const objectPath = `${order.id}/draft-pack.pdf`;
-  const { error: upErr } = await supabase.storage
-    .from(DRAFT_PACKS_BUCKET)
-    .upload(objectPath, finalPdfBuffer, {
-      contentType: "application/pdf",
-      upsert: true,
-    });
-  if (upErr) {
-    throw new Error(`Storage upload failed: ${upErr.message}`);
-  }
-
-  const { data: signed, error: signErr } = await supabase.storage
-    .from(DRAFT_PACKS_BUCKET)
-    .createSignedUrl(objectPath, SIGNED_URL_TTL_SECONDS);
-  if (signErr || !signed?.signedUrl) {
-    throw new Error(
-      `Signed URL creation failed: ${signErr?.message ?? "no URL returned"}`
-    );
-  }
-  const pdfUrl = signed.signedUrl;
-  console.log(`  ✓ uploaded · signed URL valid 90 days`);
-
-  step(7, "Update tier2_orders");
-  const now = new Date().toISOString();
-  const { error: updErr } = await supabase
-    .from("tier2_orders")
-    .update({
-      status: "delivered",
-      delivered_at: now,
-      draft_pack_pdf_url: pdfUrl,
-    })
-    .eq("id", order.id);
-  if (updErr) {
-    throw new Error(`Order update failed: ${updErr.message}`);
-  }
-  console.log(`  ✓ order ${order.id} marked delivered`);
-
-  step(8, "Send email via Resend");
-  if (args.skipEmail) {
-    console.log("  - skipped (--skip-email flag)");
-  } else {
-    const recipient = order.email_sent_to ?? assessment.email;
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
-      console.warn(
-        "  ! RESEND_API_KEY not set — skipping email. Order is delivered but founder must email manually."
-      );
-    } else {
-      const { subject, text, html } = renderDraftPackEmail({
-        name: assessment.name,
-        product_name: productName,
-        share_token: assessment.share_token ?? "",
-        pdf_url: pdfUrl,
-        include_resend_banner: true,
-      });
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: "Raunaq Pradhan from ClearPath <onboarding@resend.dev>",
-          to: recipient,
-          reply_to: "raunaq.pradhan@gmail.com",
-          subject,
-          text,
-          html,
-        }),
-      });
-      if (!res.ok) {
-        const detail = await res.text().catch(() => "");
-        throw new Error(`Resend ${res.status}: ${detail.slice(0, 300)}`);
-      }
-      console.log(`  ✓ email sent to ${recipient}`);
-    }
-  }
-
-  console.log(`\n✓ Draft Pack delivered for order ${order.id}`);
-  console.log(`  PDF: ${pdfUrl}`);
-}
-
-async function appendForms(
-  mainBytes: Buffer,
-  forms: RelevantForm[]
-): Promise<Buffer> {
-  if (forms.length === 0) {
-    console.log("  - no relevant forms identified — skipping appendix");
-    return mainBytes;
-  }
-
+  console.log(`\n✓ Draft Pack delivered for order ${result.orderId}`);
+  console.log(`  PDF: ${result.pdfUrl}`);
+  console.log(`  pages=${result.pageCount} · cost ≈ $${result.opusCostUsd.toFixed(4)}`);
+  console.log(`  appendices: ${result.appendedFormIds.join(", ") || "(none)"}`);
   console.log(
-    `  - ${forms.length} relevant form(s): ${forms.map((f) => f.id).join(", ")}`
+    `  email: ${result.emailSent ? `sent to ${result.emailRecipient}` : "skipped"}`
   );
-
-  const main = await PDFDocument.load(mainBytes, { ignoreEncryption: true });
-  const helvetica = await main.embedFont(StandardFonts.Helvetica);
-  const helveticaBold = await main.embedFont(StandardFonts.HelveticaBold);
-
-  let appendixIdx = 0;
-  let appendedCount = 0;
-
-  for (const form of forms) {
-    if (!form.available || !form.url) {
-      console.log(
-        `  - ${form.id}: not in mirror — founder downloads from cdsco.gov.in`
-      );
-      continue;
-    }
-
-    let formBytes: ArrayBuffer;
-    try {
-      const res = await fetch(form.url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      formBytes = await res.arrayBuffer();
-    } catch (err) {
-      console.warn(
-        `  ! ${form.id}: fetch failed — ${
-          err instanceof Error ? err.message : err
-        }. Skipping.`
-      );
-      continue;
-    }
-
-    let formDoc: PDFDocument;
-    try {
-      formDoc = await PDFDocument.load(formBytes, { ignoreEncryption: true });
-    } catch (err) {
-      console.warn(
-        `  ! ${form.id}: PDF parse failed — ${
-          err instanceof Error ? err.message : err
-        }. Skipping.`
-      );
-      continue;
-    }
-
-    const letter = String.fromCharCode(65 + appendixIdx); // A, B, C, ...
-    appendixIdx++;
-
-    // Separator page (A4 portrait)
-    const sep = main.addPage([595, 842]);
-    sep.drawText(`APPENDIX ${letter}`, {
-      x: 56,
-      y: 760,
-      size: 11,
-      font: helveticaBold,
-      color: rgb(0.73, 0.46, 0.09),
-    });
-    sep.drawText(`Blank Form ${form.id}`, {
-      x: 56,
-      y: 720,
-      size: 24,
-      font: helveticaBold,
-      color: rgb(0.06, 0.43, 0.34),
-    });
-    sep.drawText(form.description, {
-      x: 56,
-      y: 690,
-      size: 13,
-      font: helvetica,
-      color: rgb(0.1, 0.1, 0.1),
-      maxWidth: 480,
-    });
-    sep.drawText("Source: cdsco.gov.in (mirror cached in ClearPath Storage)", {
-      x: 56,
-      y: 645,
-      size: 9,
-      font: helvetica,
-      color: rgb(0.42, 0.42, 0.42),
-    });
-    sep.drawText("Why this form applies", {
-      x: 56,
-      y: 600,
-      size: 10,
-      font: helveticaBold,
-      color: rgb(0.42, 0.42, 0.42),
-    });
-    sep.drawText(form.reason, {
-      x: 56,
-      y: 580,
-      size: 11,
-      font: helvetica,
-      color: rgb(0.1, 0.1, 0.1),
-      maxWidth: 480,
-      lineHeight: 14,
-    });
-    sep.drawText("How to use this form", {
-      x: 56,
-      y: 480,
-      size: 10,
-      font: helveticaBold,
-      color: rgb(0.42, 0.42, 0.42),
-    });
-    sep.drawText(
-      "Fill this form using the drafted content from earlier sections — Intended Use (Section 02), Device Description (Section 03), Risk Classification (Section 04), and Clinical Context (Section 05). Cross-reference your wording so the form, the Device Master File, and any clinical evaluation say the same thing.",
-      {
-        x: 56,
-        y: 460,
-        size: 10,
-        font: helvetica,
-        color: rgb(0.1, 0.1, 0.1),
-        maxWidth: 480,
-        lineHeight: 14,
-      }
-    );
-    sep.drawText(
-      "ClearPath · Regulatory Draft Pack — appendix separator. Not legal advice.",
-      {
-        x: 56,
-        y: 40,
-        size: 8,
-        font: helvetica,
-        color: rgb(0.6, 0.6, 0.6),
-      }
-    );
-
-    // Copy form pages
-    const pageIndices = formDoc.getPageIndices();
-    const copied = await main.copyPages(formDoc, pageIndices);
-    for (const p of copied) main.addPage(p);
-
-    appendedCount++;
-    console.log(
-      `  ✓ appendix ${letter}: ${form.id} (${pageIndices.length} pages copied)`
-    );
-  }
-
-  if (appendedCount === 0) {
-    console.log("  - 0 forms appended (all skipped)");
-    return mainBytes;
-  }
-
-  const out = await main.save();
-  console.log(
-    `  ✓ merged · ${(out.length / 1024).toFixed(0)} KB · ${main.getPageCount()} pages total`
-  );
-  return Buffer.from(out);
 }
 
 main().catch((err) => {
-  console.error("\n✗ Generation failed:", err instanceof Error ? err.message : err);
+  console.error(
+    "\n✗ Generation threw:",
+    err instanceof Error ? err.message : err
+  );
   process.exit(1);
 });

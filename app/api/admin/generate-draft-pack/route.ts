@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getServiceClient } from "@/lib/supabase";
+import { generateDraftPack } from "@/lib/engine/draft-pack-generator";
+
+// Vercel Hobby plan caps function execution at 60 seconds. Typical
+// end-to-end is ~30-40s (Opus dominates), which fits comfortably.
+// If Opus stalls past the cap, the function will be killed and the
+// caller sees a connection error — the caller's UI must treat that
+// as a failure path (don't fake success). The order will be left in
+// 'generating' state and an admin retry (or CLI run) recovers.
+export const maxDuration = 60;
 
 const schema = z.object({ order_id: z.string().uuid() });
 
@@ -20,43 +29,74 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const orderId = parsed.data.order_id;
   const supabase = getServiceClient();
 
-  // CAS: only flip if currently verified. The actual generation runs in a
-  // local CLI invocation (Vercel functions can't reliably do background work
-  // on the hobby plan). The endpoint just hands off the command string.
-  const { data, error } = await supabase
+  // CAS verified → generating. Only one request can hold the lock; concurrent
+  // clicks will see 409.
+  const { data: locked, error: casErr } = await supabase
     .from("tier2_orders")
     .update({ status: "generating" })
-    .eq("id", parsed.data.order_id)
+    .eq("id", orderId)
     .eq("status", "verified")
     .select("id")
     .maybeSingle<{ id: string }>();
 
-  if (error) {
-    console.error("generate-draft-pack CAS update failed:", error);
+  if (casErr) {
+    console.error("generate-draft-pack CAS update failed:", casErr);
     return NextResponse.json(
       { error: "Could not trigger generation. Please try again." },
       { status: 500 }
     );
   }
-  if (!data) {
+  if (!locked) {
     return NextResponse.json(
       { error: "Order not in 'verified' state — verify it first." },
       { status: 409 }
     );
   }
 
-  const cliCommand = `npm run generate-draft-pack -- --order-id ${data.id}`;
+  // Run end-to-end. Logs land in Vercel function logs.
+  const result = await generateDraftPack({
+    orderId,
+    log: (msg) => console.log(`[generate-draft-pack] ${msg}`),
+  });
+
+  if (!result.ok) {
+    // Revert lock so admin can retry (or run the CLI).
+    await supabase
+      .from("tier2_orders")
+      .update({ status: "verified" })
+      .eq("id", orderId)
+      .eq("status", "generating");
+
+    return NextResponse.json(
+      {
+        error: `Generation failed at step "${result.errorStep}": ${result.error}`,
+        step: result.errorStep,
+      },
+      { status: 500 }
+    );
+  }
+
+  // Live mode (only mode the API uses — no dryRun from admin).
+  if (result.mode !== "live") {
+    return NextResponse.json(
+      { error: "Internal mismatch: generator returned non-live result." },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json(
     {
       ok: true,
-      order_id: data.id,
-      cli_command: cliCommand,
-      message:
-        "Draft Pack generation triggered. Run this from your terminal to complete:",
+      order_id: result.orderId,
+      pdf_url: result.pdfUrl,
+      page_count: result.pageCount,
+      email_sent: result.emailSent,
+      email_recipient: result.emailRecipient,
+      appended_form_ids: result.appendedFormIds,
     },
-    { status: 202 }
+    { status: 200 }
   );
 }
