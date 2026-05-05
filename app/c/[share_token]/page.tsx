@@ -4,6 +4,7 @@ import { getServiceClient } from "@/lib/supabase";
 import { ReadinessCardSchema } from "@/lib/schemas/readiness-card";
 import { ReadinessCardContainer } from "@/components/card/ReadinessCardContainer";
 import { GlobalHeader } from "@/components/layout/GlobalHeader";
+import { deriveTRL } from "@/lib/engine/trl";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,16 @@ export default async function CardPage({
     notFound();
   }
   const card = parsed.data;
+
+  // Backfill TRL deterministically for cards generated before the synthesizer
+  // started populating it. Anchored to the SERB / ANRF MAHA MedTech Mission
+  // framework (CDSCO-form-anchored TRL definitions).
+  if (!card.trl) {
+    const derived = deriveTRL(card);
+    if (derived !== null) {
+      card.trl = derived;
+    }
+  }
 
   const h = await headers();
   const host = h.get("host") ?? "clearpath.in";

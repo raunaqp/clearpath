@@ -9,6 +9,7 @@ import { ShareRow } from "./ShareRow";
 import { Tier23ButtonRow } from "./Tier23ButtonRow";
 import { TimelineBlock } from "./TimelineBlock";
 import { TopGapsList } from "./TopGapsList";
+import { TRLBlock } from "./TRLBlock";
 import { VerdictBlock } from "./VerdictBlock";
 import { WellnessCarveOutBlock } from "./WellnessCarveOutBlock";
 import { WhyRegulatedBlock } from "./WhyRegulatedBlock";
@@ -81,6 +82,13 @@ export function ReadinessCard({
             />
           </div>
         </div>
+
+        {/* 2b. TRL block (sibling metric to readiness — never composite) */}
+        {card.trl && card.trl.level !== null && (
+          <div className="mb-8">
+            <TRLBlock trl={card.trl} />
+          </div>
+        )}
 
         {/* 3-5. Verdict + Why regulated + Top gaps */}
         <div className="space-y-7">

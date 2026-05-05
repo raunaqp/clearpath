@@ -63,6 +63,44 @@ export const RiskLevelEnum = z.enum([
 
 export const SeverityEnum = z.enum(["high", "medium", "low"]);
 
+/**
+ * TRL (Technology Readiness Level) — anchored to SERB/ANRF MAHA MedTech Mission
+ * framework (medical-device-specific, CDSCO-form-anchored).
+ *
+ * Source: https://serb.gov.in/assets/pdf/TRL_and_health_priority.pdf
+ *
+ * Two tracks:
+ *  - investigational (no predicate) — full 9 levels
+ *  - has_predicate — collapses TRL 6-7 (substantial-equivalence path)
+ *
+ * `null` when medical_device_status = not_medical_device / wellness_carve_out.
+ */
+export const TRLLevelSchema = z.union([
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+  z.literal(5),
+  z.literal(6),
+  z.literal(7),
+  z.literal(8),
+  z.literal(9),
+]);
+
+export const TRLTrackEnum = z.enum(["investigational", "has_predicate"]);
+
+export const TRLStageSchema = z.enum([
+  "ideation",
+  "proof_of_principle",
+  "early_poc",
+  "advanced_poc",
+  "test_batch",
+  "pilot_study",
+  "pivotal_study",
+  "pre_commercialisation",
+  "commercialisation",
+]);
+
 const RegulationEntrySchema = z.object({
   verdict: VerdictEnum,
   rationale: z.string(),
@@ -129,6 +167,24 @@ export const ReadinessCardSchema = z.object({
     level: RiskLevelEnum,
     rationale: z.string(),
   }),
+
+  /**
+   * TRL — optional/additive. When present, surfaces a CDSCO-form-anchored
+   * progress reading next to readiness. Computed deterministically from
+   * detected_signals + classification when not provided by Opus.
+   *
+   * `null` for non-medical-device / wellness paths.
+   */
+  trl: z
+    .object({
+      level: TRLLevelSchema.nullable(),
+      stage: TRLStageSchema.nullable(),
+      track: TRLTrackEnum.nullable(),
+      completion_pct: z.number().int().min(0).max(100).nullable(),
+      next_milestone: z.string(),
+      rationale: z.string(),
+    })
+    .optional(),
 
   timeline: z.object({
     estimate_months_low: z.number().int().min(0),

@@ -232,6 +232,75 @@ Risk is independent from Readiness. A pre-revenue prototype can be HIGH risk + 1
 
 ---
 
+# TRL framework (§3.7b) — anchored to SERB / ANRF MAHA MedTech Mission
+
+TRL (Technology Readiness Level) is a SIBLING metric to Readiness — never a composite. Each anchored to a CDSCO form/license rather than vibes.
+
+Source: SERB / ANRF "TRLs for Medical Devices and IVDs" (the same framework BIRAC, MAHA MedTech Mission, and DST evaluators use).
+
+## Two tracks
+
+- **investigational** — no predicate device. Full 9 levels.
+- **has_predicate** — substantial-equivalence path. TRL 6/7 collapse into "clinical/performance evaluation + MD-3/MD-7 application".
+
+Pick the track from \`classification.novel_or_predicate\`:
+- \`novel\` → \`investigational\`
+- \`has_predicate\` → \`has_predicate\`
+- \`null\` (unclear) → default to \`investigational\` (more conservative)
+
+## Levels (investigational track)
+
+| TRL | Stage | Anchored to (objective evidence) |
+|-----|-------|----------------------------------|
+| 1 | Ideation | Problem statement documented |
+| 2 | Proof of Principle | Spec + FTO search, no prototype |
+| 3 | Early-stage PoC | In-house prototype + analytical perf tested |
+| 4 | Advanced PoC (Design Freeze) | MD-12 (Test License) submitted |
+| 5 | Test-batch Evaluation | MD-13 obtained + MD-22/MD-24 submitted |
+| 6 | Pilot CI/CPE | MD-23/MD-25 obtained, pilot data |
+| 7 | Pivotal CI/CPE | Pivotal complete, MD-26/MD-28 submitted |
+| 8 | Pre-commercialisation | MD-27/MD-29 obtained, ISO 13485 line up |
+| 9 | Commercialisation + PMS | Live in market with PMS |
+
+For has-predicate: TRL 6 = clinical evaluation against predicate, TRL 7 = MD-3 (Class A/B) or MD-7 (Class C/D) application submitted, TRL 8 = mfg license granted.
+
+## Completion %
+
+Anchored to TRL, weighted toward later stages (each later step is materially more expensive):
+TRL 1=5%, 2=12%, 3=22%, 4=35%, 5=50%, 6=65%, 7=78%, 8=92%, 9=100%.
+
+## When TRL is null
+
+Set \`trl: null\` (and no completion_pct) when \`medical_device_status\` is \`not_medical_device\` or \`wellness_carve_out\`. TRL is a medical-device framework; non-MDs don't have one.
+
+## How to infer TRL from signals
+
+Use \`detected_signals\` and \`readiness.dimensions\` to anchor:
+- \`submission_maturity = 0\` + no clinical = TRL 1-3 (depends on prototype evidence)
+- \`submission_maturity = 1\` (pre-sub / SUGAM) = TRL 4
+- \`submission_maturity = 2\` (MD-12 issued) + \`clinical_evidence ≥ 1\` = TRL 5
+- \`clinical_evidence = 2\` (published validation, MD-23/25 obtained) = TRL 6-7
+- \`quality_system = 2\` + active manufacturing license = TRL 8
+
+When in doubt, anchor LOWER (honesty over confidence rule).
+
+## Output shape
+
+\`\`\`json
+"trl": {
+  "level": 4,                          // 1-9 or null
+  "stage": "advanced_poc",
+  "track": "investigational",          // or "has_predicate"
+  "completion_pct": 35,
+  "next_milestone": "Obtain MD-13 Test License and complete bench testing (TRL 5)",
+  "rationale": "MD-12 likely submitted based on detected_signals.prior_regulatory_work; design freeze inferred from V&V protocols mentioned on the website. SERB/ANRF investigational track."
+}
+\`\`\`
+
+Use softening: "likely TRL 4", "appears to be on the predicate track" rather than absolute claims.
+
+---
+
 # CDSCO Oct 2025 SaMD draft (key context)
 
 Distilled from the 21 Oct 2025 CDSCO Draft Guidance on Software-as-a-Medical-Device:
