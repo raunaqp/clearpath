@@ -118,8 +118,10 @@ export default async function AssessPage({
   // routing_complete / wizard → jump into the wizard.
   // If an unacknowledged high/medium conflict exists, divert to
   // the dedicated /wizard/[id]/conflict screen first.
-  // If all wizard answers are already filled (e.g. demo-packet prefill),
-  // mark wizard_complete and fall through to synthesis below.
+  // Demo packets prefill all 7 answers at intake; the wizard still
+  // renders (showing prefilled answers) so partners can see the depth
+  // of the questionnaire during demos. The wizard offers a "skip to
+  // card" affordance when all answers are present.
   if (
     assessment.status === "routing_complete" ||
     assessment.status === "wizard" ||
@@ -143,25 +145,11 @@ export default async function AssessPage({
       redirect(`/wizard/${id}/q/${step}`);
     }
 
-    // All answers present — server-side wizard completion. Used by
-    // demo packets that prefill all 7 answers at intake time.
-    const supabaseClient = getServiceClient();
-    const completionMeta: AssessmentMeta = {
-      ...(meta as AssessmentMeta),
-      wizard_completed_at: new Date().toISOString(),
-      wizard_skipped_questions: [],
-      wizard_auto_completed: true,
-    };
-    await supabaseClient
-      .from("assessments")
-      .update({
-        status: "wizard_complete",
-        meta: completionMeta,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", id);
-    // Update local copy so the next branch (wizard_complete) handler runs
-    assessment.status = "wizard_complete";
+    // All answers present (e.g. demo-packet prefill). Show the wizard
+    // from question 1 so partners see the depth of the questionnaire.
+    // The wizard's WizardClient renders the prefilled answer for each
+    // step and exposes a "skip to card" link in the header.
+    redirect(`/wizard/${id}/q/1`);
   }
 
   // synthesizer_error — show panel + retry button. Don't auto-retry on
