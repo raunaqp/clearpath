@@ -80,6 +80,7 @@ export function ReadinessCardContainer({
         onAbdmSubmit={handleAbdmSubmit}
         onDpdpSubmit={handleDpdpSubmit}
         completeness={completeness ?? null}
+        hideDownload={true}
       />
       <IntentConfirmationModal
         open={modal !== null}

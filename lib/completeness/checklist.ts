@@ -146,3 +146,48 @@ export function getChecklist(
 ): Requirement[] {
   return CHECKLIST[category];
 }
+
+/**
+ * Returns the union of all unique requirements across every category,
+ * for use in the intake-page upload UI's doc_type dropdown. Plus an
+ * "Other" sentinel so users can upload non-CDSCO files (pitch decks,
+ * one-pagers) without breaking the matcher.
+ *
+ * Each entry's `id` is the canonical doc_type that should be persisted
+ * to assessments.uploaded_docs[].doc_type. The completeness extractor
+ * matches on these ids first, falling back to filename hints when no
+ * doc_type is set (so users who skip tagging still get partial credit).
+ */
+export type DocTypeOption = {
+  id: string;
+  name: string;
+};
+
+const PITCH_DECK_OPTION: DocTypeOption = {
+  id: "pitch_deck",
+  name: "Pitch deck (not a CDSCO doc)",
+};
+
+const OTHER_OPTION: DocTypeOption = {
+  id: "other",
+  name: "Other / not sure",
+};
+
+export function allDocTypeOptions(): DocTypeOption[] {
+  const seen = new Set<string>();
+  const out: DocTypeOption[] = [];
+  // Iterate through every category; checklist arrays may share entries,
+  // so dedupe on requirement id.
+  for (const category of Object.values(CHECKLIST)) {
+    for (const req of category) {
+      if (seen.has(req.id)) continue;
+      seen.add(req.id);
+      out.push({ id: req.id, name: req.name });
+    }
+  }
+  // Append non-CDSCO sentinels at the end so they don't compete with
+  // the real options at the top of the dropdown.
+  out.push(PITCH_DECK_OPTION);
+  out.push(OTHER_OPTION);
+  return out;
+}

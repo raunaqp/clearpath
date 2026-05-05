@@ -62,7 +62,7 @@ export function RiskBlock({
 
   return (
     <div
-      className="rounded-lg border border-[#D9D5C8] px-4 py-3"
+      className="rounded-lg border border-[#D9D5C8] px-4 py-3 h-full"
       style={{ backgroundColor: bg }}
     >
       <div className="flex items-baseline justify-between gap-3 mb-2">

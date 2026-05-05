@@ -38,7 +38,7 @@ export function TRLBlock({ trl }: { trl: TRL | null | undefined }) {
     trl.track === "has_predicate" ? "predicate track" : "investigational track";
 
   return (
-    <div className="rounded-lg border border-[#D9D5C8] bg-[#FAF8F2] px-4 py-3">
+    <div className="rounded-lg border border-[#D9D5C8] bg-[#FAF8F2] px-4 py-3 h-full">
       <div className="flex items-baseline justify-between gap-3 mb-2">
         <div className="flex items-baseline gap-2">
           <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-[#6B766F]">

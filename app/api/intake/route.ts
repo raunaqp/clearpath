@@ -8,6 +8,12 @@ const uploadedDocSchema = z.object({
   storage_path: z.string().min(1).max(500),
   size_bytes: z.number().int().positive().max(5 * 1024 * 1024),
   sha256: z.string().length(64),
+  /** Optional canonical CDSCO doc type tag (e.g. "iso_13485_cert").
+   * Set by the user via the per-file dropdown on the intake page.
+   * The completeness extractor matches doc_type before falling back
+   * to filename-substring matching, so tagging produces stronger
+   * signal in the Documents block + draft pack. */
+  doc_type: z.string().max(80).nullable().optional(),
 });
 
 const schema = z.object({

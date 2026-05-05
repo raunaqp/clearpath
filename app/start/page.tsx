@@ -19,10 +19,13 @@ import {
   ONE_LINER_MIN,
   ONE_LINER_MAX,
 } from "@/lib/intake/validation";
+import { allDocTypeOptions } from "@/lib/completeness/checklist";
 
 const MAX_FILES = 3;
 const MAX_SIZE_BYTES = 5 * 1024 * 1024;   // 5 MB
 const MAX_PAGES = 10;
+
+const DOC_TYPE_OPTIONS = allDocTypeOptions();
 
 type FieldName = "name" | "email" | "mobile" | "oneLiner" | "url";
 
@@ -36,6 +39,11 @@ type UploadedDoc = {
   status: "uploading" | "uploaded" | "failed";
   progress: number;
   error?: string;
+  /** Canonical CDSCO doc type (e.g. "iso_13485_cert", "device_master_record")
+   * or sentinel ("pitch_deck", "other"). Drives the completeness checker's
+   * doc_type-based matching layer. Optional — falling back to filename
+   * hints when unset. Tagged by the user via the per-file dropdown. */
+  doc_type?: string;
 };
 
 function fmtSize(bytes: number) {
@@ -180,6 +188,7 @@ function StartPageInner() {
                 storage_path: string;
                 size_bytes: number;
                 sha256: string;
+                doc_type?: string | null;
               }>
             ).map((d) => ({
               id: d.sha256,
@@ -190,6 +199,7 @@ function StartPageInner() {
               storage_path: d.storage_path,
               status: "uploaded" as const,
               progress: 100,
+              doc_type: d.doc_type ?? undefined,
             }))
           );
         }
@@ -381,6 +391,12 @@ function StartPageInner() {
     setFileError("");
   }
 
+  function setDocType(id: string, doc_type: string) {
+    setDocs((prev) =>
+      prev.map((d) => (d.id === id ? { ...d, doc_type: doc_type || undefined } : d))
+    );
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     // Explicit validation on submit — cover both step-1 and step-2 fields
@@ -448,6 +464,7 @@ function StartPageInner() {
           storage_path: d.storage_path,
           size_bytes: d.size_bytes,
           sha256: d.sha256,
+          doc_type: d.doc_type ?? null,
         })),
         ...(resumeId ? { resume_id: resumeId } : {}),
         ...(demoPacketId ? { demo_packet_id: demoPacketId } : {}),
@@ -541,6 +558,7 @@ function StartPageInner() {
               setDragOver={setDragOver}
               handleFiles={handleFiles}
               removeDoc={removeDoc}
+              setDocType={setDocType}
               fileInputRef={fileInputRef}
               fileError={fileError}
               submitting={submitting}
@@ -655,6 +673,7 @@ function Step2({
   setDragOver,
   handleFiles,
   removeDoc,
+  setDocType,
   fileInputRef,
   fileError,
   submitting,
@@ -674,6 +693,7 @@ function Step2({
   setDragOver: (v: boolean) => void;
   handleFiles: (files: FileList | File[]) => Promise<void>;
   removeDoc: (id: string) => void;
+  setDocType: (id: string, doc_type: string) => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   fileError: string;
   submitting: boolean;
@@ -874,6 +894,30 @@ function Step2({
                           className="h-full bg-[#0F6E56] transition-[width] duration-150"
                           style={{ width: `${d.progress}%` }}
                         />
+                      </div>
+                    )}
+                    {d.status === "uploaded" && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <label
+                          htmlFor={`doctype-${d.id}`}
+                          className="text-[10px] tracking-[0.14em] uppercase text-[#6B766F] font-mono shrink-0"
+                        >
+                          Type
+                        </label>
+                        <select
+                          id={`doctype-${d.id}`}
+                          value={d.doc_type ?? ""}
+                          onChange={(e) => setDocType(d.id, e.target.value)}
+                          className="text-xs border border-[#D9D5C8] rounded px-2 py-1 bg-white text-[#0E1411] flex-1 min-w-0 focus:outline-none focus:border-[#0F6E56]"
+                          aria-label={`Document type for ${d.filename}`}
+                        >
+                          <option value="">— select what this is —</option>
+                          {DOC_TYPE_OPTIONS.map((opt) => (
+                            <option key={opt.id} value={opt.id}>
+                              {opt.name}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     )}
                   </li>

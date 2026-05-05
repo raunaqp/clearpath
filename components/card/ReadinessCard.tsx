@@ -67,10 +67,18 @@ export function ReadinessCard({
   return (
     <RiskTintedSurface riskLevel={card.risk.level}>
       <div className="bg-white rounded-xl border border-[#D9D5C8] px-5 sm:px-6 md:px-8 py-6 sm:py-8">
-        {/* 1. Header (eyebrow + product + device type) */}
-        <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-3">
-          REGULATORY RISK PROFILE
-        </p>
+        {/* 1. Header — eyebrow + product + device type on left,
+            regulation count chip top-right (single source of truth for
+            "how many regs apply"). On mobile the chip drops below
+            the eyebrow to avoid cramping the product name. */}
+        <div className="flex items-start justify-between gap-4 mb-3">
+          <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517]">
+            REGULATORY RISK PROFILE
+          </p>
+          <div className="shrink-0">
+            <RegulationCountBadge regulations={card.regulations} />
+          </div>
+        </div>
         <h1 className="font-serif text-[clamp(24px,3vw,36px)] leading-tight text-[#0E1411] mb-1">
           {productName}
         </h1>
@@ -78,13 +86,7 @@ export function ReadinessCard({
           {card.classification.device_type}
         </p>
 
-        {/* 2. Top chip — regulation count, single source of truth for
-            "how many regs apply." */}
-        <div className="mb-5">
-          <RegulationCountBadge regulations={card.regulations} />
-        </div>
-
-        {/* 3. 2x2 grid of sibling metrics:
+        {/* 2. 2x2 grid of sibling metrics:
               Row 1: Risk · TRL
               Row 2: Documents · Timeline
 
@@ -97,25 +99,35 @@ export function ReadinessCard({
             don't apply, so the grid degrades gracefully to just Risk +
             Timeline (or a single Risk block if Timeline is N/A too).
         */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8">
-          <RiskBlock
-            riskLevel={card.risk.level}
-            riskRationale={card.risk.rationale}
-            cdscoClass={card.classification.cdsco_class}
-            classQualifier={card.classification.class_qualifier}
-            isMedicalDevice={
-              card.classification.medical_device_status === "is_medical_device" ||
-              card.classification.medical_device_status === "hybrid"
-            }
-          />
-          {showTrlBlock && card.trl && <TRLBlock trl={card.trl} />}
-          {showCompletenessBlock && (
-            <DocumentCompletenessBlock
-              result={completeness ?? null}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8 auto-rows-fr">
+          <div className="h-full">
+            <RiskBlock
+              riskLevel={card.risk.level}
+              riskRationale={card.risk.rationale}
               cdscoClass={card.classification.cdsco_class}
+              classQualifier={card.classification.class_qualifier}
+              isMedicalDevice={
+                card.classification.medical_device_status === "is_medical_device" ||
+                card.classification.medical_device_status === "hybrid"
+              }
             />
+          </div>
+          {showTrlBlock && card.trl && (
+            <div className="h-full">
+              <TRLBlock trl={card.trl} />
+            </div>
           )}
-          <TimelineCompactBlock timeline={card.timeline} />
+          {showCompletenessBlock && (
+            <div className="h-full">
+              <DocumentCompletenessBlock
+                result={completeness ?? null}
+                cdscoClass={card.classification.cdsco_class}
+              />
+            </div>
+          )}
+          <div className="h-full">
+            <TimelineCompactBlock timeline={card.timeline} />
+          </div>
         </div>
 
         {/* 3. Verdict + Why regulated */}
