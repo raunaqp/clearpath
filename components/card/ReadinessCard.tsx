@@ -2,15 +2,15 @@ import type { ReadinessCard as ReadinessCardType } from "@/lib/schemas/readiness
 import type { CompletenessResult } from "@/lib/completeness/types";
 import Link from "next/link";
 import { ABDMGapBlock } from "./ABDMGapBlock";
-import { BadgeRow } from "./BadgeRow";
 import { DocumentCompletenessBlock } from "./DocumentCompletenessBlock";
 import { DPDPGapBlock } from "./DPDPGapBlock";
-import { ReadinessCircle } from "./ReadinessCircle";
+import { RegulationCountBadge } from "./RegulationCountBadge";
 import { RegulationSnapshot } from "./RegulationSnapshot";
+import { RiskBlock } from "./RiskBlock";
 import { RiskTintedSurface } from "./RiskTintedSurface";
 import { ShareRow } from "./ShareRow";
 import { Tier23ButtonRow } from "./Tier23ButtonRow";
-import { TimelineBlock } from "./TimelineBlock";
+import { TimelineCompactBlock } from "./TimelineCompactBlock";
 import { TopGapsList } from "./TopGapsList";
 import { TRLBlock } from "./TRLBlock";
 import { VerdictBlock } from "./VerdictBlock";
@@ -78,41 +78,45 @@ export function ReadinessCard({
           {card.classification.device_type}
         </p>
 
-        {/* 2. Readiness circle + Badge Row.
-            Readiness /10 = paperwork preparedness across 5 dimensions
-            (regulatory clarity, QMS, technical docs, clinical evidence,
-            submission maturity). Sibling to TRL (technical/clinical
-            maturity) and Documents (CDSCO doc count). Three independent
-            metrics — never composited per "Readiness ≠ Risk" rule. */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-6 mb-8">
-          <ReadinessCircle
-            score={card.readiness.score}
-            band={card.readiness.band}
-          />
-          <div className="flex-1 min-w-0">
-            <BadgeRow
-              riskLevel={card.risk.level}
-              mdStatus={card.classification.medical_device_status}
-              cdscoClass={card.classification.cdsco_class}
-              classQualifier={card.classification.class_qualifier}
-              timelineDisplay={card.timeline.display}
-              regulations={card.regulations}
-            />
-          </div>
+        {/* 2. Top chip — regulation count, single source of truth for
+            "how many regs apply." */}
+        <div className="mb-5">
+          <RegulationCountBadge regulations={card.regulations} />
         </div>
 
-        {/* 2b. TRL + Documents (sibling metrics, side-by-side on desktop). */}
-        {(showTrlBlock || showCompletenessBlock) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8">
-            {showTrlBlock && card.trl && <TRLBlock trl={card.trl} />}
-            {showCompletenessBlock && (
-              <DocumentCompletenessBlock
-                result={completeness ?? null}
-                cdscoClass={card.classification.cdsco_class}
-              />
-            )}
-          </div>
-        )}
+        {/* 3. 2x2 grid of sibling metrics:
+              Row 1: Risk · TRL
+              Row 2: Documents · Timeline
+
+            Three independent scores + a timeline. Never composited —
+            partners see independent axes. Readiness 0/10 score has been
+            retired from the visible card (data still lives in
+            card.readiness for TRL derivation + draft-pack consumers).
+
+            For non-medical-device or wellness cards: TRL and Documents
+            don't apply, so the grid degrades gracefully to just Risk +
+            Timeline (or a single Risk block if Timeline is N/A too).
+        */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8">
+          <RiskBlock
+            riskLevel={card.risk.level}
+            riskRationale={card.risk.rationale}
+            cdscoClass={card.classification.cdsco_class}
+            classQualifier={card.classification.class_qualifier}
+            isMedicalDevice={
+              card.classification.medical_device_status === "is_medical_device" ||
+              card.classification.medical_device_status === "hybrid"
+            }
+          />
+          {showTrlBlock && card.trl && <TRLBlock trl={card.trl} />}
+          {showCompletenessBlock && (
+            <DocumentCompletenessBlock
+              result={completeness ?? null}
+              cdscoClass={card.classification.cdsco_class}
+            />
+          )}
+          <TimelineCompactBlock timeline={card.timeline} />
+        </div>
 
         {/* 3. Verdict + Why regulated */}
         <div className="space-y-7 mb-7">
@@ -174,16 +178,6 @@ export function ReadinessCard({
             onSubmit={onAbdmSubmit}
           />
         )}
-
-        {/* 10. Timeline (reference depth at bottom) */}
-        <div className="mt-7">
-          <TimelineBlock
-            low={card.timeline.estimate_months_low}
-            high={card.timeline.estimate_months_high}
-            display={card.timeline.display}
-            anchor={card.timeline.anchor}
-          />
-        </div>
       </div>
 
       {/* 11. ShareRow (Download PDF + secondary copy link) */}
