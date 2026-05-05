@@ -8,6 +8,8 @@ import {
 import React from "react";
 import type { DraftPackContent } from "@/lib/engine/draft-pack-prompts";
 import type { ReadinessCard } from "@/lib/schemas/readiness-card";
+import type { CompletenessResult } from "@/lib/completeness/types";
+import { getTRLDefinition } from "@/lib/engine/trl";
 import {
   applicableRegulations,
   type ApplicableRegulation,
@@ -223,6 +225,73 @@ const styles = StyleSheet.create({
     borderTopWidth: 0.5,
     borderTopColor: RULE,
   },
+  // Maturity & Completeness section (NEW — Section 10)
+  maturityRow: {
+    flexDirection: "row",
+    gap: 16,
+    marginTop: 12,
+    marginBottom: 16,
+  },
+  maturityCard: {
+    flex: 1,
+    borderWidth: 0.5,
+    borderColor: RULE,
+    backgroundColor: "#FFFFFF",
+    padding: 12,
+  },
+  maturityKicker: {
+    fontSize: 8.5,
+    color: TEXT_MUTED,
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  maturityValue: {
+    fontFamily: "Times-Bold",
+    fontSize: 22,
+    color: TEXT_DARK,
+    marginBottom: 6,
+  },
+  maturityValueUnit: {
+    fontFamily: "Helvetica",
+    fontSize: 11,
+    color: TEXT_MUTED,
+  },
+  maturitySub: {
+    fontSize: 9.5,
+    color: TEXT_DARK,
+    marginBottom: 4,
+  },
+  maturityNote: {
+    fontSize: 8.5,
+    color: TEXT_MUTED,
+    fontStyle: "italic",
+    marginTop: 4,
+  },
+  maturityProgressTrack: {
+    height: 3,
+    backgroundColor: "#E8E4D6",
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  maturityProgressFill: {
+    height: 3,
+    backgroundColor: TEAL_DEEP,
+  },
+  missingDocItem: {
+    flexDirection: "row",
+    marginTop: 3,
+    marginBottom: 1,
+  },
+  missingDocBullet: {
+    width: 12,
+    fontSize: 9.5,
+    color: TEXT_MUTED,
+  },
+  missingDocText: {
+    flex: 1,
+    fontSize: 9.5,
+    color: TEXT_DARK,
+  },
 });
 
 export type DraftPackData = {
@@ -309,10 +378,16 @@ export const DraftPackDocument = ({
   data,
   content,
   regulations,
+  trl,
+  completeness,
 }: {
   data: DraftPackData;
   content?: DraftPackContent;
   regulations?: ReadinessCard["regulations"];
+  /** TRL block from the Risk Card. Renders the Section 10 Maturity panel. */
+  trl?: ReadinessCard["trl"];
+  /** Completeness result from the Risk Card. Renders the documents panel. */
+  completeness?: CompletenessResult | null;
 }) => (
   <Document
     title={`ClearPath Draft Pack — ${data.product_name}`}
@@ -846,6 +921,153 @@ export const DraftPackDocument = ({
 
       <Footer productName={data.product_name} />
     </Page>
+
+    {/* 11. Maturity & Document Completeness — added so the Draft Pack
+         carries the same TRL + completeness numbers the founder sees on
+         the Risk Card. Pure data, no LLM. */}
+    {(trl || completeness) ? (
+      <Page size="A4" style={styles.page}>
+        <SectionHeader
+          kicker="SECTION 10"
+          title="Maturity &amp; Document Completeness"
+        />
+        <Text style={styles.body}>
+          The numbers below are carried over from your Risk Card so the
+          Draft Pack and the Card never disagree. TRL is anchored to the
+          SERB / ANRF MAHA MedTech Mission framework — the same vocabulary
+          BIRAC, MAHA MedTech evaluators, and IKP Eden use when assessing
+          medtech funding applications.
+        </Text>
+
+        <View style={styles.maturityRow}>
+          {trl && trl.level !== null ? (
+            <View style={styles.maturityCard} wrap={false}>
+              <Text style={styles.maturityKicker}>
+                TECHNOLOGY READINESS LEVEL
+              </Text>
+              <Text style={styles.maturityValue}>
+                TRL {trl.level}
+                <Text style={styles.maturityValueUnit}> / 9</Text>
+              </Text>
+              {(() => {
+                const def = getTRLDefinition(
+                  trl.level,
+                  trl.track ?? "investigational"
+                );
+                const pct = trl.completion_pct ?? 0;
+                return (
+                  <>
+                    <Text style={styles.maturitySub}>
+                      {def.label}
+                    </Text>
+                    <Text style={styles.maturitySub}>
+                      {trl.track === "has_predicate"
+                        ? "Predicate-equivalence track"
+                        : "Investigational track"}
+                      {" · "}
+                      {pct}% to commercialisation
+                    </Text>
+                    <View style={styles.maturityProgressTrack}>
+                      <View
+                        style={[
+                          styles.maturityProgressFill,
+                          { width: `${Math.max(pct, 2)}%` },
+                        ]}
+                      />
+                    </View>
+                    {def.anchor_form ? (
+                      <Text style={styles.maturityNote}>
+                        Anchor form: {def.anchor_form}
+                      </Text>
+                    ) : null}
+                    <Text style={styles.maturityNote}>
+                      Next: {trl.next_milestone}
+                    </Text>
+                  </>
+                );
+              })()}
+            </View>
+          ) : null}
+
+          {completeness ? (
+            <View style={styles.maturityCard} wrap={false}>
+              <Text style={styles.maturityKicker}>
+                CDSCO DOCUMENT COMPLETENESS
+              </Text>
+              {(() => {
+                const total = completeness.per_requirement.length;
+                const satisfied = completeness.per_requirement.filter(
+                  (r) => r.satisfied
+                ).length;
+                const uploaded = completeness.per_requirement.filter(
+                  (r) =>
+                    r.satisfied &&
+                    r.satisfied_by_document_ids.some(
+                      (id) => !id.startsWith("signal:")
+                    )
+                ).length;
+                const claimed = satisfied - uploaded;
+                const pct = completeness.overall_pct;
+                return (
+                  <>
+                    <Text style={styles.maturityValue}>
+                      {satisfied}
+                      <Text style={styles.maturityValueUnit}>
+                        {" "}
+                        / {total} in place
+                      </Text>
+                    </Text>
+                    <Text style={styles.maturitySub}>
+                      {pct}% of required documents
+                    </Text>
+                    <View style={styles.maturityProgressTrack}>
+                      <View
+                        style={[
+                          styles.maturityProgressFill,
+                          { width: `${Math.max(pct, 2)}%` },
+                        ]}
+                      />
+                    </View>
+                    <Text style={styles.maturityNote}>
+                      {uploaded > 0
+                        ? `${uploaded} uploaded`
+                        : "0 uploaded"}
+                      {claimed > 0
+                        ? ` · ${claimed} claimed (not yet verified)`
+                        : ""}
+                    </Text>
+                    <Text style={styles.maturityNote}>
+                      Estimated from uploaded files + your wizard answers.
+                    </Text>
+                  </>
+                );
+              })()}
+            </View>
+          ) : null}
+        </View>
+
+        {completeness && completeness.missing.length > 0 ? (
+          <View wrap={false}>
+            <Text style={styles.h2}>
+              Documents not yet in place ({completeness.missing.length})
+            </Text>
+            {completeness.missing.map((r) => (
+              <View key={r.id} style={styles.missingDocItem}>
+                <Text style={styles.missingDocBullet}>·</Text>
+                <Text style={styles.missingDocText}>{r.name}</Text>
+              </View>
+            ))}
+            <Text style={[styles.maturityNote, { marginTop: 8 }]}>
+              Each document above will be drafted in the matching
+              section of this Draft Pack, or appended as a CDSCO blank
+              form ready for completion.
+            </Text>
+          </View>
+        ) : null}
+
+        <Footer productName={data.product_name} />
+      </Page>
+    ) : null}
   </Document>
 );
 

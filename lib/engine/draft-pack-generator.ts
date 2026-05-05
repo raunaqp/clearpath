@@ -25,6 +25,9 @@ import {
   getRelevantForms,
   type RelevantForm,
 } from "@/lib/cdsco/relevant-forms";
+import { deriveTRL } from "@/lib/engine/trl";
+import { runCompletenessForCard } from "@/lib/completeness/category";
+import type { CheckerDocument } from "@/lib/completeness/types";
 
 const DRAFT_PACKS_BUCKET = "draft_packs";
 const SIGNED_URL_TTL_SECONDS = 90 * 24 * 60 * 60; // 90 days
@@ -95,6 +98,13 @@ type AssessmentRow = {
   wizard_answers: Record<string, unknown> | null;
   readiness_card: unknown;
   share_token: string | null;
+  uploaded_docs:
+    | Array<{
+        filename: string;
+        sha256: string;
+        doc_type?: string | null;
+      }>
+    | null;
 };
 
 type ReadinessCardMeta = { product_name?: string; company_name?: string };
@@ -138,7 +148,7 @@ export async function generateDraftPack(
   const { data: assessment, error: assErr } = await supabase
     .from("assessments")
     .select(
-      "id, name, email, one_liner, url_fetched_content, wizard_answers, readiness_card, share_token"
+      "id, name, email, one_liner, url_fetched_content, wizard_answers, readiness_card, share_token, uploaded_docs"
     )
     .eq("id", order.assessment_id)
     .maybeSingle<AssessmentRow>();
@@ -206,6 +216,29 @@ export async function generateDraftPack(
   });
   let mainPdfBuffer: Buffer;
   try {
+    // Compute TRL + completeness from the validated card so the Draft Pack
+    // and the Risk Card always show consistent numbers.
+    //   - TRL: backfilled deterministically when missing (same logic as
+    //     app/c/[share_token]/page.tsx). Anchored to SERB / ANRF.
+    //   - Completeness: same render-time pattern. Pulls uploaded_docs from
+    //     the assessment row + uses readiness dimensions as signal supplement.
+    const trlForPack =
+      validatedCard?.trl && validatedCard.trl.level !== null
+        ? validatedCard.trl
+        : validatedCard
+          ? deriveTRL(validatedCard) ?? undefined
+          : undefined;
+    const checkerDocs: CheckerDocument[] = (assessment.uploaded_docs ?? []).map(
+      (d, idx) => ({
+        id: d.sha256 || `doc-${idx}`,
+        filename: d.filename,
+        doc_type: d.doc_type ?? null,
+      })
+    );
+    const completenessForPack = validatedCard
+      ? runCompletenessForCard(validatedCard, checkerDocs)
+      : null;
+
     // `DraftPackDocument` wraps a `<Document>`, but @react-pdf/renderer's
     // type for `renderToBuffer` insists on `ReactElement<DocumentProps>`
     // directly (rejecting a wrapping function-component). The runtime
@@ -221,6 +254,8 @@ export async function generateDraftPack(
       },
       content,
       regulations: validatedCard?.regulations,
+      trl: trlForPack,
+      completeness: completenessForPack,
     });
     mainPdfBuffer = await renderToBuffer(
       element as unknown as React.ReactElement<DocumentProps>
