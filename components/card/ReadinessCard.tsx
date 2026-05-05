@@ -1,6 +1,7 @@
 import type { ReadinessCard as ReadinessCardType } from "@/lib/schemas/readiness-card";
 import type { CompletenessResult } from "@/lib/completeness/types";
 import Link from "next/link";
+import { ConciergeValueBlock } from "./ConciergeValueBlock";
 import { DocumentCompletenessBlock } from "./DocumentCompletenessBlock";
 import { RegulationCountBadge } from "./RegulationCountBadge";
 import { RegulationSnapshot } from "./RegulationSnapshot";
@@ -140,19 +141,9 @@ export function ReadinessCard({
         </div>
 
         {/* 4. Regulation snapshot — moved ABOVE gaps so the founder sees
-            scope first, then the actionable gaps to fix. Followed by a
-            learn-more link to /regulations for partners who want
-            background on each of the 9 frameworks. */}
+            scope first, then the actionable gaps to fix. */}
         <div className="mb-7">
           <RegulationSnapshot regulations={card.regulations} />
-          <div className="mt-3 text-right">
-            <Link
-              href="/regulations"
-              className="text-xs text-[#6B766F] hover:text-[#0F6E56] underline underline-offset-4"
-            >
-              More about these regulations →
-            </Link>
-          </div>
         </div>
 
         {/* 5. Top gaps — actionable next steps */}
@@ -160,13 +151,19 @@ export function ReadinessCard({
           <TopGapsList gaps={card.top_gaps} />
         </div>
 
-        {/* 6. Time-saved block — only when there are missing CDSCO docs.
-            Hooks the Documents count to a concrete value prop for Tier 2. */}
+        {/* 6. Time-saved block (Tier 2 value prop) — only when there are
+            missing CDSCO docs. Hooks the Documents count to a concrete
+            value prop for Tier 2. */}
         {!isWellness && (
           <TimeSavedBlock result={completeness ?? null} />
         )}
 
-        {/* 7. Pick your path — Tier 2/3 CTAs.
+        {/* 7. Concierge value block (Tier 3 value prop) — sibling to
+            time-saved. Reframes ₹50K concierge as faster than a
+            traditional consultant, not just 'expert review'. */}
+        {!isWellness && <ConciergeValueBlock />}
+
+        {/* 8. Pick your path — Tier 2/3 CTAs.
             Wellness: shows carve-out block instead since paid tiers don't apply. */}
         <div className="mb-7">
           {isWellness ? (
@@ -176,16 +173,23 @@ export function ReadinessCard({
           )}
         </div>
 
-        {/* Edit-inputs link removed from the card per partner feedback —
-            it created a competing CTA next to Tier 2/3 buttons and
-            implied the card was wrong by default. The same flow is still
-            reachable: navigate to /wizard/<assessmentId>/q/1 directly,
-            or use the in-product "Resume" link from /start. */}
+        {/* 9. More about these regulations — moved BELOW the CTAs so it
+            doesn't compete with them. Partners curious about the 9
+            frameworks can follow this link to /regulations after they've
+            seen the core verdict + paths forward. */}
+        <div className="mb-2 text-center">
+          <Link
+            href="/regulations"
+            className="inline-flex items-center text-xs text-[#6B766F] hover:text-[#0F6E56] underline underline-offset-4"
+          >
+            More about these 9 regulations + FAQ →
+          </Link>
+        </div>
 
-        {/* DPDP / ABDM intent capture blocks have been removed from the
-            card. The DPDP and ABDM regulations still appear in the
-            RegulationSnapshot above with their verdicts — that's where
-            the user sees scope. */}
+        {/* Edit-inputs link removed from card body. Now lives above the
+            card in the page chrome (app/c/[share_token]/page.tsx) so it
+            doesn't compete with Tier 2/3 CTAs. DPDP / ABDM intent capture
+            blocks also removed; regulations still appear in the snapshot. */}
       </div>
 
       {/* 11. ShareRow (Download PDF + secondary copy link) */}

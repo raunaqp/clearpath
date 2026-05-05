@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { GlobalHeader } from "@/components/layout/GlobalHeader";
 import { REGULATION_REFERENCES } from "@/lib/cdsco/regulations-reference";
+import { REGULATION_FAQ } from "@/lib/cdsco/regulation-faq";
 import type { RegulationKey } from "@/lib/cdsco/regulations-reference";
 
 export const metadata = {
@@ -54,13 +55,15 @@ export default function RegulationsPage() {
             </p>
           </header>
 
-          {/* The 9 regulations */}
-          <section className="space-y-6">
+          {/* The 9 regulations with FAQ folded in */}
+          <section className="space-y-8">
             {orderedKeys.map((key) => {
               const reg = REGULATION_REFERENCES[key];
+              const faqs = REGULATION_FAQ[key] ?? [];
               return (
                 <article
                   key={key}
+                  id={`reg-${key}`}
                   className="rounded-lg border border-[#D9D5C8] bg-white px-5 py-5"
                 >
                   <h2 className="font-serif text-xl text-[#0E1411] mb-1">
@@ -72,7 +75,7 @@ export default function RegulationsPage() {
                   <p className="text-sm text-[#0E1411] leading-relaxed mb-3">
                     {reg.submission_process}
                   </p>
-                  <div className="flex items-center gap-3 text-xs">
+                  <div className="flex items-center gap-3 text-xs mb-5">
                     <a
                       href={reg.url}
                       target="_blank"
@@ -90,39 +93,44 @@ export default function RegulationsPage() {
                       </span>
                     )}
                   </div>
+
+                  {faqs.length > 0 && (
+                    <div className="border-t border-[#E8E4D6] pt-4 space-y-4">
+                      <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-[#6B766F]">
+                        Common questions
+                      </p>
+                      {faqs.map((faq, i) => (
+                        <div key={i}>
+                          <p className="text-sm text-[#0E1411] font-medium mb-1">
+                            {faq.q}
+                          </p>
+                          <p className="text-sm text-[#6B766F] leading-relaxed">
+                            {faq.a}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </article>
               );
             })}
           </section>
 
-          {/* FAQ placeholder */}
-          <section className="mt-12 pt-10 border-t border-[#D9D5C8]">
-            <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-3">
-              Frequently asked questions
-            </p>
-            <h2 className="font-serif text-2xl text-[#0E1411] mb-4">
-              Common questions
+          {/* CTA back to /start */}
+          <section className="mt-12 pt-10 border-t border-[#D9D5C8] text-center">
+            <h2 className="font-serif text-2xl text-[#0E1411] mb-3">
+              Want a product-specific answer?
             </h2>
-            <div className="rounded-lg border border-dashed border-[#D9D5C8] bg-[#FAF8F2] px-5 py-6">
-              <p className="text-sm text-[#6B766F] leading-relaxed">
-                We&apos;re writing answers to the questions founders ask us
-                most: when does CDSCO actually apply, when is something a
-                medical device, what triggers DPDP and ABDM, how do
-                consent rules differ for clinical investigations, when do you
-                need ICMR-EC approval, and so on.
-              </p>
-              <p className="text-sm text-[#6B766F] leading-relaxed mt-3">
-                In the meantime, the fastest way to get a product-specific
-                answer is to run your own Readiness Card —{" "}
-                <Link
-                  href="/start"
-                  className="text-[#0F6E56] hover:text-[#0d5c48] underline underline-offset-2"
-                >
-                  it&apos;s free, takes about 5 minutes
-                </Link>
-                .
-              </p>
-            </div>
+            <p className="text-sm text-[#6B766F] leading-relaxed max-w-xl mx-auto mb-5">
+              Run your own Risk Card. Type a one-liner about your product, answer 7
+              questions, get a calibrated regulatory readiness assessment.
+            </p>
+            <Link
+              href="/start"
+              className="inline-flex items-center justify-center rounded-full bg-[#0F6E56] hover:bg-[#0d5c48] text-white font-medium text-[15px] px-6 py-3 transition-colors"
+            >
+              Start your Risk Card — free →
+            </Link>
           </section>
 
           <footer className="mt-12 pt-6 border-t border-[#D9D5C8]">

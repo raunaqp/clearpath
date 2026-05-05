@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { getServiceClient } from "@/lib/supabase";
 import { ReadinessCardSchema } from "@/lib/schemas/readiness-card";
 import { ReadinessCardContainer } from "@/components/card/ReadinessCardContainer";
@@ -96,6 +97,24 @@ export default async function CardPage({
       <GlobalHeader />
       <main className="flex-1 px-4 sm:px-6 lg:px-8 pt-8 lg:pt-12 pb-12">
         <div className="max-w-4xl mx-auto">
+          {/* Card actions row — sits above the card itself in the page
+              chrome so the actions don't compete with on-card CTAs.
+              "Regenerate" sends the user back to the wizard with their
+              previous answers prefilled (server-side step on /wizard/
+              [id]/q/1 reads wizard_answers and renders Q1 with the
+              prior selection — same flow real users hit when resuming).
+              The right-side label is a passive credit. */}
+          <div className="flex items-center justify-between mb-3 text-xs">
+            <Link
+              href={`/wizard/${data.id}/q/1`}
+              className="text-[#6B766F] hover:text-[#0F6E56] underline underline-offset-4"
+            >
+              ← Regenerate this card
+            </Link>
+            <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-[#6B766F]">
+              ClearPath · Risk Card
+            </span>
+          </div>
           <ReadinessCardContainer
             card={card}
             assessmentId={data.id}
