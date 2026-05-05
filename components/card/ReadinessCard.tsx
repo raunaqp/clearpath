@@ -140,9 +140,19 @@ export function ReadinessCard({
         </div>
 
         {/* 4. Regulation snapshot — moved ABOVE gaps so the founder sees
-            scope first, then the actionable gaps to fix. */}
+            scope first, then the actionable gaps to fix. Followed by a
+            learn-more link to /regulations for partners who want
+            background on each of the 9 frameworks. */}
         <div className="mb-7">
           <RegulationSnapshot regulations={card.regulations} />
+          <div className="mt-3 text-right">
+            <Link
+              href="/regulations"
+              className="text-xs text-[#6B766F] hover:text-[#0F6E56] underline underline-offset-4"
+            >
+              More about these regulations →
+            </Link>
+          </div>
         </div>
 
         {/* 5. Top gaps — actionable next steps */}
@@ -166,28 +176,16 @@ export function ReadinessCard({
           )}
         </div>
 
-        {/* 7. Edit inputs — full re-entry into the wizard. */}
-        <div className="mb-7 pt-5 border-t border-[#E8E4D6]">
-          <Link
-            href={`/wizard/${assessmentId}/q/1`}
-            className="inline-flex items-center gap-2 text-sm text-[#6B766F] hover:text-[#0F6E56] underline underline-offset-4"
-          >
-            ← Edit your answers and regenerate
-          </Link>
-          <p className="text-xs text-[#6B766F] mt-1.5 leading-relaxed">
-            Step through the 7 questions again with prefilled answers; submit
-            to generate a fresh card.
-          </p>
-        </div>
+        {/* Edit-inputs link removed from the card per partner feedback —
+            it created a competing CTA next to Tier 2/3 buttons and
+            implied the card was wrong by default. The same flow is still
+            reachable: navigate to /wizard/<assessmentId>/q/1 directly,
+            or use the in-product "Resume" link from /start. */}
 
         {/* DPDP / ABDM intent capture blocks have been removed from the
             card. The DPDP and ABDM regulations still appear in the
             RegulationSnapshot above with their verdicts — that's where
-            the user sees scope. The intent-capture blocks were a future-
-            product hook ("Notify me — coming May 2026") that confused
-            partners during demos. Components remain on disk for any
-            future re-introduction; assessment row keeps the
-            *_intent_captured_at columns untouched. */}
+            the user sees scope. */}
       </div>
 
       {/* 11. ShareRow (Download PDF + secondary copy link) */}

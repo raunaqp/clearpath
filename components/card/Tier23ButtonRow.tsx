@@ -58,8 +58,9 @@ export function Tier23ButtonRow({ assessmentId }: { assessmentId: string }) {
         </Link>
       </div>
       <p className="text-xs text-[#6B766F] mt-3 leading-relaxed">
-        Draft Pack: 10 minutes, emailed. Concierge: ongoing expert review for
-        12 months.
+        Draft Pack: 10 minutes, emailed. Concierge: our team handles document
+        generation and submission alongside you — typically in weeks, where a
+        traditional regulatory consultant would take 6–12 months.
       </p>
     </section>
   );
