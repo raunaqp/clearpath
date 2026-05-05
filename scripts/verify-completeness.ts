@@ -76,6 +76,28 @@ const cases = [
     expect: { category: "class_c_d", total: 8, satisfied: 3 },
   },
   {
+    name: "Forus mature (all dims=2, signal supplement should fire)",
+    card: (() => {
+      const c = makeCard({ cls: "D", ai_ml: false });
+      c.readiness.dimensions = {
+        regulatory_clarity: 2,
+        quality_system: 2,
+        technical_docs: 2,
+        clinical_evidence: 2,
+        submission_maturity: 2,
+      };
+      return c;
+    })(),
+    docs: [],
+    // class_c_d has 8 reqs. Signal supplement on all dims=2 satisfies:
+    //   submission_maturity → MD-7
+    //   quality_system     → iso_13485_cert (iec_62304 not in class_c_d list)
+    //   technical_docs     → device_master_record, test_reports
+    //   clinical_evidence  → clinical_evaluation_report, risk_management_file
+    // = 6 satisfied. Missing: essential_principles, ifu. → 75%.
+    expect: { category: "class_c_d", total: 8, satisfied: 6 },
+  },
+  {
     name: "Wellness app (no MD)",
     card: makeCard({ cls: null, ai_ml: true, status: "wellness_carve_out" }),
     docs: [],

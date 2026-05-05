@@ -7,16 +7,17 @@ import type { CompletenessResult } from "@/lib/completeness/types";
  *
  *   - Readiness /10: paperwork preparedness across 5 dimensions
  *   - TRL 1-9: technical/clinical maturity (SERB / MAHA MedTech anchored)
- *   - Documents X / Y: which CDSCO-required documents are detected
+ *   - Documents X / Y: CDSCO-required docs in place (uploaded + claimed)
  *
- * The doc count is estimated from filename + doc_type matching of the
- * documents the founder uploaded at intake. It is intentionally a
- * UNDER-estimate for the free Tier 0 card — exact field-level detection
- * is a Tier 2 (₹499) feature in the Draft Pack.
+ * Two ways a requirement gets marked satisfied:
+ *   • Uploaded — strong evidence (filename + doc_type matched)
+ *   • Claimed — signal supplement from wizard answers (dim === 2)
+ *
+ * The component shows both counts so the founder isn't misled. Tier 2
+ * Draft Pack (₹499) verifies claimed items against actual content.
  *
  * Source of truth: lib/completeness/checklist.ts — same registry the
- * Draft Pack uses, so the card and the pack always agree on what's
- * needed.
+ * Draft Pack uses, so card and pack always agree on what's needed.
  */
 export function DocumentCompletenessBlock({
   result,
@@ -32,6 +33,12 @@ export function DocumentCompletenessBlock({
 
   const total = result.per_requirement.length;
   const satisfied = result.per_requirement.filter((r) => r.satisfied).length;
+  const uploaded = result.per_requirement.filter(
+    (r) =>
+      r.satisfied &&
+      r.satisfied_by_document_ids.some((id) => !id.startsWith("signal:"))
+  ).length;
+  const viaSignalOnly = satisfied - uploaded;
   const missingCount = total - satisfied;
   const pct = result.overall_pct;
 
@@ -56,13 +63,12 @@ export function DocumentCompletenessBlock({
           <span className="font-serif text-2xl tabular-nums text-[#0E1411]">
             {satisfied}
           </span>
-          <span className="text-xs text-[#6B766F]">/ {total}</span>
+          <span className="text-xs text-[#6B766F]">/ {total} in place</span>
         </div>
         <div className="text-right">
           <span className="font-serif text-lg tabular-nums text-[#0E1411]">
             {pct}%
           </span>
-          <span className="text-[10px] text-[#6B766F] ml-1">detected</span>
         </div>
       </div>
 
@@ -73,7 +79,7 @@ export function DocumentCompletenessBlock({
         aria-valuenow={pct}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label={`${satisfied} of ${total} CDSCO-required documents detected`}
+        aria-label={`${satisfied} of ${total} CDSCO-required documents in place`}
       >
         <div
           className="h-full rounded-full transition-all"
@@ -81,11 +87,29 @@ export function DocumentCompletenessBlock({
         />
       </div>
 
+      {/* Breakdown of how the count was arrived at — honest about
+          uploaded vs claimed-only */}
+      {satisfied > 0 && (
+        <p className="text-[11px] text-[#6B766F] leading-relaxed mb-2">
+          {uploaded > 0 && (
+            <>
+              <span className="text-[#3B6D11] font-medium">{uploaded} uploaded</span>
+              {viaSignalOnly > 0 && " · "}
+            </>
+          )}
+          {viaSignalOnly > 0 && (
+            <span className="text-[#BA7517]">
+              {viaSignalOnly} claimed (not yet verified)
+            </span>
+          )}
+        </p>
+      )}
+
       {missingCount > 0 ? (
         <div className="space-y-1">
           <p className="text-xs text-[#0E1411]">
             <span className="font-medium">
-              {missingCount} document{missingCount === 1 ? "" : "s"} not yet detected
+              {missingCount} document{missingCount === 1 ? "" : "s"} not yet in place
             </span>{" "}
             <span className="text-[#6B766F]">
               for likely Class {cdscoClass ?? "TBD"} pathway
@@ -105,14 +129,14 @@ export function DocumentCompletenessBlock({
         </div>
       ) : (
         <p className="text-xs text-[#3B6D11] leading-relaxed">
-          All required documents detected from your uploads. Draft Pack will
-          verify field-level completeness.
+          All required documents in place. Draft Pack verifies field-level
+          completeness against CDSCO standards.
         </p>
       )}
 
       <p className="text-[10px] text-[#6B766F] leading-relaxed mt-2 italic">
-        Estimated from filenames + uploaded docs. Field-level verification is
-        part of the ₹499 Draft Pack.
+        Estimated from uploaded files + your wizard answers. Tier 2 Draft Pack
+        verifies content against CDSCO requirements.
       </p>
     </div>
   );
