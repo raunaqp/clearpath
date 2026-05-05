@@ -79,6 +79,7 @@ export function ReadinessCard({
               cdscoClass={card.classification.cdsco_class}
               classQualifier={card.classification.class_qualifier}
               timelineDisplay={card.timeline.display}
+              regulations={card.regulations}
             />
           </div>
         </div>

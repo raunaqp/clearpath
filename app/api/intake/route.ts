@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getServiceClient } from "@/lib/supabase";
+import { getDemoPacket } from "@/lib/demo-packets";
 
 const uploadedDocSchema = z.object({
   filename: z.string().min(1).max(200),
@@ -44,6 +45,10 @@ const schema = z.object({
     }),
   uploaded_docs: z.array(uploadedDocSchema).max(3).optional().default([]),
   resume_id: z.string().uuid().optional(),
+  /** Demo packet ID — when present, server pre-fills wizard answers
+   * and tags the assessment with meta.is_demo = true so it's filterable
+   * out of analytics + admin views. */
+  demo_packet_id: z.string().min(1).max(50).optional(),
 });
 
 type AssessmentMeta = Record<string, unknown> & {
@@ -65,9 +70,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: first.message }, { status: 422 });
   }
 
-  const { name, email, mobile, one_liner, url, uploaded_docs, resume_id } = parsed.data;
+  const { name, email, mobile, one_liner, url, uploaded_docs, resume_id, demo_packet_id } = parsed.data;
 
   const supabase = getServiceClient();
+
+  // Demo packet: prefill wizard answers + tag meta. Validation: only
+  // honour demo_packet_id if it matches a known packet (defensive).
+  const demoPacket = demo_packet_id ? getDemoPacket(demo_packet_id) : null;
+  const demoMeta = demoPacket
+    ? { is_demo: true, demo_packet_id: demoPacket.id }
+    : {};
+  const demoWizardAnswers = demoPacket ? demoPacket.wizard_answers : null;
 
   if (resume_id) {
     // Resume flow: update existing row in place, clear downstream, bump edit counter.
@@ -137,6 +150,9 @@ export async function POST(req: NextRequest) {
       url: url || null,
       uploaded_docs: uploaded_docs.length > 0 ? uploaded_docs : null,
       status: "draft",
+      // Demo packets pre-fill wizard answers so partners see a card in <30s
+      wizard_answers: demoWizardAnswers,
+      meta: demoPacket ? demoMeta : null,
     })
     .select("id")
     .single();

@@ -6,6 +6,8 @@ import Link from "next/link";
 import posthog from "posthog-js";
 import { GlobalHeader } from "@/components/layout/GlobalHeader";
 import { JourneyProgress } from "@/components/layout/JourneyProgress";
+import { DemoPacketBar } from "@/components/landing/DemoPacketBar";
+import { type DemoPacket } from "@/lib/demo-packets";
 import { countPdfPages, sha256Hex } from "@/lib/pdf-utils";
 import {
   validateEmail,
@@ -264,6 +266,30 @@ function StartPageInner() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  /**
+   * Demo packet selection — prefills both intake steps with a real
+   * Indian medtech case so partners can see a finished card in
+   * <30 seconds without typing. Stores the packet ID in URL for
+   * server-side wizard prefill on assessment creation.
+   */
+  function handleDemoSelect(packet: DemoPacket) {
+    setName(packet.prefill.name);
+    setEmail(packet.prefill.email);
+    setMobile(packet.prefill.mobile);
+    setOneLiner(packet.prefill.one_liner);
+    setUrl(packet.prefill.url);
+    setErrors({});
+    setTouched({});
+    // Update URL so submit handler picks up packet ID
+    const params = new URLSearchParams(searchParams?.toString() ?? "");
+    params.set("demo", packet.id);
+    router.replace(`/start?${params.toString()}`, { scroll: false });
+    // Jump to step 2 — user reviews + clicks submit
+    setStep(2);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    posthog.capture("demo_packet_selected", { packet_id: packet.id });
+  }
+
   const handleFiles = useCallback(
     async (files: FileList | File[]) => {
       setFileError("");
@@ -406,6 +432,8 @@ function StartPageInner() {
       });
     } catch {}
 
+    const demoPacketId = searchParams?.get("demo") ?? null;
+
     const res = await fetch("/api/intake", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -422,6 +450,7 @@ function StartPageInner() {
           sha256: d.sha256,
         })),
         ...(resumeId ? { resume_id: resumeId } : {}),
+        ...(demoPacketId ? { demo_packet_id: demoPacketId } : {}),
       }),
     });
 
@@ -463,6 +492,10 @@ function StartPageInner() {
             phase="intake"
             sub={{ current: step, total: 2 }}
           />
+
+          {/* Demo packet bar — visible to all for now (pre-launch demo).
+              Post-launch we may gate behind ?demo=true or admin auth. */}
+          <DemoPacketBar onSelect={handleDemoSelect} visible={step === 1} />
 
           {step === 1 && (
             <Step1

@@ -260,6 +260,13 @@ export async function runSynthesisForAssessment(
     synthesizer_error: null,
   };
 
+  // Denormalise TRL into convenience columns for admin queries / indexes.
+  // Source of truth remains readiness_card JSONB.
+  const cardWithTRL = cardToSave as { trl?: { level?: number | null; track?: string | null; completion_pct?: number | null } };
+  const trlLevel = cardWithTRL?.trl?.level ?? null;
+  const trlTrack = cardWithTRL?.trl?.track ?? null;
+  const trlPct = cardWithTRL?.trl?.completion_pct ?? null;
+
   const { error: saveErr } = await supabase
     .from("assessments")
     .update({
@@ -269,6 +276,9 @@ export async function runSynthesisForAssessment(
       cache_version: ver,
       status: "completed",
       meta: finalMeta,
+      trl_level: trlLevel,
+      trl_track: trlTrack,
+      trl_completion_pct: trlPct,
       updated_at: finishedAtIso,
     })
     .eq("id", id);
