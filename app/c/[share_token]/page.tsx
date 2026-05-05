@@ -5,8 +5,18 @@ import { ReadinessCardSchema } from "@/lib/schemas/readiness-card";
 import { ReadinessCardContainer } from "@/components/card/ReadinessCardContainer";
 import { GlobalHeader } from "@/components/layout/GlobalHeader";
 import { deriveTRL } from "@/lib/engine/trl";
+import { runCompletenessForCard } from "@/lib/completeness/category";
+import type { CheckerDocument } from "@/lib/completeness/types";
 
 export const dynamic = "force-dynamic";
+
+type UploadedDoc = {
+  filename: string;
+  storage_path: string;
+  size_bytes: number;
+  sha256: string;
+  doc_type?: string | null;
+};
 
 type AssessmentRow = {
   id: string;
@@ -15,6 +25,7 @@ type AssessmentRow = {
   readiness_card: unknown;
   abdm_intent_captured_at: string | null;
   dpdp_intent_captured_at: string | null;
+  uploaded_docs: UploadedDoc[] | null;
 };
 
 export default async function CardPage({
@@ -28,7 +39,7 @@ export default async function CardPage({
   const { data, error } = await supabase
     .from("assessments")
     .select(
-      "id, share_token, email, readiness_card, abdm_intent_captured_at, dpdp_intent_captured_at"
+      "id, share_token, email, readiness_card, abdm_intent_captured_at, dpdp_intent_captured_at, uploaded_docs"
     )
     .eq("share_token", share_token)
     .eq("status", "completed")
@@ -53,6 +64,19 @@ export default async function CardPage({
       card.trl = derived;
     }
   }
+
+  // Run document-completeness check using the uploaded_docs at intake.
+  // Source of truth: lib/completeness/checklist.ts (ported from
+  // cdsco-reviewer-tool). Returns null for non-medical-device or
+  // unknown-class cards — the card UI handles the null gracefully.
+  const checkerDocs: CheckerDocument[] = (data.uploaded_docs ?? []).map(
+    (d, idx) => ({
+      id: d.sha256 || `doc-${idx}`,
+      filename: d.filename,
+      doc_type: d.doc_type ?? null,
+    })
+  );
+  const completeness = runCompletenessForCard(card, checkerDocs);
 
   const h = await headers();
   const host = h.get("host") ?? "clearpath.in";
@@ -83,6 +107,7 @@ export default async function CardPage({
             showAbdmBlock={showAbdmBlock}
             showDpdpBlock={showDpdpBlock}
             isWellness={isWellness}
+            completeness={completeness}
           />
         </div>
       </main>

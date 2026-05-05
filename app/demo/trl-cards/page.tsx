@@ -362,6 +362,7 @@ function CardWrapper({
         showAbdmBlock={false}
         showDpdpBlock={false}
         isWellness={isWellness}
+        hideDownload={true}
       />
     </div>
   );

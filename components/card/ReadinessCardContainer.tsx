@@ -9,6 +9,7 @@ import {
   captureDpdpIntent,
 } from "@/app/c/[share_token]/actions";
 import type { ReadinessCard as ReadinessCardType } from "@/lib/schemas/readiness-card";
+import type { CompletenessResult } from "@/lib/completeness/types";
 
 type ModalState = { type: "abdm" | "dpdp" } | null;
 
@@ -23,6 +24,7 @@ export function ReadinessCardContainer({
   showAbdmBlock,
   showDpdpBlock,
   isWellness,
+  completeness,
 }: {
   card: ReadinessCardType;
   assessmentId: string;
@@ -34,6 +36,7 @@ export function ReadinessCardContainer({
   showAbdmBlock: boolean;
   showDpdpBlock: boolean;
   isWellness: boolean;
+  completeness?: CompletenessResult | null;
 }) {
   const [modal, setModal] = useState<ModalState>(null);
 
@@ -76,6 +79,7 @@ export function ReadinessCardContainer({
         isWellness={isWellness}
         onAbdmSubmit={handleAbdmSubmit}
         onDpdpSubmit={handleDpdpSubmit}
+        completeness={completeness ?? null}
       />
       <IntentConfirmationModal
         open={modal !== null}
