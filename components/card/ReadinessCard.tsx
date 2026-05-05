@@ -174,16 +174,17 @@ export function ReadinessCard({
         </div>
 
         {/* 9. More about these regulations — moved BELOW the CTAs so it
-            doesn't compete with them. Partners curious about the 9
-            frameworks can follow this link to /regulations after they've
-            seen the core verdict + paths forward. */}
+            doesn't compete with them. Opens in a new tab so partners
+            reading the card during a demo don't lose context. */}
         <div className="mb-2 text-center">
-          <Link
+          <a
             href="/regulations"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center text-xs text-[#6B766F] hover:text-[#0F6E56] underline underline-offset-4"
           >
             More about these 9 regulations + FAQ →
-          </Link>
+          </a>
         </div>
 
         {/* Edit-inputs link removed from card body. Now lives above the
