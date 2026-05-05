@@ -163,6 +163,13 @@ export type DocTypeOption = {
   name: string;
 };
 
+export type DocTypeGroup = {
+  /** Display label for the optgroup. */
+  label: string;
+  /** Options in this group. */
+  options: DocTypeOption[];
+};
+
 const PITCH_DECK_OPTION: DocTypeOption = {
   id: "pitch_deck",
   name: "Pitch deck (not a CDSCO doc)",
@@ -173,21 +180,68 @@ const OTHER_OPTION: DocTypeOption = {
   name: "Other / not sure",
 };
 
+/**
+ * Returns a flat list of every unique doc-type option across all CDSCO
+ * categories + non-CDSCO sentinels. Order follows the grouped view but
+ * collapsed to a single array. Use `groupedDocTypeOptions()` instead
+ * when rendering a dropdown — the grouping aids selection, especially
+ * for the 12+ option list.
+ */
 export function allDocTypeOptions(): DocTypeOption[] {
-  const seen = new Set<string>();
-  const out: DocTypeOption[] = [];
-  // Iterate through every category; checklist arrays may share entries,
-  // so dedupe on requirement id.
-  for (const category of Object.values(CHECKLIST)) {
-    for (const req of category) {
-      if (seen.has(req.id)) continue;
-      seen.add(req.id);
-      out.push({ id: req.id, name: req.name });
-    }
+  return groupedDocTypeOptions().flatMap((g) => g.options);
+}
+
+/**
+ * Returns the doc-type options grouped by intent. Maps to native HTML
+ * `<optgroup>` for accessible, zero-JS dropdown grouping. Group order
+ * is deliberately submission-pathway-aligned: the application form
+ * the founder hands in first, then quality/manufacturing evidence,
+ * then risk/clinical content, then product info, then software-specific
+ * (only relevant for SaMD), then non-CDSCO at the bottom.
+ */
+export function groupedDocTypeOptions(): DocTypeGroup[] {
+  // Pull from CHECKLIST so any future addition to the registry doesn't
+  // require updating this function — it derives from the source of truth.
+  const byId = new Map<string, Requirement>();
+  for (const reqs of Object.values(CHECKLIST)) {
+    for (const req of reqs) byId.set(req.id, req);
   }
-  // Append non-CDSCO sentinels at the end so they don't compete with
-  // the real options at the top of the dropdown.
-  out.push(PITCH_DECK_OPTION);
-  out.push(OTHER_OPTION);
-  return out;
+  const get = (id: string): DocTypeOption | null => {
+    const req = byId.get(id);
+    return req ? { id: req.id, name: req.name } : null;
+  };
+  const opts = (ids: string[]): DocTypeOption[] =>
+    ids.map(get).filter((o): o is DocTypeOption => o !== null);
+
+  return [
+    {
+      label: "Application forms",
+      options: opts(["MD-3", "MD-7"]),
+    },
+    {
+      label: "Quality system & manufacturing",
+      options: opts(["iso_13485_cert", "device_master_record"]),
+    },
+    {
+      label: "Risk & clinical",
+      options: opts([
+        "risk_management_file",
+        "clinical_evaluation_report",
+        "essential_principles",
+        "test_reports",
+      ]),
+    },
+    {
+      label: "Product info",
+      options: opts(["ifu"]),
+    },
+    {
+      label: "Software (SaMD only)",
+      options: opts(["iec_62304", "algorithm_change_protocol"]),
+    },
+    {
+      label: "Other",
+      options: [PITCH_DECK_OPTION, OTHER_OPTION],
+    },
+  ];
 }

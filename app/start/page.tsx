@@ -19,13 +19,13 @@ import {
   ONE_LINER_MIN,
   ONE_LINER_MAX,
 } from "@/lib/intake/validation";
-import { allDocTypeOptions } from "@/lib/completeness/checklist";
+import { groupedDocTypeOptions } from "@/lib/completeness/checklist";
 
 const MAX_FILES = 3;
 const MAX_SIZE_BYTES = 5 * 1024 * 1024;   // 5 MB
 const MAX_PAGES = 10;
 
-const DOC_TYPE_OPTIONS = allDocTypeOptions();
+const DOC_TYPE_GROUPS = groupedDocTypeOptions();
 
 type FieldName = "name" | "email" | "mobile" | "oneLiner" | "url";
 
@@ -912,10 +912,14 @@ function Step2({
                           aria-label={`Document type for ${d.filename}`}
                         >
                           <option value="">— select what this is —</option>
-                          {DOC_TYPE_OPTIONS.map((opt) => (
-                            <option key={opt.id} value={opt.id}>
-                              {opt.name}
-                            </option>
+                          {DOC_TYPE_GROUPS.map((group) => (
+                            <optgroup key={group.label} label={group.label}>
+                              {group.options.map((opt) => (
+                                <option key={opt.id} value={opt.id}>
+                                  {opt.name}
+                                </option>
+                              ))}
+                            </optgroup>
                           ))}
                         </select>
                       </div>

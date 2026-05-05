@@ -1,15 +1,14 @@
 import type { ReadinessCard as ReadinessCardType } from "@/lib/schemas/readiness-card";
 import type { CompletenessResult } from "@/lib/completeness/types";
 import Link from "next/link";
-import { ABDMGapBlock } from "./ABDMGapBlock";
 import { DocumentCompletenessBlock } from "./DocumentCompletenessBlock";
-import { DPDPGapBlock } from "./DPDPGapBlock";
 import { RegulationCountBadge } from "./RegulationCountBadge";
 import { RegulationSnapshot } from "./RegulationSnapshot";
 import { RiskBlock } from "./RiskBlock";
 import { RiskTintedSurface } from "./RiskTintedSurface";
 import { ShareRow } from "./ShareRow";
 import { Tier23ButtonRow } from "./Tier23ButtonRow";
+import { TimeSavedBlock } from "./TimeSavedBlock";
 import { TimelineCompactBlock } from "./TimelineCompactBlock";
 import { TopGapsList } from "./TopGapsList";
 import { TRLBlock } from "./TRLBlock";
@@ -31,12 +30,16 @@ export function ReadinessCard({
   assessmentId,
   shareUrl,
   shareToken,
-  abdmAlreadyCaptured,
-  dpdpAlreadyCaptured,
-  onAbdmSubmit,
-  onDpdpSubmit,
-  showAbdmBlock,
-  showDpdpBlock,
+  // ABDM/DPDP props retained on the type signature so the container
+  // caller doesn't break. The intent-capture blocks have been removed
+  // from the rendered output (regulations still appear in the snapshot
+  // above), but a future re-introduction would re-enable these.
+  abdmAlreadyCaptured: _abdmAlreadyCaptured,
+  dpdpAlreadyCaptured: _dpdpAlreadyCaptured,
+  onAbdmSubmit: _onAbdmSubmit,
+  onDpdpSubmit: _onDpdpSubmit,
+  showAbdmBlock: _showAbdmBlock,
+  showDpdpBlock: _showDpdpBlock,
   isWellness,
   completeness,
   hideDownload,
@@ -147,7 +150,13 @@ export function ReadinessCard({
           <TopGapsList gaps={card.top_gaps} />
         </div>
 
-        {/* 6. Pick your path — Tier 2/3 CTAs.
+        {/* 6. Time-saved block — only when there are missing CDSCO docs.
+            Hooks the Documents count to a concrete value prop for Tier 2. */}
+        {!isWellness && (
+          <TimeSavedBlock result={completeness ?? null} />
+        )}
+
+        {/* 7. Pick your path — Tier 2/3 CTAs.
             Wellness: shows carve-out block instead since paid tiers don't apply. */}
         <div className="mb-7">
           {isWellness ? (
@@ -157,9 +166,7 @@ export function ReadinessCard({
           )}
         </div>
 
-        {/* 7. Edit inputs — full re-entry into the wizard. The card was
-            generated from these inputs; editing kicks off a fresh
-            synthesis. Same path used by demo packets and real assessments. */}
+        {/* 7. Edit inputs — full re-entry into the wizard. */}
         <div className="mb-7 pt-5 border-t border-[#E8E4D6]">
           <Link
             href={`/wizard/${assessmentId}/q/1`}
@@ -173,23 +180,14 @@ export function ReadinessCard({
           </p>
         </div>
 
-        {/* 8. DPDP intent block — kept simple, optional. */}
-        {showDpdpBlock && (
-          <DPDPGapBlock
-            assessmentId={assessmentId}
-            alreadyCaptured={dpdpAlreadyCaptured}
-            onSubmit={onDpdpSubmit}
-          />
-        )}
-
-        {/* 9. ABDM intent block */}
-        {showAbdmBlock && (
-          <ABDMGapBlock
-            assessmentId={assessmentId}
-            alreadyCaptured={abdmAlreadyCaptured}
-            onSubmit={onAbdmSubmit}
-          />
-        )}
+        {/* DPDP / ABDM intent capture blocks have been removed from the
+            card. The DPDP and ABDM regulations still appear in the
+            RegulationSnapshot above with their verdicts — that's where
+            the user sees scope. The intent-capture blocks were a future-
+            product hook ("Notify me — coming May 2026") that confused
+            partners during demos. Components remain on disk for any
+            future re-introduction; assessment row keeps the
+            *_intent_captured_at columns untouched. */}
       </div>
 
       {/* 11. ShareRow (Download PDF + secondary copy link) */}
