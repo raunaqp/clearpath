@@ -15,7 +15,7 @@ import type { ReadinessCard as ReadinessCardType } from "@/lib/schemas/readiness
 
 export const dynamic = "force-static";
 
-const NOOP_ABDM = async (_message: string): Promise<void> => {};
+const NOOP_ABDM = async (): Promise<void> => {};
 const NOOP_DPDP = async (): Promise<void> => {};
 
 const cerviai: ReadinessCardType = {
