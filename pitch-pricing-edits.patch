@@ -1,0 +1,44 @@
+diff --git a/app/demo/pitch/page.tsx b/app/demo/pitch/page.tsx
+index 6006d90..302a6a8 100644
+--- a/app/demo/pitch/page.tsx
++++ b/app/demo/pitch/page.tsx
+@@ -88,11 +88,11 @@ const paths: B2BPath[] = [
+   {
+     title: "Incubator licence",
+     who: "Venture Center · IKP Eden · BIRAC TBIs · DST NIDHI",
+-    price: "₹2–5 L / year",
++    price: "Discussing with partners",
+     notes: [
+-      "Per incubator · 30–50 startups",
+-      "Pilot free for 5–10 startups",
+-      "Case study → paid annual contract",
++      "Cohort access for 30–50 portfolio startups",
++      "Pilot terms shaped per partner",
++      "Goal: 1–2 case studies before Q3",
+     ],
+     fill: TEAL_LIGHT,
+     border: TEAL,
+@@ -105,7 +105,7 @@ const paths: B2BPath[] = [
+     notes: [
+       "Incubator looks sophisticated to their LPs",
+       "We get reach into 30–50 startups",
+-      "Revenue: flat fee or rev-share",
++      "Commercials TBD",
+     ],
+     fill: PURPLE_LIGHT,
+     border: PURPLE,
+@@ -114,11 +114,11 @@ const paths: B2BPath[] = [
+   {
+     title: "Tier 3 referral",
+     who: "Incubator surfaces concierge to portfolio",
+-    price: "15–20% of ₹50K",
++    price: "Referral fee on close",
+     notes: [
+       "Per signed concierge contract",
+-      "Aligns incentives, clean math",
+-      "No upfront commitment from incubator",
++      "Aligns incentives, no upfront commitment",
++      "Rate to be agreed per partner",
+     ],
+     fill: CORAL_LIGHT,
+     border: CORAL,

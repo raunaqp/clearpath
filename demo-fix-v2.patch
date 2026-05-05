@@ -1,0 +1,123 @@
+From 94fcd2f504483db20f33afcd9758533fd5017203 Mon Sep 17 00:00:00 2001
+From: claude <claude@anthropic>
+Date: Tue, 5 May 2026 20:38:23 +0000
+Subject: [PATCH] fix(demo): server-side wizard auto-complete + relabel MD? to
+ Device?
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Two bugs caught in smoke test:
+
+1. firstUnansweredStep() returned 1 when all answers were filled,
+   sending demo-packet users back to wizard step 1 even though
+   their answers were already in the DB. Synthesis never ran and
+   the user saw 'Generation taking longer than expected.'
+
+   Fix: firstUnansweredStep returns null when complete, and the
+   assess page server-side updates status to 'wizard_complete' +
+   sets wizard_completed_at + falls through to synthesis.
+
+2. The MD? badge used regulatory shorthand. Founders without
+   CDSCO experience read it as a typo or initials. Renamed to
+   Device? — same semantics, clearer surface label.
+---
+ app/assess/[id]/page.tsx     | 40 +++++++++++++++++++++++++++++++++---
+ components/card/BadgeRow.tsx |  2 +-
+ 2 files changed, 38 insertions(+), 4 deletions(-)
+
+diff --git a/app/assess/[id]/page.tsx b/app/assess/[id]/page.tsx
+index 8abb135..5bd2a16 100644
+--- a/app/assess/[id]/page.tsx
++++ b/app/assess/[id]/page.tsx
+@@ -42,6 +42,11 @@ type AssessmentMeta = {
+     severity?: "high" | "medium" | "low" | "none";
+   } | null;
+   conflict_acknowledged?: boolean;
++  // Wizard completion metadata (also written by /api/wizard/complete)
++  wizard_completed_at?: string;
++  wizard_skipped_questions?: number[];
++  wizard_auto_completed?: boolean;
++  [key: string]: unknown;
+ };
+ 
+ type AssessmentRow = {
+@@ -56,7 +61,7 @@ type AssessmentRow = {
+   meta: AssessmentMeta | null;
+ };
+ 
+-function firstUnansweredStep(answers: WizardAnswers | null): number {
++function firstUnansweredStep(answers: WizardAnswers | null): number | null {
+   const a = answers ?? {};
+   const total = totalSteps();
+   for (let i = 1; i <= total; i++) {
+@@ -65,7 +70,10 @@ function firstUnansweredStep(answers: WizardAnswers | null): number {
+     if (v === undefined || v === null) return i;
+     if (Array.isArray(v) && v.length === 0) return i;
+   }
+-  return 1;
++  // All questions answered (e.g. demo-packet prefill). Caller should
++  // mark wizard complete and proceed to synthesis instead of redirecting
++  // back to question 1.
++  return null;
+ }
+ 
+ export default async function AssessPage({
+@@ -110,6 +118,8 @@ export default async function AssessPage({
+   // routing_complete / wizard → jump into the wizard.
+   // If an unacknowledged high/medium conflict exists, divert to
+   // the dedicated /wizard/[id]/conflict screen first.
++  // If all wizard answers are already filled (e.g. demo-packet prefill),
++  // mark wizard_complete and fall through to synthesis below.
+   if (
+     assessment.status === "routing_complete" ||
+     assessment.status === "wizard" ||
+@@ -127,7 +137,31 @@ export default async function AssessPage({
+     }
+ 
+     const step = firstUnansweredStep(assessment.wizard_answers);
+-    redirect(`/wizard/${id}/q/${step}`);
++
++    if (step !== null) {
++      // Wizard not yet complete — redirect to next unanswered step
++      redirect(`/wizard/${id}/q/${step}`);
++    }
++
++    // All answers present — server-side wizard completion. Used by
++    // demo packets that prefill all 7 answers at intake time.
++    const supabaseClient = getServiceClient();
++    const completionMeta: AssessmentMeta = {
++      ...(meta as AssessmentMeta),
++      wizard_completed_at: new Date().toISOString(),
++      wizard_skipped_questions: [],
++      wizard_auto_completed: true,
++    };
++    await supabaseClient
++      .from("assessments")
++      .update({
++        status: "wizard_complete",
++        meta: completionMeta,
++        updated_at: new Date().toISOString(),
++      })
++      .eq("id", id);
++    // Update local copy so the next branch (wizard_complete) handler runs
++    assessment.status = "wizard_complete";
+   }
+ 
+   // synthesizer_error — show panel + retry button. Don't auto-retry on
+diff --git a/components/card/BadgeRow.tsx b/components/card/BadgeRow.tsx
+index 8a0f4bb..a3f9c3b 100644
+--- a/components/card/BadgeRow.tsx
++++ b/components/card/BadgeRow.tsx
+@@ -65,7 +65,7 @@ export function BadgeRow({
+       <span className={badgeBase(RISK_STYLE[riskLevel])}>
+         Risk: {RISK_LABEL[riskLevel]}
+       </span>
+-      <span className={badgeBase(neutralPill)}>MD?: {mdLabel}</span>
++      <span className={badgeBase(neutralPill)}>Device?: {mdLabel}</span>
+       <span className={badgeBase(neutralPill)}>Class: {classText}</span>
+       <span className={badgeBase(neutralPill)}>
+         Timeline: {timelineDisplay}
+-- 
+2.43.0
+

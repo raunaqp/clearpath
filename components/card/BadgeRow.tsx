@@ -65,7 +65,7 @@ export function BadgeRow({
       <span className={badgeBase(RISK_STYLE[riskLevel])}>
         Risk: {RISK_LABEL[riskLevel]}
       </span>
-      <span className={badgeBase(neutralPill)}>MD?: {mdLabel}</span>
+      <span className={badgeBase(neutralPill)}>Device?: {mdLabel}</span>
       <span className={badgeBase(neutralPill)}>Class: {classText}</span>
       <span className={badgeBase(neutralPill)}>
         Timeline: {timelineDisplay}
