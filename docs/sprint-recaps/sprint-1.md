@@ -162,6 +162,22 @@ original sprint-plan target was $0.017/free-assessment (assumed Sonnet on synth 
 
 `lib/engine/opus-cost.ts` had Opus 4.x rates (3× inflated) until this commit. **historical `cost_usd` values for Opus calls before this commit are unreliable.** forward telemetry is correct. don't aggregate across the commit boundary without correction. did not backfill historical data: pricing has shifted across Opus 4.0/4.1/4.5/4.6/4.7 so blanket /3 may be wrong for some rows; and historical absolute accuracy matters less than forward correctness.
 
+### addendum (2026-05-07) — story 1.2 draft-pack caching claim correction
+
+The Story 1.2 commit `ca2e0e7` claimed "Sonnet 4.6 with prompt caching" on draft-pack. **The caching never realized.** `DRAFT_PACK_SYSTEM_PROMPT` is 856 tokens; Sonnet 4.6's minimum cacheable prefix is 1024 tokens. The `cache_control: { type: 'ephemeral' }` directive on the system block was silently ignored by the Anthropic API on every call. Both `cache_creation_input_tokens` and `cache_read_input_tokens` returned 0.
+
+Caught by Story 1.4b smoke test (engine_costs row for `draft_pack` showed `cache_read_tokens: 0` AND `cache_write_tokens: 0` simultaneously, which is impossible if caching were active).
+
+Fix: directive dropped in 1.4b fix commit. Re-add only when prompt grows past 1024 tokens for legitimate content reasons (e.g. Sprint 6 real-data calibration may expand it). Re-run 5-case draft-pack A/B at that time to verify no regression vs. the locked Story 1.2 baseline.
+
+Cost impact: Tier 1 stays at ~$0.06/draft-pack (uncached). The eval-reported $0.058/call avg from 2026-05-06 was already uncached pricing (consistent with this finding); the "55% cheaper than Opus" Story 1.2 conclusion stands but the "with caching" framing was wrong.
+
+**Synth + pre-router caching verified WORKING in 1.4b smoke tests** (the other layers are unaffected by the draft-pack-specific issue):
+- pre-router (Haiku 4.5): `cache_read: 4512` on subsequent calls, cost dropped $0.0068 → $0.0017. **75% savings cached.**
+- synthesizer (Opus 4.7): `cache_read: 12170` on back-to-back calls within TTL window, cost dropped from $0.127 (uncached) to $0.060/$0.071 (cached). **47-51% savings cached.**
+
+Both are above the 1024-token cache minimum (pre-router prompt ~4500 tokens, synth prompt ~7700 tokens) so caching engages naturally.
+
 ## backlog (logged during sprint 1)
 
 - **`docs/model-and-cost-policy.md` section 1 incorrectly describes pre-router as outputting cdsco_class.** pre-router actually outputs `product_type`, `next_action`, `conflict_detected`, `detected_signals`. cdsco_class is a synthesizer output. fix the doc when we revisit it (probably end of sprint 1). source: caught during story 1.2 eval-bar prep, 2026-05-06.
@@ -171,6 +187,12 @@ original sprint-plan target was $0.017/free-assessment (assumed Sonnet on synth 
 - **`docs/model-and-cost-policy.md` section 5 medians are ~2× low on synth.** real opus synth median is ~$0.118/call, real sonnet synth median ~$0.076/call. doc says ~$0.06 for opus, ~$0.035 for sonnet — both half of actual. likely because the system prompt is bigger than the doc author assumed when projecting. update at end of story 1.2 batch commit. source: eval-actual cost data 2026-05-06, run-by `scripts/eval-1-2-batched.ts`.
 
 - **sonnet has higher JSON-parse-fail rate on the synth schema (2/10 = 20% vs. opus 0/10 = 0%).** during story 1.2 eval, sonnet needed the strict-suffix retry on CP-021 + CP-023 to produce schema-valid output. opus parsed clean on attempt 1 in all 10 cases. note for **story 1.3**: stricter system-prompt instructions or schema-forcing techniques (XML output mode? structured output API?) might close the gap. low priority for sprint 1 since we reverted synth to opus, but if synth is ever revisited for cost reasons, this is a known reliability gap to design around.
+
+- **re-add draft-pack caching IF/WHEN prompt grows past Sonnet's 1024-token threshold** for legitimate content reasons. Sprint 6 real-data calibration may add content that crosses the threshold. When it does: re-add `cache_control: { type: 'ephemeral' }` on the system block AND re-run the 5-case draft-pack A/B (Opus baseline vs. cached-Sonnet) to verify no prose-quality regression vs. the locked Story 1.2 baseline. Logged during 1.4b fix, 2026-05-07.
+
+- **cache-hit telemetry visibility.** readiness-card cache hits in `lib/engine/run-synthesis.ts:175-190` are currently silent — no log, no row in `engine_costs`, no metric on `assessments`. Story 1.4b smoke test caught a "missing synth row" that turned out to be a cache hit (verified via `meta.synthesizer_cache_hit_from`). For dashboard visibility, either write `call_layer='synth_cache_hit'` rows with `cost_usd=0` OR add a `cache_hit_count` column on `assessments`. Visibility matters more than cost capture (cache hits are $0 by design). Defer to post-1.4c. Logged during 1.4b fix, 2026-05-07.
+
+- **audit readiness-card cache behavior.** the cache in `run-synthesis.ts:175-190` is currently silent and has no invalidation tied to synth prompt-tuning commits. Risk: customer receives stale cached output after a synth prompt fix that should have changed the verdict. Partner-facing risk if a regulator-style reviewer sees inconsistent classifications across similar inputs. Decide: keep with explicit invalidation on prompt-version bumps, add a TTL, or remove entirely. Logged during 1.4b fix, 2026-05-07.
 
 ## stories 1.3-1.6 — not yet started
 

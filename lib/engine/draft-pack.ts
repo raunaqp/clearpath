@@ -154,7 +154,12 @@ export async function generateDraftPackContent(
         {
           type: "text",
           text: systemText,
-          cache_control: { type: "ephemeral" },
+          // cache_control intentionally omitted: DRAFT_PACK_SYSTEM_PROMPT is
+          // ~856 tokens, below Sonnet 4.6's 1024-token cache minimum. The
+          // API silently ignored the directive (verified in 1.4b smoke test:
+          // engine_costs row showed cache_read=0 AND cache_write=0). Re-add
+          // when the prompt grows past 1024 tokens for legitimate content
+          // reasons. See sprint-1.md backlog.
         },
       ],
       messages: [{ role: "user", content: userMessage }],
