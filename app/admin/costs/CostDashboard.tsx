@@ -63,9 +63,20 @@ function shortId(id: string | null): string {
   return id.slice(0, 8);
 }
 
-function fmtTime(iso: string): string {
+/**
+ * ISO 8601 short form for display: YYYY-MM-DD HH:mm (local TZ).
+ * Unambiguous globally; sortable as text; matches CDSCO / ICH document
+ * conventions. Keep the original ISO string in a `title` attribute for
+ * forensic debug (full timestamp + Z timezone marker).
+ */
+function formatDate(iso: string): string {
   const d = new Date(iso);
-  return d.toLocaleString("en-IN", { hour12: false });
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
 }
 
 type SortKey = keyof EngineCostRow | "parent";
@@ -79,8 +90,8 @@ export function CostDashboard({ data }: { data: CostsDashboardData }) {
     >
       <header className="flex items-baseline justify-between">
         <h1 className="font-serif text-3xl">Cost dashboard</h1>
-        <span className="text-xs" style={{ color: MUTED }}>
-          generated {new Date(data.generated_at).toLocaleString("en-IN", { hour12: false })}
+        <span className="text-xs" style={{ color: MUTED }} title={data.generated_at}>
+          generated {formatDate(data.generated_at)}
         </span>
       </header>
 
@@ -360,8 +371,12 @@ function RecentCallsTable({ rows }: { rows: EngineCostRow[] }) {
               const parentLabel = r.assessment_id ? "a:" : r.order_id_tier2 ? "o:" : "";
               return (
                 <tr key={r.id} style={{ borderBottom: `1px solid ${BORDER}` }}>
-                  <td className="py-2 font-mono whitespace-nowrap" style={{ color: MUTED }}>
-                    {fmtTime(r.created_at)}
+                  <td
+                    className="py-2 font-mono whitespace-nowrap"
+                    style={{ color: MUTED }}
+                    title={r.created_at}
+                  >
+                    {formatDate(r.created_at)}
                   </td>
                   <td className="py-2">{r.call_layer}</td>
                   <td className="py-2 font-mono" style={{ color: MUTED }}>
