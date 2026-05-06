@@ -84,14 +84,16 @@ async function main() {
     );
     fs.writeFileSync(out, result.pdfBuffer);
     console.log(`\n✓ dry-run complete · wrote PDF to ${out}`);
-    console.log(`  pages=${result.pageCount} · cost ≈ $${result.opusCostUsd.toFixed(4)}`);
+    // Cost no longer in result (lives in engine_costs table); generator
+    // log line above already prints `cost ≈ $X` from a fresh calculation.
+    console.log(`  pages=${result.pageCount}`);
     console.log(`  appendices: ${result.appendedFormIds.join(", ") || "(none)"}`);
     return;
   }
 
   console.log(`\n✓ Draft Pack delivered for order ${result.orderId}`);
   console.log(`  PDF: ${result.pdfUrl}`);
-  console.log(`  pages=${result.pageCount} · cost ≈ $${result.opusCostUsd.toFixed(4)}`);
+  console.log(`  pages=${result.pageCount}`);
   console.log(`  appendices: ${result.appendedFormIds.join(", ") || "(none)"}`);
   console.log(
     `  email: ${result.emailSent ? `sent to ${result.emailRecipient}` : "skipped"}`

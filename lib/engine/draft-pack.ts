@@ -11,8 +11,12 @@ import {
   type TokenUsage,
   type ModelKey,
 } from "@/lib/engine/cost-calculator";
+import { recordEngineCost } from "@/lib/engine/cost-recorder";
 
-const MODEL: ModelKey = "claude-sonnet-4-6";
+// Exported so generator/CLI can compute display cost without duplicating
+// the model name. If you change MODEL, downstream display-cost calls
+// follow automatically.
+export const MODEL: ModelKey = "claude-sonnet-4-6";
 const MAX_TOKENS = 8000;
 const STRICT_SUFFIX =
   "\n\nReturn STRICT JSON ONLY. No preamble. No trailing text.";
@@ -28,7 +32,6 @@ export type DraftPackInput = {
 export type DraftPackResult = {
   content: DraftPackContent;
   usage: TokenUsage;
-  costUsd: number;
 };
 
 function stripFences(text: string): string {
@@ -108,7 +111,8 @@ function usageFrom(response: Anthropic.Message): TokenUsage {
 }
 
 export async function generateDraftPackContent(
-  input: DraftPackInput
+  input: DraftPackInput,
+  ctx: { orderId: string }
 ): Promise<DraftPackResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -183,7 +187,15 @@ export async function generateDraftPackContent(
         cache_hit: totalUsage.cache_read > 0,
       });
 
-      return { content: softened, usage: totalUsage, costUsd: totalCost };
+      await recordEngineCost({
+        call_layer: "draft_pack",
+        model: MODEL,
+        usage: totalUsage,
+        cost_usd: totalCost,
+        order_id_tier2: ctx.orderId,
+      });
+
+      return { content: softened, usage: totalUsage };
     } catch (err) {
       if (attempt === 2) {
         await trackApiCost({
@@ -192,6 +204,13 @@ export async function generateDraftPackContent(
           usage: totalUsage,
           cost_usd: totalCost,
           cache_hit: totalUsage.cache_read > 0,
+        });
+        await recordEngineCost({
+          call_layer: "draft_pack",
+          model: MODEL,
+          usage: totalUsage,
+          cost_usd: totalCost,
+          order_id_tier2: ctx.orderId,
         });
         throw new Error(
           `draft-pack: JSON/schema validation failed after retry: ${

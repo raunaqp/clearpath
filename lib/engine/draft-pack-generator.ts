@@ -17,7 +17,8 @@ import {
 } from "@react-pdf/renderer";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { getServiceClient } from "@/lib/supabase";
-import { generateDraftPackContent } from "@/lib/engine/draft-pack";
+import { generateDraftPackContent, MODEL as DRAFT_PACK_MODEL } from "@/lib/engine/draft-pack";
+import { calculateCallCost } from "@/lib/engine/cost-calculator";
 import { DraftPackDocument } from "@/lib/pdf/draft-pack-template";
 import { renderDraftPackEmail } from "@/lib/email/draft-pack-delivery";
 import { ReadinessCardSchema } from "@/lib/schemas/readiness-card";
@@ -60,7 +61,6 @@ type GenerateOkBase = {
   ok: true;
   orderId: string;
   pageCount: number;
-  opusCostUsd: number;
   appendedFormIds: string[];
 };
 
@@ -203,22 +203,25 @@ export async function generateDraftPack(
   const validatedCard = cardParsed.success ? cardParsed.data : null;
   log(`  ✓ assessment ${assessment.id} · product="${productName}"`);
 
-  // 3. Opus
-  log(`[3] Call Opus for Draft Pack content`);
+  // 3. Draft-pack content generation
+  log(`[3] Call draft-pack engine for content`);
   let content;
-  let opusCostUsd: number;
   try {
-    const result = await generateDraftPackContent({
-      productName,
-      oneLiner: assessment.one_liner,
-      urlContent: assessment.url_fetched_content,
-      wizardAnswers: assessment.wizard_answers ?? {},
-      readinessCard: assessment.readiness_card,
-    });
+    const result = await generateDraftPackContent(
+      {
+        productName,
+        oneLiner: assessment.one_liner,
+        urlContent: assessment.url_fetched_content,
+        wizardAnswers: assessment.wizard_answers ?? {},
+        readinessCard: assessment.readiness_card,
+      },
+      { orderId: opts.orderId }
+    );
     content = result.content;
-    opusCostUsd = result.costUsd;
+    // Display-only cost recompute (engine already wrote authoritative row to engine_costs).
+    const costUsd = calculateCallCost(DRAFT_PACK_MODEL, result.usage);
     log(
-      `  ✓ content generated · cost ≈ $${opusCostUsd.toFixed(4)} · CDSCO class=${content.risk_classification.cdsco_class}`
+      `  ✓ content generated · cost ≈ $${costUsd.toFixed(4)} · CDSCO class=${content.risk_classification.cdsco_class}`
     );
   } catch (e) {
     return err(opts.orderId, "opus", e instanceof Error ? e.message : String(e));
@@ -324,7 +327,6 @@ export async function generateDraftPack(
       orderId: opts.orderId,
       pdfBuffer: merged.buffer,
       pageCount: merged.pageCount,
-      opusCostUsd,
       appendedFormIds: merged.appendedIds,
     };
   }
@@ -433,7 +435,6 @@ export async function generateDraftPack(
     orderId: opts.orderId,
     pdfUrl,
     pageCount: merged.pageCount,
-    opusCostUsd,
     appendedFormIds: merged.appendedIds,
     emailSent,
     emailRecipient: recipient,

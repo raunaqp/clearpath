@@ -6,6 +6,7 @@ import {
   type TokenUsage,
   type ModelKey,
 } from "./cost-calculator";
+import { recordEngineCost } from "./cost-recorder";
 
 export type PreRouterPdf =
   | { type: "cached"; sha256: string; summary: string }
@@ -86,7 +87,6 @@ export type PreRouterResult = {
     cache_write: number;
     output_tokens: number;
   };
-  cost_usd: number;
   raw_model_response: string;
 };
 
@@ -339,7 +339,8 @@ function asDetectedSignals(v: unknown): DetectedSignals {
 }
 
 export async function runPreRouter(
-  input: PreRouterInput
+  input: PreRouterInput,
+  ctx: { assessmentId: string }
 ): Promise<PreRouterResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -437,6 +438,14 @@ ${freshPdfs.length === 0 ? "No fresh PDFs attached." : `Fresh PDFs (${freshPdfs.
     cache_hit,
   });
 
+  await recordEngineCost({
+    call_layer: "pre_router",
+    model: MODEL,
+    usage,
+    cost_usd,
+    assessment_id: ctx.assessmentId,
+  });
+
   const conflict_detected = asBool(parsed.conflict_detected);
   const conflict_details = conflict_detected
     ? asConflictDetails(parsed.conflict_details)
@@ -453,7 +462,6 @@ ${freshPdfs.length === 0 ? "No fresh PDFs attached." : `Fresh PDFs (${freshPdfs.
     detected_signals: asDetectedSignals(parsed.detected_signals),
     pdf_summaries: asPdfSummaries(parsed.pdf_summaries),
     usage,
-    cost_usd,
     raw_model_response: rawText,
   };
 }

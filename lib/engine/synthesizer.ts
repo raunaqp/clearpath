@@ -11,6 +11,7 @@ import {
   type TokenUsage,
   type ModelKey,
 } from "@/lib/engine/cost-calculator";
+import { recordEngineCost } from "@/lib/engine/cost-recorder";
 
 const MODEL: ModelKey = "claude-opus-4-7";
 const MAX_TOKENS = 4000;
@@ -32,7 +33,6 @@ export type SynthesizerResult = {
   card: ReadinessCard;
   rawModelResponse: string;
   usage: TokenUsage;
-  costUsd: number;
 };
 
 function buildUserMessage(input: SynthesizerInput): string {
@@ -146,11 +146,18 @@ export async function runSynthesizer(
         cache_hit: totalUsage.cache_read > 0,
       });
 
+      await recordEngineCost({
+        call_layer: "synthesizer",
+        model: MODEL,
+        usage: totalUsage,
+        cost_usd: totalCost,
+        assessment_id: input.assessmentId,
+      });
+
       return {
         card: softened,
         rawModelResponse: rawText,
         usage: totalUsage,
-        costUsd: totalCost,
       };
     } catch (err) {
       if (attempt === 2) {
@@ -161,6 +168,13 @@ export async function runSynthesizer(
           usage: totalUsage,
           cost_usd: totalCost,
           cache_hit: totalUsage.cache_read > 0,
+        });
+        await recordEngineCost({
+          call_layer: "synthesizer",
+          model: MODEL,
+          usage: totalUsage,
+          cost_usd: totalCost,
+          assessment_id: input.assessmentId,
         });
         throw new Error(
           `synthesizer: JSON/schema validation failed after retry: ${

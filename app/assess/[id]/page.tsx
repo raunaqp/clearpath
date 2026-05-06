@@ -263,11 +263,14 @@ async function runPreRouterFlow(
       }
     }
 
-    const result = await runPreRouter({
-      oneLiner: assessment.one_liner,
-      urlContent,
-      pdfs,
-    });
+    const result = await runPreRouter(
+      {
+        oneLiner: assessment.one_liner,
+        urlContent,
+        pdfs,
+      },
+      { assessmentId: assessment.id }
+    );
 
     for (const s of result.pdf_summaries) {
       try {
@@ -292,11 +295,14 @@ async function runPreRouterFlow(
         status: newStatus,
         meta: {
           pre_router: {
+            // cost_usd no longer written here — cost lives in engine_costs
+            // table (Story 1.4b). Other 5 fields stay; they're assessment-
+            // record context, not cost data. Existing nested cost_usd
+            // values from prior assessments stay (no backfill — Option Y).
             rationale: result.rationale,
             conflict_detected: result.conflict_detected,
             conflict_note: result.conflict_note,
             rejection_reason: result.rejection_reason,
-            cost_usd: result.cost_usd,
             ran_at: new Date().toISOString(),
           },
           conflict_detected: result.conflict_detected,
