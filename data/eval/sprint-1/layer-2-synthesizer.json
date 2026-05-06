@@ -1,0 +1,2398 @@
+[
+  {
+    "case_id": "CP-016",
+    "product_name": "GlucoTrack Lite",
+    "one_liner": "Mobile app that logs glucose readings and gives lifestyle nudges for diabetics.",
+    "opus": {
+      "cdsco_class": null,
+      "cost_usd": 0.11849,
+      "elapsed_ms": 33459,
+      "usage": {
+        "input_tokens": 12533,
+        "output_tokens": 2233,
+        "cache_read": 0,
+        "cache_write": 0
+      },
+      "parse_ok": true,
+      "attempts": 1
+    },
+    "sonnet": {
+      "cdsco_class": "B",
+      "cost_usd": 0.064152,
+      "elapsed_ms": 47511,
+      "usage": {
+        "input_tokens": 9264,
+        "output_tokens": 2424,
+        "cache_read": 0,
+        "cache_write": 0
+      },
+      "parse_ok": true,
+      "attempts": 1
+    },
+    "cdsco_match": false,
+    "_opus_card": {
+      "meta": {
+        "company_name": "Unknown",
+        "product_name": "Glucose logging & lifestyle nudges app",
+        "scoped_feature": null,
+        "product_type": "product",
+        "generated_at": "2025-01-15T00:00:00Z",
+        "conflict_resolved": null
+      },
+      "classification": {
+        "medical_device_status": "wellness_carve_out",
+        "device_type": "Consumer self-tracking app for diabetics (manual log + lifestyle nudges)",
+        "imdrf_category": null,
+        "cdsco_class": null,
+        "class_qualifier": null,
+        "ai_ml_flag": false,
+        "acp_required": false,
+        "export_only": false,
+        "novel_or_predicate": null
+      },
+      "readiness": {
+        "score": null,
+        "band": "not_applicable",
+        "dimensions": {
+          "regulatory_clarity": 0,
+          "quality_system": 0,
+          "technical_docs": 0,
+          "clinical_evidence": 0,
+          "submission_maturity": 0
+        },
+        "note": "Wellness carve-out — readiness scoring N/A. The app logs user-entered readings and offers lifestyle nudges, which generally falls outside SaMD scope. Readiness scoring re-engages if the product later adds dose calculation, insulin titration, or diagnostic claims."
+      },
+      "risk": {
+        "level": "low",
+        "rationale": "Manual logging + lifestyle nudges typically sits in the wellness carve-out under the Oct 2025 CDSCO SaMD draft. Primary exposure is DPDP (sensitive health data), not MDR. Risk would shift to medium/high if the app starts driving clinical management (e.g. insulin dose recommendations)."
+      },
+      "timeline": {
+        "estimate_months_low": 2,
+        "estimate_months_high": 4,
+        "display": "2–4 months",
+        "anchor": "DPDP readiness (consent flow, privacy notice, breach process) is the main lift; no CDSCO submission timeline applies at current scope."
+      },
+      "regulations": {
+        "cdsco_mdr": {
+          "verdict": "not_applicable",
+          "rationale": "Manual glucose logging and generic lifestyle nudges do not diagnose, treat, or drive clinical management. Based on published CDSCO Oct 2025 SaMD draft guidance, this likely sits outside SaMD scope.",
+          "forms": [],
+          "pathway_note": "Re-classify if the app adds dose calculation, insulin titration, or AI-driven clinical recommendations — that would likely become Class B/C SaMD."
+        },
+        "cdsco_pharmacy": {
+          "verdict": "not_applicable",
+          "rationale": "No drug sale, dispensing, or distribution feature."
+        },
+        "dpdp": {
+          "verdict": "required",
+          "rationale": "Glucose readings are sensitive personal health data of Indian users; DPDP obligations (consent, notice, purpose limitation, breach reporting) apply. SDF designation may apply at scale (≥10 lakh users)."
+        },
+        "icmr": {
+          "verdict": "not_applicable",
+          "rationale": "No AI/ML in clinical decisioning and no clinical validation studies indicated at current scope."
+        },
+        "abdm": {
+          "verdict": "optional",
+          "rationale": "Direct-to-consumer self-tracking app; ABHA linking and HIP/HIU integration are not required but may aid interoperability if users want to share logs with clinicians."
+        },
+        "nabh": {
+          "verdict": "optional",
+          "rationale": "No hospital procurement channel indicated; NABH digital health standards do not apply to consumer-facing self-tracking apps."
+        },
+        "mci_telemed": {
+          "verdict": "not_applicable",
+          "rationale": "No doctor-patient consultation or RMP-mediated advice feature described."
+        },
+        "irdai": {
+          "verdict": "not_applicable",
+          "rationale": "No insurance distribution, aggregation, or underwriting feature."
+        },
+        "nabl": {
+          "verdict": "not_applicable",
+          "rationale": "No own-lab operations and no IVD validation needs at current scope."
+        }
+      },
+      "top_gaps": [
+        {
+          "dim": "dpdp",
+          "gap_title": "DPDP consent + privacy notice for sensitive health data",
+          "fix_action": "Draft a DPDP-aligned privacy notice and granular consent flow specifically for glucose data; appoint a grievance officer and document a breach response SOP this month.",
+          "severity": "high"
+        },
+        {
+          "dim": "regulatory_clarity",
+          "gap_title": "Feature-creep boundary not documented",
+          "fix_action": "Write an internal product policy that flags any future feature touching dose calculation, insulin titration, or AI-based clinical advice as a regulatory trigger requiring CDSCO re-assessment before launch.",
+          "severity": "medium"
+        },
+        {
+          "dim": "quality_system",
+          "gap_title": "No basic software hygiene framework",
+          "fix_action": "Even outside MDR scope, adopt lightweight ISO 27001-style controls (access logs, encryption-at-rest for health data, change-management) to support DPDP defensibility and future regulator readiness.",
+          "severity": "low"
+        }
+      ],
+      "verdict": "Likely a wellness carve-out today: manual glucose logging + lifestyle nudges generally sits outside CDSCO SaMD scope. Your real compliance lift is DPDP, since glucose readings are sensitive personal data.",
+      "why_regulated": "The product processes sensitive health data of Indian users, which makes DPDP applicable regardless of medical-device status. CDSCO MDR is not engaged because the app does not diagnose, treat, or drive clinical management at current scope.",
+      "post_2025_samd_gap": false,
+      "tier0_card_tagline": "Wellness today, SaMD if you add dosing — DPDP is your real homework.",
+      "tier1_teaser": "₹499 unlocks a DPDP readiness checklist tailored to glucose-data flows, plus a feature-trigger map showing exactly which product changes flip you into CDSCO scope.",
+      "tier2_teaser": "₹25K unlocks a full DPDP implementation pack (consent templates, breach SOP, DPIA scaffold) and a SaMD-readiness pre-mortem so a future dose-calculator feature doesn't blindside you."
+    },
+    "_sonnet_card": {
+      "meta": {
+        "company_name": "Unknown — not provided",
+        "product_name": "Glucose Logging & Lifestyle Nudge App",
+        "scoped_feature": null,
+        "product_type": "product",
+        "generated_at": "2025-01-30T00:00:00Z",
+        "conflict_resolved": null
+      },
+      "classification": {
+        "medical_device_status": "hybrid",
+        "device_type": "Mobile app for glucose logging (passive data capture) with AI/rule-based lifestyle nudges for diabetics — likely sits at the boundary of wellness and SaMD depending on the specificity of nudge claims",
+        "imdrf_category": "II",
+        "cdsco_class": "B",
+        "class_qualifier": "unclear",
+        "ai_ml_flag": true,
+        "acp_required": true,
+        "export_only": false,
+        "novel_or_predicate": "has_predicate"
+      },
+      "readiness": {
+        "score": 2,
+        "band": "red",
+        "dimensions": {
+          "regulatory_clarity": 0,
+          "quality_system": 0,
+          "technical_docs": 1,
+          "clinical_evidence": 0,
+          "submission_maturity": 0
+        },
+        "note": "Wizard answers are empty and no signals of QMS, certifications, or CDSCO engagement are detected. A basic mobile app architecture is inferred (hence technical_docs=1 for likely existence of some internal spec), but no regulatory work has been done. Readiness is at floor."
+      },
+      "risk": {
+        "level": "medium",
+        "rationale": "The glucose-logging feature alone is likely non-serious / inform, placing it at IMDRF II / CDSCO Class B. However, if lifestyle nudges are framed as clinical recommendations (e.g. 'adjust insulin', 'consult doctor now'), the product may drift into a serious / drive profile. Risk is medium rather than high because the product appears passive-display + lifestyle-nudge, not a closed-loop treatment driver — but the boundary is thin and evolving CDSCO SaMD guidance makes the classification uncertain."
+      },
+      "trl": {
+        "level": 2,
+        "stage": "proof_of_principle",
+        "track": "has_predicate",
+        "completion_pct": 12,
+        "next_milestone": "Conduct a formal SaMD classification analysis, produce a regulatory strategy document, and initiate ISO 13485 gap assessment — anchoring the product at TRL 3 (early-stage PoC with defined regulatory scope).",
+        "rationale": "No prior regulatory work, no QMS, no clinical evidence, and no CDSCO submission activity detected. A basic app likely exists (inferred from product description), placing the product at TRL 2 on the has-predicate track — principle is established, comparables exist internationally (e.g. mySugr, Dario Health), but no regulatory or clinical scaffolding is in place. Anchored conservatively per honesty-over-confidence rule."
+      },
+      "timeline": {
+        "estimate_months_low": 8,
+        "estimate_months_high": 14,
+        "display": "8–14 months",
+        "anchor": "Estimate anchored to a likely Class B SaMD pathway (state authority, MD-5) with QMS build from scratch. Upper bound expands if nudge claims are re-scoped upward to Class C, triggering central pathway and clinical investigation requirements."
+      },
+      "regulations": {
+        "cdsco_mdr": {
+          "verdict": "conditional",
+          "rationale": "Glucose logging alone (display of user-entered readings) may fall outside SaMD scope per the Oct 2025 CDSCO draft. However, if lifestyle nudges are positioned as clinical-decision-influencing outputs for a non-serious chronic condition, the product likely qualifies as a Class B SaMD. Classification should be confirmed via a formal regulatory strategy before any CDSCO engagement. SaMD pathway is evolving; forms TBD.",
+          "forms": [
+            "MD-5",
+            "MD-12"
+          ],
+          "pathway_note": "SaMD pathway evolving · Class B → state authority (MD-5) most likely · forms TBD pending final SaMD guidance"
+        },
+        "cdsco_pharmacy": {
+          "verdict": "not_applicable",
+          "rationale": "The product does not sell, dispense, or distribute drugs. No pharmacy regime exposure."
+        },
+        "dpdp": {
+          "verdict": "required",
+          "rationale": "The app processes glucose readings and health behaviour data of Indian users — this is sensitive personal data under the DPDP Act 2023. Compliance (consent management, data minimisation, grievance officer) is required from day one regardless of scale. If the user base crosses ~10 lakh, SDF designation and elevated obligations may apply."
+        },
+        "icmr": {
+          "verdict": "conditional",
+          "rationale": "If the product's lifestyle nudges are backed by or validated through a clinical study involving human participants, ICMR ethical guidelines and EC approval will apply. For a product currently without validation studies and no clinical claims, this is conditional rather than required — but any planned clinical validation will trigger it."
+        },
+        "abdm": {
+          "verdict": "conditional",
+          "rationale": "ABDM integration is not required for a standalone d2c diabetes app but is increasingly expected if the product seeks hospital partnerships or government health programme alignment. ABHA linkage and FHIR R4 compliance would be needed if the founder pursues that channel. Recommended to plan for it; not legally mandated today."
+        },
+        "nabh": {
+          "verdict": "optional",
+          "rationale": "The product is d2c consumer-facing and does not operate as hospital IT or EHR. NABH accreditation is not required unless the founder actively pursues procurement in NABH-accredited hospital settings, which is unlikely for this product profile."
+        },
+        "mci_telemed": {
+          "verdict": "not_applicable",
+          "rationale": "The product does not facilitate doctor-patient teleconsultations or remote medical advice by a Registered Medical Practitioner. Telemedicine guidelines are not triggered."
+        },
+        "irdai": {
+          "verdict": "not_applicable",
+          "rationale": "The product does not distribute, sell, or aggregate health insurance products. No IRDAI exposure."
+        },
+        "nabl": {
+          "verdict": "not_applicable",
+          "rationale": "The product does not operate clinical or diagnostic laboratories and is not an IVD manufacturer. The glucose readings are user-entered (not generated by a lab device operated by the company). No NABL exposure."
+        }
+      },
+      "top_gaps": [
+        {
+          "dim": "regulatory_clarity",
+          "gap_title": "Classification boundary not resolved — wellness vs. SaMD",
+          "fix_action": "Engage a CDSCO-experienced regulatory consultant this week to conduct a formal SaMD classification analysis against the Oct 2025 draft guidance. Document the clinical-state × information-significance assessment and produce a written classification rationale before any marketing claims are finalised.",
+          "severity": "high"
+        },
+        {
+          "dim": "quality_system",
+          "gap_title": "No QMS in place — ISO 13485 and IEC 62304 absent",
+          "fix_action": "Initiate a gap assessment against ISO 13485:2016 and IEC 62304 (software lifecycle) with a certified consultant. Even if final classification lands at Class B, a documented QMS is a prerequisite for CDSCO submission and will take 6–9 months to build from scratch.",
+          "severity": "high"
+        },
+        {
+          "dim": "clinical_evidence",
+          "gap_title": "No clinical or analytical validation data detected",
+          "fix_action": "Design and register a pilot validation study (retrospective or prospective) with at least one clinical partner to generate performance evidence for the nudge algorithm. Register the study on CTRI and obtain Ethics Committee approval before enrolling participants.",
+          "severity": "medium"
+        }
+      ],
+      "verdict": "This glucose-logging and lifestyle-nudge app likely sits at the boundary of wellness and Class B SaMD under evolving CDSCO guidance — the classification is not yet resolved and is the single most urgent question to answer. With no QMS, no clinical validation, and no regulatory engagement detected, the product is currently at the floor of readiness (2/10, red band) for a potential medical-device pathway, even though its risk exposure is medium rather than high.",
+      "why_regulated": "Under the Oct 2025 CDSCO SaMD draft, software that provides information intended to influence clinical management of a non-serious condition (such as Type 2 diabetes self-management nudges) may qualify as a Class B SaMD under the IMDRF non-serious × drive / diagnose-treat profile. The classification hinges on whether the lifestyle nudges are framed as clinical outputs or purely as general wellness guidance — a distinction the founder must resolve explicitly before launch.",
+      "post_2025_samd_gap": true,
+      "tier0_card_tagline": "Likely Class B SaMD boundary · 2/10 readiness · Resolve classification before launch",
+      "tier1_teaser": "Tier 1 (₹499) unlocks: full regulatory roadmap with form-by-form CDSCO checklist, a QMS build timeline, DPDP consent-framework template, and a prioritised 90-day action plan to move from red to amber band.",
+      "tier2_teaser": "Tier 2 (₹25K) unlocks: a CDSCO-experienced regulatory consultant engagement for formal SaMD classification opinion, ISO 13485 gap assessment report, clinical validation study design, and a draft Algorithm Change Protocol (ACP) for the nudge AI — everything needed to initiate a CDSCO pre-submission meeting."
+    }
+  },
+  {
+    "case_id": "CP-017",
+    "product_name": "CardioAI Triage",
+    "one_liner": "AI model that reads ECG images and flags possible myocardial infarction.",
+    "opus": {
+      "cdsco_class": "C",
+      "cost_usd": 0.117605,
+      "elapsed_ms": 31076,
+      "usage": {
+        "input_tokens": 12526,
+        "output_tokens": 2199,
+        "cache_read": 0,
+        "cache_write": 0
+      },
+      "parse_ok": true,
+      "attempts": 1
+    },
+    "sonnet": {
+      "cdsco_class": "C",
+      "cost_usd": 0.065496,
+      "elapsed_ms": 47857,
+      "usage": {
+        "input_tokens": 9267,
+        "output_tokens": 2513,
+        "cache_read": 0,
+        "cache_write": 0
+      },
+      "parse_ok": true,
+      "attempts": 1
+    },
+    "cdsco_match": true,
+    "_opus_card": {
+      "meta": {
+        "company_name": "Unknown",
+        "product_name": "ECG-MI AI",
+        "scoped_feature": null,
+        "product_type": "product",
+        "generated_at": "2025-01-15T12:00:00Z",
+        "conflict_resolved": null
+      },
+      "classification": {
+        "medical_device_status": "is_medical_device",
+        "device_type": "AI diagnostic SaMD — ECG image interpretation for myocardial infarction detection",
+        "imdrf_category": "III",
+        "cdsco_class": "C",
+        "class_qualifier": "AI-CDS",
+        "ai_ml_flag": true,
+        "acp_required": true,
+        "export_only": false,
+        "novel_or_predicate": null
+      },
+      "readiness": {
+        "score": 1,
+        "band": "red",
+        "dimensions": {
+          "regulatory_clarity": 0,
+          "quality_system": 0,
+          "technical_docs": 1,
+          "clinical_evidence": 0,
+          "submission_maturity": 0
+        },
+        "note": "Major foundational gaps across QMS, clinical evidence, and CDSCO engagement. A diagnostic AI for a critical cardiac state needs significant scaffolding before submission is realistic."
+      },
+      "risk": {
+        "level": "high",
+        "rationale": "AI diagnostic SaMD on a serious-to-critical clinical state (myocardial infarction); central CDSCO pathway likely, plus the Oct 2025 SaMD draft puts AI-CDS squarely in scope."
+      },
+      "timeline": {
+        "estimate_months_low": 18,
+        "estimate_months_high": 28,
+        "display": "18–28 months",
+        "anchor": "Anchored to a typical Class C AI-SaMD pathway: QMS stand-up (6–9mo), clinical investigation under MD-22/MD-23 (9–12mo), and central manufacturing licence under MD-9. Timeline assumes a clean run with no resubmissions."
+      },
+      "regulations": {
+        "cdsco_mdr": {
+          "verdict": "required",
+          "rationale": "Diagnostic AI flagging myocardial infarction is a medical device driving clinical management of a serious clinical state; central pathway likely applies.",
+          "forms": [
+            "MD-12",
+            "MD-9"
+          ],
+          "pathway_note": "SaMD pathway evolving · forms TBD; likely MD-12 (test license) followed by MD-9 (Class C/D central manufacturing license) plus MD-22 for clinical investigation."
+        },
+        "cdsco_pharmacy": {
+          "verdict": "not_applicable",
+          "rationale": "No drug sale, distribution, or dispensing involved."
+        },
+        "dpdp": {
+          "verdict": "required",
+          "rationale": "ECG images are sensitive personal health data; DPDP applies to any Indian patient data processed. SDF designation may apply depending on scale."
+        },
+        "icmr": {
+          "verdict": "required",
+          "rationale": "AI used in clinical diagnosis context; ICMR 2023 AI ethics guidelines apply, and EC-approved prospective validation is typically expected."
+        },
+        "abdm": {
+          "verdict": "conditional",
+          "rationale": "Optional for a standalone diagnostic AI today; becomes important if integrating with hospital EHRs or selling into ABDM-aligned workflows."
+        },
+        "nabh": {
+          "verdict": "required_for_procurement",
+          "rationale": "Hospital procurement of clinical AI tools is increasingly NABH-gated; relevant when selling to accredited cardiac care centres."
+        },
+        "mci_telemed": {
+          "verdict": "not_applicable",
+          "rationale": "No doctor-patient teleconsultation feature described."
+        },
+        "irdai": {
+          "verdict": "not_applicable",
+          "rationale": "No insurance distribution, aggregation, or underwriting feature."
+        },
+        "nabl": {
+          "verdict": "conditional",
+          "rationale": "Clinical validation studies likely benefit from NABL-accredited cardiology partner sites; depends on study design."
+        }
+      },
+      "top_gaps": [
+        {
+          "dim": "quality_system",
+          "gap_title": "No ISO 13485 QMS detected",
+          "fix_action": "Engage an ISO 13485 consultant this month for a gap assessment scoped to a Class C AI-SaMD.",
+          "severity": "high"
+        },
+        {
+          "dim": "quality_system",
+          "gap_title": "No IEC 62304 software lifecycle detected",
+          "fix_action": "Stand up an IEC 62304-aligned SDLC (likely Software Safety Class C) covering version control, risk-traced requirements, and V&V protocols.",
+          "severity": "high"
+        },
+        {
+          "dim": "clinical_evidence",
+          "gap_title": "No clinical validation evidence detected",
+          "fix_action": "Plan an EC-approved retrospective validation against cardiologist-adjudicated ECGs as a precursor to a CTRI-registered prospective study.",
+          "severity": "high"
+        }
+      ],
+      "verdict": "Likely a Class C AI-CDS diagnostic SaMD on a serious cardiac condition — central CDSCO pathway likely applies, with material gaps across QMS, software lifecycle, and clinical evidence to close before submission.",
+      "why_regulated": "An AI that reads ECG images and flags possible myocardial infarction drives clinical management of a serious-to-critical state, which the IMDRF × CDSCO matrix and the Oct 2025 SaMD draft place squarely within medical-device scope.",
+      "post_2025_samd_gap": true,
+      "tier0_card_tagline": "Class C AI-CDS for cardiac diagnosis — high risk, low readiness, ~18–28 months on a clean run.",
+      "tier1_teaser": "₹499 unlocks the full pathway map: MD-12 → MD-22 → MD-9 sequencing, ACP template for AI/ML SaMD, and a 90-day QMS stand-up plan tailored to a Class C diagnostic.",
+      "tier2_teaser": "₹25K unlocks a hands-on regulatory dossier sprint: ISO 13485 + IEC 62304 scaffolding, ICMR-compliant clinical validation protocol, and a CDSCO pre-submission package."
+    },
+    "_sonnet_card": {
+      "meta": {
+        "company_name": "Unknown — not provided",
+        "product_name": "ECG-MI Flagging AI",
+        "scoped_feature": null,
+        "product_type": "product",
+        "generated_at": "2025-01-30T00:00:00Z",
+        "conflict_resolved": null
+      },
+      "classification": {
+        "medical_device_status": "is_medical_device",
+        "device_type": "AI-based ECG image analysis tool for possible myocardial infarction flagging (diagnostic SaMD)",
+        "imdrf_category": "III",
+        "cdsco_class": "C",
+        "class_qualifier": "AI-CDS",
+        "ai_ml_flag": true,
+        "acp_required": true,
+        "export_only": false,
+        "novel_or_predicate": "novel"
+      },
+      "readiness": {
+        "score": 2,
+        "band": "red",
+        "dimensions": {
+          "regulatory_clarity": 0,
+          "quality_system": 0,
+          "technical_docs": 1,
+          "clinical_evidence": 0,
+          "submission_maturity": 0
+        },
+        "note": "No certifications, partnerships, prior regulatory work, or clinical validation detected. A single point is credited to technical_docs on the assumption that an AI model implies some internal design artefact exists, but no explicit DHF, risk analysis, or V&V protocol was detected. All other dimensions score zero. Readiness band is red — major foundational work is required before any CDSCO submission can be contemplated."
+      },
+      "risk": {
+        "level": "high",
+        "rationale": "This product reads ECGs and flags possible myocardial infarction — a serious, time-critical clinical state where an incorrect flag (false negative or false positive) could directly affect patient management. Under the CDSCO Oct 2025 SaMD draft, an AI tool that diagnoses or drives clinical management in a serious/critical clinical state is firmly in scope as a regulated medical device, likely Class C. Risk is high regardless of the product's current readiness posture."
+      },
+      "trl": {
+        "level": 2,
+        "stage": "proof_of_principle",
+        "track": "investigational",
+        "completion_pct": 12,
+        "next_milestone": "Freeze product specification, conduct Freedom-to-Operate (FTO) search, and build a functional prototype suitable for bench-level analytical performance testing — prerequisites for TRL 3 and eventual MD-12 Test License submission at TRL 4.",
+        "rationale": "No prior regulatory work, no clinical evidence, no QMS, and no facility detected. An AI model likely exists (hence TRL 2 rather than TRL 1) but no design freeze, validation protocol, or CDSCO engagement is in evidence. Anchored conservatively to TRL 2 on the SERB/ANRF investigational track. No predicate device is identified in the Indian market, making the investigational track the appropriate default."
+      },
+      "timeline": {
+        "estimate_months_low": 18,
+        "estimate_months_high": 30,
+        "display": "18–30 months",
+        "anchor": "Estimate anchored to a novel AI-CDS SaMD on a serious clinical state with no detected prior regulatory engagement, no QMS, and no clinical validation. Timeline assumes the team starts a quality system and clinical evidence programme now. The SaMD pathway is still evolving under the Oct 2025 CDSCO draft; significant uncertainty applies."
+      },
+      "regulations": {
+        "cdsco_mdr": {
+          "verdict": "required",
+          "rationale": "An AI model that reads ECG images and flags possible myocardial infarction is software intended to influence clinical management of a serious condition — squarely within the definition of SaMD under Medical Device Rules 2017 and the Oct 2025 CDSCO SaMD draft guidance. Central authority pathway likely applies given the probable Class C classification. Approval pathway is evolving; forms below are indicative.",
+          "forms": [
+            "MD-12",
+            "MD-9"
+          ],
+          "pathway_note": "SaMD pathway evolving · forms TBD under Oct 2025 draft · ACP submission likely required alongside application"
+        },
+        "cdsco_pharmacy": {
+          "verdict": "not_applicable",
+          "rationale": "Product does not sell, distribute, or dispense drugs. Drugs & Cosmetics Act pharmacy regime does not apply."
+        },
+        "dpdp": {
+          "verdict": "required",
+          "rationale": "The product processes ECG images linked to identifiable Indian patients, which constitutes sensitive personal health data under the Digital Personal Data Protection Act 2023. Compliance is required from the first user. SDF designation (with additional DPO, DPIA, and audit obligations) may apply if the product scales beyond approximately 10 lakh users or receives a formal SDF designation from the government."
+        },
+        "icmr": {
+          "verdict": "required",
+          "rationale": "Based on published ICMR Ethical Guidelines for AI in Healthcare 2023, an AI tool making clinical diagnostic inferences (MI flagging) is expected to undergo Ethics Committee-approved clinical validation before deployment. ICMR guidelines also govern data use in AI training on patient ECG data. Engagement with an accredited Ethics Committee is likely required before clinical studies can commence."
+        },
+        "abdm": {
+          "verdict": "conditional",
+          "rationale": "If deployed in government hospitals or integrated with ABHA-linked patient records, ABDM Health Information Provider / User framework and FHIR R4 compliance would apply. For a standalone product sold to private hospitals or clinics, ABDM integration is currently optional but increasingly recommended for interoperability. Milestone requirements (M1/M2/M3) would need to be assessed at deployment time."
+        },
+        "nabh": {
+          "verdict": "conditional",
+          "rationale": "If the product is sold into NABH-accredited hospital procurement channels, NABH digital health standards compliance may be a contractual gate. The product itself is not a hospital IT system, but hospital buyers may require it. Applicability depends on the target customer channel."
+        },
+        "mci_telemed": {
+          "verdict": "not_applicable",
+          "rationale": "The product is an AI diagnostic tool, not a telemedicine consultation platform. It does not facilitate doctor-patient consultations. NMC Telemedicine Practice Guidelines 2020 do not apply."
+        },
+        "irdai": {
+          "verdict": "not_applicable",
+          "rationale": "The product does not distribute, sell, or underwrite health insurance products. IRDAI licensing requirements do not apply."
+        },
+        "nabl": {
+          "verdict": "conditional",
+          "rationale": "The product analyses ECG images rather than performing wet-lab IVD tests, so NABL accreditation is not directly required for the product itself. However, if clinical validation studies are conducted through partner diagnostic or cardiology labs, those labs would typically need NABL or equivalent accreditation to produce evidence acceptable to CDSCO. Partnership-level NABL compliance is therefore conditionally relevant."
+        }
+      },
+      "top_gaps": [
+        {
+          "dim": "quality_system",
+          "gap_title": "No ISO 13485 Quality Management System detected",
+          "fix_action": "Engage an ISO 13485-experienced medical device consultant this week for a gap assessment against MDR 2017 Schedule 5 requirements. Prioritise establishing a document control system and quality manual as the first deliverable.",
+          "severity": "high"
+        },
+        {
+          "dim": "quality_system",
+          "gap_title": "No IEC 62304 software lifecycle process detected",
+          "fix_action": "Commission an IEC 62304 readiness review alongside the ISO 13485 gap assessment. Map your existing ML development pipeline to IEC 62304 safety classes and identify where formal software development plan, verification records, and change control procedures need to be created.",
+          "severity": "high"
+        },
+        {
+          "dim": "clinical_evidence",
+          "gap_title": "No clinical validation study or Ethics Committee engagement detected",
+          "fix_action": "Identify a cardiology department at a NABH-accredited or ICMR-networked hospital for a prospective clinical evaluation partnership. Draft an EC submission protocol this month — clinical evidence is the longest-lead item on the critical path to Class C CDSCO submission.",
+          "severity": "high"
+        }
+      ],
+      "verdict": "This AI ECG-MI flagging tool is likely a Class C SaMD under CDSCO Medical Device Rules 2017 — a high-risk regulatory profile with no detected quality system, clinical validation, or prior CDSCO engagement. The product is currently at a red readiness posture; significant foundational work across quality systems, software lifecycle processes, and clinical evidence is required before an approval application can realistically be contemplated.",
+      "why_regulated": "Software that reads ECG images to flag possible myocardial infarction is intended to influence clinical management of a serious, time-critical condition — placing it within the IMDRF 'serious state × diagnose/treat' cell, which maps to likely Class C SaMD under the CDSCO MDR 2017 classification framework and the Oct 2025 SaMD draft guidance.",
+      "post_2025_samd_gap": true,
+      "tier0_card_tagline": "Likely Class C SaMD · High Risk · Red Readiness · Start QMS and clinical validation now",
+      "tier1_teaser": "Tier 1 (₹499) unlocks: precise CDSCO form sequence for your Class C SaMD pathway, ACP template outline for your AI/ML model, a 12-month regulatory roadmap with month-by-month milestones, and a shortlist of ICMR-networked cardiology sites for clinical validation partnership.",
+      "tier2_teaser": "Tier 2 (₹25,000) unlocks: a senior regulatory consultant review session, a custom ISO 13485 gap assessment report benchmarked against MDR 2017 Schedule 5, IEC 62304 software classification memo for your ML pipeline, a draft EC submission protocol for the clinical validation study, and a CDSCO pre-submission meeting preparation package."
+    }
+  },
+  {
+    "case_id": "CP-018",
+    "product_name": "DermaLens",
+    "one_liner": "Smartphone-based skin lesion classifier for suspicious mole detection.",
+    "opus": {
+      "cdsco_class": "C",
+      "cost_usd": 0.117965,
+      "elapsed_ms": 32692,
+      "usage": {
+        "input_tokens": 12528,
+        "output_tokens": 2213,
+        "cache_read": 0,
+        "cache_write": 0
+      },
+      "parse_ok": true,
+      "attempts": 1
+    },
+    "sonnet": {
+      "cdsco_class": "C",
+      "cost_usd": 0.064104,
+      "elapsed_ms": 46175,
+      "usage": {
+        "input_tokens": 9263,
+        "output_tokens": 2421,
+        "cache_read": 0,
+        "cache_write": 0
+      },
+      "parse_ok": true,
+      "attempts": 1
+    },
+    "cdsco_match": true,
+    "_opus_card": {
+      "meta": {
+        "company_name": "Unknown",
+        "product_name": "Smartphone skin lesion classifier",
+        "scoped_feature": null,
+        "product_type": "product",
+        "generated_at": "2025-01-15T00:00:00Z",
+        "conflict_resolved": null
+      },
+      "classification": {
+        "medical_device_status": "is_medical_device",
+        "device_type": "AI image-based dermatological lesion classifier (SaMD)",
+        "imdrf_category": "III",
+        "cdsco_class": "C",
+        "class_qualifier": "AI-CDS",
+        "ai_ml_flag": true,
+        "acp_required": true,
+        "export_only": false,
+        "novel_or_predicate": "novel"
+      },
+      "readiness": {
+        "score": 1,
+        "band": "red",
+        "dimensions": {
+          "regulatory_clarity": 0,
+          "quality_system": 0,
+          "technical_docs": 1,
+          "clinical_evidence": 0,
+          "submission_maturity": 0
+        },
+        "note": "Pre-submission posture with no detected QMS, no clinical validation, and no CDSCO engagement. Foundational gaps before any submission is viable."
+      },
+      "risk": {
+        "level": "high",
+        "rationale": "AI diagnostic SaMD detecting suspicious moles (cancer-screening context) on a serious clinical state; falls squarely under the Oct 2025 CDSCO SaMD draft."
+      },
+      "timeline": {
+        "estimate_months_low": 18,
+        "estimate_months_high": 30,
+        "display": "18–30 months",
+        "anchor": "Anchored to a novel AI diagnostic SaMD pathway: ISO 13485 + IEC 62304 build-out, EC-approved prospective clinical validation, MD-12 test license, and central CDSCO pathway (likely MD-9). Timeline is wide because no predicate path is evident."
+      },
+      "regulations": {
+        "cdsco_mdr": {
+          "verdict": "required",
+          "rationale": "AI software that diagnoses/triages suspicious skin lesions drives clinical management on a serious condition; likely Class B/C SaMD under the Oct 2025 CDSCO draft.",
+          "forms": [
+            "MD-12",
+            "MD-9"
+          ],
+          "pathway_note": "SaMD pathway evolving · forms TBD; central authority pathway likely given diagnostic AI on a serious clinical state."
+        },
+        "cdsco_pharmacy": {
+          "verdict": "not_applicable",
+          "rationale": "No drug sale, dispensing, or distribution involved."
+        },
+        "dpdp": {
+          "verdict": "required",
+          "rationale": "Skin lesion images of Indian users are sensitive personal data; DPDP applies from day one. SDF designation may apply later depending on scale."
+        },
+        "icmr": {
+          "verdict": "required",
+          "rationale": "AI used in clinical diagnosis context; EC-approved prospective validation is typically required under ICMR's 2023 AI-in-healthcare guidelines."
+        },
+        "abdm": {
+          "verdict": "optional",
+          "rationale": "Consumer smartphone app; ABDM integration is not legally required but recommended if integrating with hospital workflows later."
+        },
+        "nabh": {
+          "verdict": "conditional",
+          "rationale": "Only relevant if selling into NABH-accredited hospitals; not required for direct-to-consumer or teledermatology distribution."
+        },
+        "mci_telemed": {
+          "verdict": "conditional",
+          "rationale": "Required if the app routes flagged cases to a Registered Medical Practitioner for teleconsult; not applicable if purely AI-only triage with no RMP involvement."
+        },
+        "irdai": {
+          "verdict": "not_applicable",
+          "rationale": "No insurance distribution, aggregation, or underwriting feature."
+        },
+        "nabl": {
+          "verdict": "not_applicable",
+          "rationale": "Image-based classifier on smartphone; no in-house lab or specimen processing involved."
+        }
+      },
+      "top_gaps": [
+        {
+          "dim": "quality_system",
+          "gap_title": "No ISO 13485 QMS in place",
+          "fix_action": "Engage an ISO 13485 consultant this month for a gap assessment scoped to a small software-only org.",
+          "severity": "high"
+        },
+        {
+          "dim": "quality_system",
+          "gap_title": "No IEC 62304 software lifecycle process detected",
+          "fix_action": "Stand up an IEC 62304 software development plan (Class B safety classification baseline) and start logging SDLC artefacts now — retrofitting later is materially more expensive.",
+          "severity": "high"
+        },
+        {
+          "dim": "clinical_evidence",
+          "gap_title": "No clinical validation pathway initiated",
+          "fix_action": "Identify 1–2 dermatology partner sites and draft an EC submission for a prospective validation study against dermatologist ground truth; register the protocol on CTRI.",
+          "severity": "high"
+        }
+      ],
+      "verdict": "Likely a Class B/C AI diagnostic SaMD under the Oct 2025 CDSCO draft — high regulatory exposure with low current readiness. Foundational QMS, software-lifecycle, and clinical-evidence gaps need to be closed before a submission conversation is viable.",
+      "why_regulated": "The product makes a diagnostic claim — flagging suspicious moles is information that drives clinical management on a serious condition (skin cancer). Under the IMDRF matrix that places it in Category III / likely CDSCO Class C as an AI-CDS SaMD.",
+      "post_2025_samd_gap": true,
+      "tier0_card_tagline": "AI dermatology triage = Class B/C SaMD. Read this before you ship.",
+      "tier1_teaser": "₹499 unlocks: predicate-search memo, scoped IEC 62304 safety-class recommendation, CDSCO pre-submission question list, and an ICMR EC-readiness checklist tailored to dermatology AI.",
+      "tier2_teaser": "₹25K unlocks: full ISO 13485 + IEC 62304 implementation roadmap, ACP (Algorithm Change Protocol) draft for the AI/ML model, clinical validation protocol template with sample-size justification, and a CDSCO submission dossier outline (MD-12 + MD-9)."
+    },
+    "_sonnet_card": {
+      "meta": {
+        "company_name": "Unknown",
+        "product_name": "Smartphone-based Skin Lesion Classifier",
+        "scoped_feature": null,
+        "product_type": "product",
+        "generated_at": "2025-01-30T10:00:00Z",
+        "conflict_resolved": null
+      },
+      "classification": {
+        "medical_device_status": "is_medical_device",
+        "device_type": "AI-powered smartphone SaMD for suspicious mole / skin lesion detection (dermatology diagnostic aid)",
+        "imdrf_category": "III",
+        "cdsco_class": "C",
+        "class_qualifier": "AI-CDS",
+        "ai_ml_flag": true,
+        "acp_required": true,
+        "export_only": false,
+        "novel_or_predicate": "novel"
+      },
+      "readiness": {
+        "score": 1,
+        "band": "red",
+        "dimensions": {
+          "regulatory_clarity": 0,
+          "quality_system": 0,
+          "technical_docs": 0,
+          "clinical_evidence": 0,
+          "submission_maturity": 1
+        },
+        "note": "No certifications, partnerships, or prior regulatory engagement detected. Wizard answers absent and no supporting documents provided. Scored at near-floor; submission_maturity receives a marginal 1 only because the product description implies awareness of a distinct regulated use case, but no CDSCO interaction is evident."
+      },
+      "risk": {
+        "level": "high",
+        "rationale": "This product uses AI to identify potentially cancerous skin lesions — a serious clinical state where the software output is intended to inform clinical management (and likely drive referral decisions). Based on published CDSCO guidance and the Oct 2025 SaMD draft, this profile typically attracts Class C (likely) classification with a central-authority pathway. No regulatory groundwork has been detected, amplifying exposure."
+      },
+      "trl": {
+        "level": 2,
+        "stage": "proof_of_principle",
+        "track": "investigational",
+        "completion_pct": 12,
+        "next_milestone": "Establish in-house prototype with analytical performance testing and initiate FTO search to reach TRL 3; simultaneously begin QMS scoping (prerequisite for MD-12 at TRL 4)",
+        "rationale": "No certifications, clinical data, prior regulatory work, or facility detected. Product description implies a concept or early-stage build exists, but no objective evidence of a design-frozen prototype, bench testing, or CDSCO interaction. Anchored conservatively at TRL 2 (proof of principle / spec stage) on the SERB/ANRF investigational track, given absence of a clear Indian predicate."
+      },
+      "timeline": {
+        "estimate_months_low": 18,
+        "estimate_months_high": 30,
+        "display": "18–30 months",
+        "anchor": "Estimate anchored to a novel AI-CDS SaMD on a serious clinical state with no predicate, no QMS, and no prior CDSCO engagement. Timeline runs from QMS initiation through clinical investigation approval (MD-22/MD-12) to central manufacturing license (MD-9). Evolving SaMD guidance may compress or extend this range."
+      },
+      "regulations": {
+        "cdsco_mdr": {
+          "verdict": "required",
+          "rationale": "A smartphone AI classifier that flags suspicious moles for clinical follow-up likely qualifies as SaMD under the CDSCO Medical Device Rules 2017 and the Oct 2025 SaMD draft guidance. The product's stated intent — detecting suspicious lesions — places it in a 'serious clinical state / diagnose or drive management' profile, typically attracting likely Class B/C (with a Class C lean given AI-CDS on a potentially malignant condition). A central-authority pathway via CDSCO is likely required.",
+          "forms": [
+            "MD-12",
+            "MD-9",
+            "MD-22"
+          ],
+          "pathway_note": "SaMD pathway evolving · forms TBD. No clear Indian predicate identified; international comparables exist (FDA-cleared AI dermatology tools). Clinical investigation approval (MD-22) likely required before licensing."
+        },
+        "cdsco_pharmacy": {
+          "verdict": "not_applicable",
+          "rationale": "Product does not sell, dispense, or distribute drugs or pharmaceuticals. Drugs & Cosmetics Act pharmacy regime does not apply."
+        },
+        "dpdp": {
+          "verdict": "required",
+          "rationale": "The product processes dermoscopic or photographic images linked to individual users — personal and potentially sensitive health data under the DPDP Act 2023. Compliance with consent, data minimisation, and breach notification obligations is required from launch. Scale may later trigger Significant Data Fiduciary obligations depending on user volume."
+        },
+        "icmr": {
+          "verdict": "required",
+          "rationale": "Based on published ICMR Ethical Guidelines for AI in Healthcare 2023, any AI tool used in a clinical diagnostic context — including skin cancer screening — typically requires Ethics Committee approval for validation studies and adherence to AI-specific transparency and accountability standards before clinical deployment."
+        },
+        "abdm": {
+          "verdict": "conditional",
+          "rationale": "ABDM integration is not mandatory for a standalone d2c or clinic-facing dermatology SaMD, but may be required if the product is deployed in government hospitals or integrated with ABHA-linked health records. Conditional on deployment channel."
+        },
+        "nabh": {
+          "verdict": "conditional",
+          "rationale": "If the product is sold to or deployed within NABH-accredited hospitals or clinic networks, NABH digital health standards may gate procurement decisions. Conditional on the go-to-market channel; not applicable for direct-to-consumer deployment."
+        },
+        "mci_telemed": {
+          "verdict": "not_applicable",
+          "rationale": "The product is a diagnostic classifier, not a telemedicine consultation facilitation platform. No doctor-patient teleconsultation feature is described. NMC Telemedicine Guidelines 2020 do not apply."
+        },
+        "irdai": {
+          "verdict": "not_applicable",
+          "rationale": "No insurance distribution, aggregation, or underwriting feature is described. IRDAI regulations do not apply."
+        },
+        "nabl": {
+          "verdict": "conditional",
+          "rationale": "The product is image-based SaMD (not an IVD in the classical in-vitro specimen sense), so direct NABL accreditation is not typically required. However, if clinical validation studies are conducted in partnership with pathology or dermatology labs, those partner labs should ideally hold NABL accreditation. Conditional on validation study design."
+        }
+      },
+      "top_gaps": [
+        {
+          "dim": "quality_system",
+          "gap_title": "No QMS or IEC 62304 / ISO 13485 in place",
+          "fix_action": "Engage an ISO 13485 + IEC 62304 consultant this week for a gap assessment and QMS scoping exercise — this is the longest-lead item on the regulatory critical path for a likely Class C SaMD.",
+          "severity": "high"
+        },
+        {
+          "dim": "clinical_evidence",
+          "gap_title": "No clinical validation data or Ethics Committee engagement detected",
+          "fix_action": "Identify a dermatology department (tertiary hospital or skin clinic) willing to co-design an IRB/EC-approved pilot validation study; register the study on CTRI as an early signal of regulatory seriousness.",
+          "severity": "high"
+        },
+        {
+          "dim": "regulatory_clarity",
+          "gap_title": "No CDSCO engagement or class hypothesis documented",
+          "fix_action": "Open a SUGAM account and schedule a pre-submission consultation with CDSCO's Medical Device Division to get early directional guidance on the applicable pathway and ACP requirements for this AI-CDS tool.",
+          "severity": "high"
+        }
+      ],
+      "verdict": "This smartphone AI skin lesion classifier likely qualifies as a Class C SaMD under the CDSCO Medical Device Rules 2017 and the Oct 2025 SaMD draft, given its AI-driven role in identifying potentially malignant lesions — a serious clinical state. With no QMS, no clinical evidence, and no CDSCO engagement detected, the product is at the floor of regulatory readiness (score 1/10, red band) against a high-risk regulatory profile, and significant foundational work is needed before any submission pathway can begin.",
+      "why_regulated": "Software that uses AI to classify skin lesions as suspicious or potentially malignant is intended to inform or drive clinical management decisions — placing it squarely within the SaMD definition under the CDSCO MDR 2017 and the Oct 2025 SaMD draft guidance. The combination of a serious clinical state (potential skin cancer), AI-driven output, and direct influence on patient referral decisions typically attracts likely Class B/C classification (with a Class C lean), requiring central-authority approval.",
+      "post_2025_samd_gap": true,
+      "tier0_card_tagline": "Likely Class C AI-CDS SaMD · Score 1/10 Red · 18–30 months to market · Start QMS now",
+      "tier1_teaser": "Unlock the full 9-regulation compliance checklist, a CDSCO pre-submission brief template, an ACP framework outline for your AI model, and a prioritised 90-day action plan — ₹499",
+      "tier2_teaser": "Engage ClearPath's regulatory team for a 3-hour founder briefing, a full DHF gap analysis, ISO 13485 + IEC 62304 scoping workshop, and a clinical investigation design roadmap with CDSCO-ready documentation — ₹25,000"
+    }
+  },
+  {
+    "case_id": "CP-019",
+    "product_name": "SurgiPlan XR",
+    "one_liner": "XR-based surgical planning tool for orthopedic implant placement.",
+    "opus": {
+      "cdsco_class": "C",
+      "cost_usd": 0.11651,
+      "elapsed_ms": 30653,
+      "usage": {
+        "input_tokens": 12527,
+        "output_tokens": 2155,
+        "cache_read": 0,
+        "cache_write": 0
+      },
+      "parse_ok": true,
+      "attempts": 1
+    },
+    "sonnet": {
+      "cdsco_class": "C",
+      "cost_usd": 0.06393,
+      "elapsed_ms": 46562,
+      "usage": {
+        "input_tokens": 9265,
+        "output_tokens": 2409,
+        "cache_read": 0,
+        "cache_write": 0
+      },
+      "parse_ok": true,
+      "attempts": 1
+    },
+    "cdsco_match": true,
+    "_opus_card": {
+      "meta": {
+        "company_name": "Unknown",
+        "product_name": "XR Surgical Planning Tool",
+        "scoped_feature": null,
+        "product_type": "product",
+        "generated_at": "2025-01-15T00:00:00Z",
+        "conflict_resolved": null
+      },
+      "classification": {
+        "medical_device_status": "is_medical_device",
+        "device_type": "XR (extended reality) surgical planning software for orthopedic implant placement",
+        "imdrf_category": "III",
+        "cdsco_class": "C",
+        "class_qualifier": "AI-CDS",
+        "ai_ml_flag": true,
+        "acp_required": true,
+        "export_only": false,
+        "novel_or_predicate": "novel"
+      },
+      "readiness": {
+        "score": 1,
+        "band": "red",
+        "dimensions": {
+          "regulatory_clarity": 0,
+          "quality_system": 0,
+          "technical_docs": 1,
+          "clinical_evidence": 0,
+          "submission_maturity": 0
+        },
+        "note": "No detected QMS, clinical evidence, or CDSCO interaction. Foundational gaps across nearly every readiness dimension."
+      },
+      "risk": {
+        "level": "high",
+        "rationale": "Software that drives surgical decision-making for implant placement is likely a Class C SaMD; errors directly affect a serious clinical state. AI/ML in the loop adds ACP exposure under the Oct 2025 CDSCO draft."
+      },
+      "timeline": {
+        "estimate_months_low": 18,
+        "estimate_months_high": 28,
+        "display": "18–28 months",
+        "anchor": "Anchored to a likely Class C SaMD pathway with no predicate, requiring QMS build-out, IEC 62304 documentation, EC-approved clinical validation, and a central CDSCO pathway (MD-12 → MD-9)."
+      },
+      "regulations": {
+        "cdsco_mdr": {
+          "verdict": "required",
+          "rationale": "XR planning that drives orthopedic implant placement typically meets the SaMD definition under the Oct 2025 draft; serious clinical state × drives clinical management → likely Class C.",
+          "forms": [
+            "MD-12",
+            "MD-9"
+          ],
+          "pathway_note": "SaMD pathway evolving · forms TBD; central authority route likely given Class C and AI-CDS character."
+        },
+        "cdsco_pharmacy": {
+          "verdict": "not_applicable",
+          "rationale": "No drug sale, distribution, or dispensing involved."
+        },
+        "dpdp": {
+          "verdict": "required",
+          "rationale": "Patient imaging and surgical planning data are sensitive personal data under DPDP; SDF designation may apply depending on scale."
+        },
+        "icmr": {
+          "verdict": "required",
+          "rationale": "AI-driven clinical decision support in surgical planning generally requires EC-approved validation aligned with ICMR's 2023 AI-in-healthcare guidelines."
+        },
+        "abdm": {
+          "verdict": "conditional",
+          "rationale": "Hospital deployment may benefit from ABHA / HIP integration; not strictly required for a planning tool."
+        },
+        "nabh": {
+          "verdict": "required_for_procurement",
+          "rationale": "Selling into NABH-accredited hospitals (typical channel for surgical tools) increasingly requires alignment with NABH digital health standards."
+        },
+        "mci_telemed": {
+          "verdict": "not_applicable",
+          "rationale": "No remote consultation feature; tool is used by surgeons for planning, not patient-facing telemedicine."
+        },
+        "irdai": {
+          "verdict": "not_applicable",
+          "rationale": "No insurance distribution, aggregation, or underwriting feature."
+        },
+        "nabl": {
+          "verdict": "not_applicable",
+          "rationale": "Not an IVD; no clinical/diagnostic lab operations."
+        }
+      },
+      "top_gaps": [
+        {
+          "dim": "quality_system",
+          "gap_title": "No ISO 13485 QMS detected",
+          "fix_action": "Engage an ISO 13485 consultant this month for a gap assessment scoped to a Class C SaMD manufacturer.",
+          "severity": "high"
+        },
+        {
+          "dim": "quality_system",
+          "gap_title": "No IEC 62304 software lifecycle process detected",
+          "fix_action": "Stand up an IEC 62304-aligned software lifecycle (likely Safety Class B or C) including risk management per ISO 14971.",
+          "severity": "high"
+        },
+        {
+          "dim": "clinical_evidence",
+          "gap_title": "No clinical validation pathway in motion",
+          "fix_action": "Identify 1–2 orthopedic surgery sites and begin EC protocol drafting for a prospective validation study against current planning workflows.",
+          "severity": "high"
+        }
+      ],
+      "verdict": "This is likely a Class C AI-driven SaMD because it drives surgical decision-making in a serious clinical state. Readiness is currently very low across QMS, technical docs, and clinical evidence — foundations need to be built before any CDSCO submission is viable.",
+      "why_regulated": "The intent is to influence where and how an orthopedic implant is placed, which is a clinical-management decision in a serious clinical state. Under the Oct 2025 CDSCO SaMD draft, software with that intent typically falls within the medical-device perimeter.",
+      "post_2025_samd_gap": true,
+      "tier0_card_tagline": "Likely Class C AI-SaMD · Readiness 1/10 · 18–28 months to submission",
+      "tier1_teaser": "₹499 unlocks the full pathway map: MD-12 vs MD-9 sequencing, IEC 62304 safety-class hypothesis, ACP scaffold for the AI component, and a milestone-by-milestone 18–28 month plan tailored to your XR + orthopedic context.",
+      "tier2_teaser": "₹25K unlocks a hands-on engagement: ISO 13485 + IEC 62304 gap assessment, draft Algorithm Change Protocol, EC-ready clinical validation protocol, and CDSCO pre-submission package with named consultant support."
+    },
+    "_sonnet_card": {
+      "meta": {
+        "company_name": "Unknown",
+        "product_name": "XR-Based Surgical Planning Tool",
+        "scoped_feature": null,
+        "product_type": "product",
+        "generated_at": "2025-01-30T10:00:00Z",
+        "conflict_resolved": null
+      },
+      "classification": {
+        "medical_device_status": "is_medical_device",
+        "device_type": "Extended-reality (XR) surgical planning software for orthopedic implant placement — likely AI-CDS SaMD driving clinical management in a serious clinical state",
+        "imdrf_category": "III",
+        "cdsco_class": "C",
+        "class_qualifier": "AI-CDS",
+        "ai_ml_flag": true,
+        "acp_required": true,
+        "export_only": false,
+        "novel_or_predicate": "novel"
+      },
+      "readiness": {
+        "score": 1,
+        "band": "red",
+        "dimensions": {
+          "regulatory_clarity": 0,
+          "quality_system": 0,
+          "technical_docs": 0,
+          "clinical_evidence": 0,
+          "submission_maturity": 1
+        },
+        "note": "No certifications, partnerships, prior regulatory work, or clinical evidence detected. Wizard answers absent. A single submission_maturity point is not awarded — reset to 0 as no SUGAM account or pre-submission evidence exists. Score reflects near-total regulatory unpreparedness for a likely Class C SaMD."
+      },
+      "risk": {
+        "level": "high",
+        "rationale": "Surgical planning software that drives implant placement decisions operates in a serious clinical state with high information-significance ('drive' or 'diagnose/treat'), placing it at IMDRF Category III / likely CDSCO Class C. Post October 2025 CDSCO SaMD draft, any in-market or near-market deployment of such a tool faces immediate regulatory exposure. No predicate device identified on the Indian market, elevating the clinical investigation burden."
+      },
+      "trl": {
+        "level": 2,
+        "stage": "proof_of_principle",
+        "track": "investigational",
+        "completion_pct": 12,
+        "next_milestone": "Establish design freeze and submit MD-12 Test License application to reach TRL 4 (Advanced PoC); requires QMS foundation and technical documentation to be in place first.",
+        "rationale": "No prototype evidence, certifications, regulatory filings, or clinical partnerships detected. Product is likely at ideation-to-early-PoC stage. Anchored conservatively at TRL 2 (proof of principle / specification stage) on the SERB/ANRF investigational track given absence of any objective evidence of prototype evaluation or regulatory engagement. No predicate identified; full investigational track applies."
+      },
+      "timeline": {
+        "estimate_months_low": 24,
+        "estimate_months_high": 42,
+        "display": "24–42 months",
+        "anchor": "Estimate anchored to a novel Class C SaMD on the investigational track: QMS establishment (~6 months), technical documentation and design freeze (~6 months), MD-12 test license application, clinical investigation planning and EC approval (~6 months), pilot and pivotal clinical investigation (~12–18 months), MD-9 central authority submission and review (~6–12 months). Timelines are indicative and depend heavily on CDSCO queue depth and clinical site availability."
+      },
+      "regulations": {
+        "cdsco_mdr": {
+          "verdict": "required",
+          "rationale": "XR surgical planning software that drives orthopedic implant placement decisions falls squarely within the CDSCO Medical Device Rules 2017 definition of SaMD. Based on published guidance and the October 2025 CDSCO SaMD draft, approval through the central authority pathway is likely required. No predicate device identified; full clinical investigation pathway expected.",
+          "forms": [
+            "MD-12",
+            "MD-9",
+            "MD-22"
+          ],
+          "pathway_note": "SaMD pathway evolving · central authority (CDSCO HQ) · forms TBD pending final SaMD guidance · novel device — clinical investigation approval (MD-22) likely prerequisite to manufacturing/import license (MD-9)"
+        },
+        "cdsco_pharmacy": {
+          "verdict": "not_applicable",
+          "rationale": "Product does not sell, distribute, or dispense drugs or pharmaceuticals. Drugs & Cosmetics Act pharmacy regime does not apply."
+        },
+        "dpdp": {
+          "verdict": "required",
+          "rationale": "The tool will process patient imaging data and clinical records — sensitive personal health data of Indian individuals. Digital Personal Data Protection Act 2023 compliance is required from day one of any Indian deployment or data processing. Scale-dependent SDF designation may apply as user base grows."
+        },
+        "icmr": {
+          "verdict": "required",
+          "rationale": "An AI/ML tool used in surgical clinical decision-making will likely require an Ethics Committee-approved clinical validation study before CDSCO submission. ICMR Ethical Guidelines for AI in Healthcare 2023 apply to the validation study design, data governance, and bias assessment."
+        },
+        "abdm": {
+          "verdict": "conditional",
+          "rationale": "If deployed in government or ABDM-networked hospitals, integration with ABHA and compliance with NHA health data exchange standards (FHIR R4, consent framework) may be required. For private-hospital-only deployment, ABDM integration is optional but increasingly expected by procurement committees."
+        },
+        "nabh": {
+          "verdict": "required_for_procurement",
+          "rationale": "Orthopedic surgical planning tools are sold into hospital settings. Procurement by NABH-accredited hospitals increasingly requires NABH Digital Health Standards compliance. Not a legal mandate, but a de-facto gate for institutional sales."
+        },
+        "mci_telemed": {
+          "verdict": "not_applicable",
+          "rationale": "Product is a surgical planning tool, not a telemedicine or remote consultation platform. NMC Telemedicine Practice Guidelines 2020 do not apply."
+        },
+        "irdai": {
+          "verdict": "not_applicable",
+          "rationale": "Product does not distribute, underwrite, or aggregate health insurance products. IRDAI licensing requirements do not apply."
+        },
+        "nabl": {
+          "verdict": "not_applicable",
+          "rationale": "Product is not an IVD and does not operate clinical or diagnostic laboratories. NABL accreditation is not directly triggered. If pre-clinical or bench-testing validation is conducted at external labs, those labs should ideally be NABL-accredited, but that is a partner-level requirement."
+        }
+      },
+      "top_gaps": [
+        {
+          "dim": "quality_system",
+          "gap_title": "No Quality Management System detected",
+          "fix_action": "Engage an ISO 13485-certified consultant this week for a gap assessment against ISO 13485:2016 and IEC 62304:2006+AMD1:2015. These are prerequisites for CDSCO Class C submission and cannot be back-filled late in the process.",
+          "severity": "high"
+        },
+        {
+          "dim": "technical_docs",
+          "gap_title": "No Design History File, risk analysis, or IEC 62304 software lifecycle documentation detected",
+          "fix_action": "Initiate a Design History File (DHF) immediately: document software architecture, intended use, indications, contraindications, and begin an ISO 14971 risk management file. This is the foundation of the CDSCO technical dossier.",
+          "severity": "high"
+        },
+        {
+          "dim": "clinical_evidence",
+          "gap_title": "No clinical validation study, Ethics Committee engagement, or CTRI registration detected",
+          "fix_action": "Identify a clinical investigation site (orthopedic department, tertiary hospital) and submit an initial protocol to their Institutional Ethics Committee (IEC). Simultaneously register the study on CTRI. This is the longest lead-time item on the critical path.",
+          "severity": "high"
+        }
+      ],
+      "verdict": "This XR surgical planning tool is likely a Class C SaMD under CDSCO Medical Device Rules 2017, requiring central authority approval — a demanding, multi-year pathway with no clear Indian predicate. With no quality system, technical documentation, or clinical evidence detected, the product is at the earliest possible readiness stage and carries high regulatory risk; the most urgent priority is establishing a QMS and engaging a clinical investigation site in parallel.",
+      "why_regulated": "Software that drives orthopedic implant placement decisions operates in a serious clinical state with high information-significance, placing it in IMDRF Category III / likely CDSCO Class C under the SaMD classification matrix. The October 2025 CDSCO SaMD draft reinforces that any tool influencing surgical clinical management is within the regulatory perimeter.",
+      "post_2025_samd_gap": true,
+      "tier0_card_tagline": "Likely Class C SaMD · High Risk · Readiness 1/10 · 24–42 month pathway · Start QMS today",
+      "tier1_teaser": "Tier 1 (₹499) unlocks: full CDSCO SaMD classification memo with form-by-form pathway map, a prioritised 90-day regulatory sprint plan, ACP framework checklist for AI/ML tools, and a clinical investigation site shortlist template.",
+      "tier2_teaser": "Tier 2 (₹25K) unlocks: a senior regulatory consultant engagement for ISO 13485 gap assessment, DHF template package tailored to XR SaMD, Ethics Committee submission support, CDSCO pre-submission meeting preparation, and a 12-month regulatory milestone Gantt chart."
+    }
+  },
+  {
+    "case_id": "CP-020",
+    "product_name": "BabyBeat Home",
+    "one_liner": "Home fetal heartbeat listening device connected to a mobile app.",
+    "opus": {
+      "cdsco_class": "B",
+      "cost_usd": 0.117155,
+      "elapsed_ms": 31907,
+      "usage": {
+        "input_tokens": 12531,
+        "output_tokens": 2180,
+        "cache_read": 0,
+        "cache_write": 0
+      },
+      "parse_ok": true,
+      "attempts": 1
+    },
+    "sonnet": {
+      "cdsco_class": "C",
+      "cost_usd": 0.069282,
+      "elapsed_ms": 55640,
+      "usage": {
+        "input_tokens": 9264,
+        "output_tokens": 2766,
+        "cache_read": 0,
+        "cache_write": 0
+      },
+      "parse_ok": true,
+      "attempts": 1
+    },
+    "cdsco_match": false,
+    "_opus_card": {
+      "meta": {
+        "company_name": "Unknown",
+        "product_name": "Home fetal heartbeat listening device",
+        "scoped_feature": null,
+        "product_type": "hardware_software",
+        "generated_at": "2025-01-20T00:00:00Z",
+        "conflict_resolved": null
+      },
+      "classification": {
+        "medical_device_status": "is_medical_device",
+        "device_type": "Home-use fetal doppler / heartbeat monitor with companion mobile app",
+        "imdrf_category": "II",
+        "cdsco_class": "B",
+        "class_qualifier": "scoped",
+        "ai_ml_flag": false,
+        "acp_required": false,
+        "export_only": false,
+        "novel_or_predicate": "has_predicate"
+      },
+      "readiness": {
+        "score": 1,
+        "band": "red",
+        "dimensions": {
+          "regulatory_clarity": 0,
+          "quality_system": 0,
+          "technical_docs": 1,
+          "clinical_evidence": 0,
+          "submission_maturity": 0
+        },
+        "note": "Very early-stage posture: no detected QMS, no clinical validation, no CDSCO engagement. A working product concept gives partial credit on technical docs."
+      },
+      "risk": {
+        "level": "high",
+        "rationale": "Home-use fetal monitoring places consumers in a serious clinical-state context (pregnancy monitoring), where false reassurance can delay care. Hardware-led medical device with companion app — likely Class B under CDSCO MDR."
+      },
+      "timeline": {
+        "estimate_months_low": 12,
+        "estimate_months_high": 18,
+        "display": "12–18 months",
+        "anchor": "Class B hardware + app pathway: ISO 13485 + IEC 62304, bench testing, predicate-based clinical evaluation, MD-5 (state authority) typically 12–18 months for a prepared founder."
+      },
+      "regulations": {
+        "cdsco_mdr": {
+          "verdict": "required",
+          "rationale": "A fetal heartbeat monitor is a regulated medical device; predicates exist (fetal dopplers are an established category). The companion app inherits the hardware's class as a SiMD.",
+          "forms": [
+            "MD-5"
+          ],
+          "pathway_note": "Likely Class B, state-authority pathway (MD-5). Confirm class with CDSCO pre-submission; consumer-facing fetal monitoring may be reviewed conservatively."
+        },
+        "cdsco_pharmacy": {
+          "verdict": "not_applicable",
+          "rationale": "No drug sale, distribution, or dispensing involved."
+        },
+        "dpdp": {
+          "verdict": "required",
+          "rationale": "App processes maternal and fetal health data of Indian users — sensitive personal data under DPDP. SDF designation may apply later depending on scale."
+        },
+        "icmr": {
+          "verdict": "conditional",
+          "rationale": "No AI/ML detected. ICMR AI guidelines do not apply, but EC-approved clinical validation will likely be expected to support label claims and predicate equivalence."
+        },
+        "abdm": {
+          "verdict": "optional",
+          "rationale": "Direct-to-consumer home device; ABDM integration is not required, though ABHA-linked records could be a future option."
+        },
+        "nabh": {
+          "verdict": "not_applicable",
+          "rationale": "Home-use consumer device; not sold into NABH-accredited hospital procurement."
+        },
+        "mci_telemed": {
+          "verdict": "not_applicable",
+          "rationale": "No teleconsultation feature described; the device is a self-monitoring tool, not an RMP-mediated service."
+        },
+        "irdai": {
+          "verdict": "not_applicable",
+          "rationale": "No insurance distribution, aggregation, or underwriting feature."
+        },
+        "nabl": {
+          "verdict": "not_applicable",
+          "rationale": "Not an IVD; no in-house lab operations described."
+        }
+      },
+      "top_gaps": [
+        {
+          "dim": "quality_system",
+          "gap_title": "No ISO 13485 QMS detected",
+          "fix_action": "Engage an ISO 13485 consultant this month for a gap assessment scoped to a Class B home-use device.",
+          "severity": "high"
+        },
+        {
+          "dim": "quality_system",
+          "gap_title": "No IEC 62304 software lifecycle process for the companion app",
+          "fix_action": "Stand up an IEC 62304 software development plan (Class A/B safety class) covering the mobile app before locking design.",
+          "severity": "high"
+        },
+        {
+          "dim": "clinical_evidence",
+          "gap_title": "No clinical validation or predicate comparison documented",
+          "fix_action": "Identify a predicate fetal doppler, draft a clinical evaluation plan, and scope an EC-approved performance study at a partner OB-GYN site.",
+          "severity": "high"
+        }
+      ],
+      "verdict": "Likely a Class B medical device under CDSCO MDR — a home fetal heartbeat monitor with a companion app sits in a serious clinical-state context (pregnancy) and follows a predicate-based pathway. Readiness is currently low: no QMS, software lifecycle, or clinical evidence detected. Since your product has a hardware component, state FDA approval may also apply depending on your manufacturing setup.",
+      "why_regulated": "The intended use is monitoring fetal heartbeat — a clinical parameter — in a home setting where misreading can drive parental decisions about seeking care. That clinical purpose, combined with the hardware nature of the device, places it inside CDSCO MDR scope.",
+      "post_2025_samd_gap": false,
+      "tier0_card_tagline": "Home fetal monitor — likely Class B, predicate path. Foundations missing.",
+      "tier1_teaser": "₹499 unlocks: predicate-device shortlist, MD-5 form pack, ISO 13485 + IEC 62304 starter checklist, and a 12–18 month sequenced plan tailored to a home-use Class B device.",
+      "tier2_teaser": "₹25K unlocks: hands-on regulatory strategy with a CDSCO-experienced reviewer — predicate selection memo, clinical evaluation plan, EC-site shortlist, and a draft MD-5 dossier outline."
+    },
+    "_sonnet_card": {
+      "meta": {
+        "company_name": "Unknown",
+        "product_name": "Home Fetal Heartbeat Listening Device",
+        "scoped_feature": null,
+        "product_type": "hardware_software",
+        "generated_at": "2025-01-30T00:00:00Z",
+        "conflict_resolved": null
+      },
+      "classification": {
+        "medical_device_status": "is_medical_device",
+        "device_type": "Consumer-facing fetal Doppler / phonocardiograph with companion mobile app (SiMD) — monitors fetal cardiac activity for maternal use at home",
+        "imdrf_category": "III",
+        "cdsco_class": "C",
+        "class_qualifier": "scoped",
+        "ai_ml_flag": false,
+        "acp_required": false,
+        "export_only": false,
+        "novel_or_predicate": "has_predicate"
+      },
+      "readiness": {
+        "score": 1,
+        "band": "red",
+        "dimensions": {
+          "regulatory_clarity": 0,
+          "quality_system": 0,
+          "technical_docs": 0,
+          "clinical_evidence": 0,
+          "submission_maturity": 1
+        },
+        "note": "No certifications, no prior regulatory work, no clinical evidence, no quality system signals detected. A single point awarded for submission_maturity only because wizard answers and signals are empty — giving the benefit of very early-stage awareness, not confirmed engagement. All five foundational pillars need to be built from the ground up."
+      },
+      "risk": {
+        "level": "high",
+        "rationale": "A device that monitors fetal cardiac activity sits in a serious clinical state (fetal distress is a serious condition); even in a consumer home-use framing, the information-significance is at least 'drive' because a false negative or false positive may delay or accelerate clinical intervention. CDSCO MDR likely requires central-authority approval (likely Class C). Hardware + software stack adds manufacturing-license and state-FDA dimensions. Risk is high regardless of current low readiness."
+      },
+      "trl": {
+        "level": 2,
+        "stage": "proof_of_principle",
+        "track": "has_predicate",
+        "completion_pct": 12,
+        "next_milestone": "Establish a design freeze and initiate MD-12 Test License submission (TRL 4) — requires ISO 13485 QMS initiation, IEC 62304 software lifecycle documentation, and a functional bench-tested prototype with documented specifications.",
+        "rationale": "No facility, no certifications, no prior regulatory work, and no clinical evidence detected. Wizard answers are empty. Anchoring conservatively at TRL 2 (proof-of-principle): a product concept exists and the hardware + app scope is described, but no prototype evidence, no specification freeze, and no regulatory engagement are on record. International fetal Doppler predicate devices exist (e.g. Sonoline, Huntleigh), placing this on the has-predicate track, but the Indian predicate pathway is still subject to evolving CDSCO SaMD guidance. Per honesty-over-confidence rule, anchoring lower."
+      },
+      "timeline": {
+        "estimate_months_low": 18,
+        "estimate_months_high": 30,
+        "display": "18–30 months",
+        "anchor": "Estimate anchored to: QMS build (6–9 months), bench + design verification (3–6 months), clinical performance evaluation (6–12 months), MD-12 test license + MD-9 central application processing (6–12 months, overlapping). Has-predicate track (international fetal Doppler comparables exist) may compress the upper bound; however, CDSCO SaMD draft guidance is still evolving, adding uncertainty."
+      },
+      "regulations": {
+        "cdsco_mdr": {
+          "verdict": "required",
+          "rationale": "A home fetal heartbeat monitoring device — hardware sensor plus companion software that displays or interprets cardiac waveforms — is a medical device under MDR 2017 Schedule I. Monitoring fetal cardiac activity places this in a serious clinical state; information-significance is at minimum 'drive', yielding a likely Class C classification under the IMDRF × CDSCO matrix. Central authority pathway (MD-9 manufacturing license) and a test license (MD-12) for clinical investigation are likely required. The companion app qualifies as SaMD and inherits the hardware class per SiMD rules. Pathway details are evolving under the Oct 2025 CDSCO SaMD draft.",
+          "forms": [
+            "MD-12",
+            "MD-9"
+          ],
+          "pathway_note": "SiMD inherits hardware class (likely C); central authority pathway. SaMD pathway evolving — forms TBD pending final Oct 2025 guidance. State FDA may also apply for manufacturing."
+        },
+        "cdsco_pharmacy": {
+          "verdict": "not_applicable",
+          "rationale": "Product is a monitoring device, not a drug or pharmaceutical; Drugs & Cosmetics Act pharmacy regime does not apply."
+        },
+        "dpdp": {
+          "verdict": "required",
+          "rationale": "The companion mobile app will process sensitive personal health data (fetal cardiac recordings, maternal identity, gestational data) of Indian users. DPDP Act 2023 compliance is required from day one. Scale is likely below SDF threshold at launch, but SDF designation should be planned for as user base grows."
+        },
+        "icmr": {
+          "verdict": "conditional",
+          "rationale": "No AI/ML component is indicated at this stage, so ICMR AI-in-healthcare guidelines do not directly apply. However, any clinical validation study or performance evaluation conducted in India will require Ethics Committee approval per ICMR ethical guidelines. Becomes required if the founder runs prospective clinical studies or if AI features are added later."
+        },
+        "abdm": {
+          "verdict": "optional",
+          "rationale": "Device is consumer-facing / direct-to-home; no hospital or government deployment indicated. ABDM integration (ABHA, HIP/HIU) is not required but may be commercially valuable for continuity of maternal health records if the product targets clinic or hospital settings in the future."
+        },
+        "nabh": {
+          "verdict": "optional",
+          "rationale": "Product is a consumer hardware device sold direct-to-home or via retail; not a hospital IT or EHR system. NABH digital health standards are not a current procurement gate. If distribution through NABH-accredited hospitals becomes a channel, this would upgrade to required_for_procurement."
+        },
+        "mci_telemed": {
+          "verdict": "not_applicable",
+          "rationale": "No telemedicine consultation feature described. The product enables passive home monitoring, not doctor-patient teleconsultation. NMC Telemedicine Practice Guidelines 2020 do not apply unless a remote-consultation feature is added."
+        },
+        "irdai": {
+          "verdict": "not_applicable",
+          "rationale": "No insurance distribution, aggregation, or underwriting feature described. IRDAI regulations do not apply."
+        },
+        "nabl": {
+          "verdict": "not_applicable",
+          "rationale": "Product is not an in-vitro diagnostic and does not operate a clinical laboratory. NABL accreditation is not directly required. If clinical performance evaluation requires a reference laboratory, that laboratory partner would need NABL accreditation — but that obligation rests with the lab, not the device manufacturer."
+        }
+      },
+      "top_gaps": [
+        {
+          "dim": "quality_system",
+          "gap_title": "No ISO 13485 QMS or IEC 62304 software lifecycle process detected",
+          "fix_action": "Engage a CDSCO-experienced ISO 13485 / IEC 62304 consultant this week for a scope-definition and gap-assessment call; request a 30-day roadmap to QMS initiation. Both certifications are likely required before MD-12 test license submission for a likely Class C hardware-software device.",
+          "severity": "high"
+        },
+        {
+          "dim": "technical_docs",
+          "gap_title": "No Design History File, risk analysis (ISO 14971), or V&V protocol evidence detected",
+          "fix_action": "Begin drafting a Design History File shell and an initial ISO 14971 risk analysis for the hardware sensor and companion app. Assign a technical owner to document architecture, intended use, indications, and known hazards — this documentation is a prerequisite for any CDSCO submission and typically takes 2–4 months to establish rigorously.",
+          "severity": "high"
+        },
+        {
+          "dim": "clinical_evidence",
+          "gap_title": "No clinical validation data, Ethics Committee engagement, or CTRI registration detected",
+          "fix_action": "Identify a maternal-fetal medicine department at a NABH-accredited hospital willing to serve as a clinical site; initiate a conversation with their institutional Ethics Committee about a performance evaluation protocol. For a likely Class C fetal monitoring device, clinical performance data will be required before central-authority submission — starting this engagement now compresses the overall timeline.",
+          "severity": "high"
+        }
+      ],
+      "verdict": "This home fetal heartbeat device is likely a Class C medical device under CDSCO MDR 2017 — the hardware sensor plus companion app together form a SiMD in a serious clinical state, pointing to a central-authority approval pathway. Since your product has a hardware component, state FDA approval may also apply depending on your manufacturing setup. With no quality system, no clinical evidence, and no regulatory engagement detected, readiness is critically low (1/10 red band) against a high-risk classification profile; the priority is to immediately initiate a QMS build and a clinical-site partnership before any submission work begins.",
+      "why_regulated": "A device designed to detect and present fetal cardiac activity — even for home consumer use — monitors a physiological parameter whose misinterpretation can delay or precipitate clinical intervention in a serious maternal-fetal condition; this places it squarely within the CDSCO MDR 2017 definition of a medical device. The companion mobile app inherits the hardware classification as a Software in a Medical Device (SiMD) under the Oct 2025 CDSCO SaMD draft framework.",
+      "post_2025_samd_gap": true,
+      "tier0_card_tagline": "Likely Class C medical device · 1/10 readiness · Start QMS and clinical evidence now",
+      "tier1_teaser": "Tier 1 (₹499) unlocks: full CDSCO MDR 2017 filing checklist tailored to likely Class C hardware-software devices, a prioritised 12-week QMS initiation roadmap, a checklist of Indian predicate fetal monitoring devices and how to build a substantial-equivalence argument, and a side-by-side comparison of state-FDA vs central-authority pathways for your manufacturing scenario.",
+      "tier2_teaser": "Tier 2 (₹25,000) unlocks: a 90-minute expert call with a CDSCO-registered regulatory affairs consultant specialising in Class C SiMD devices, a bespoke ISO 13485 / IEC 62304 scope document, identification of NABH-accredited clinical sites for your performance evaluation, a draft Ethics Committee submission protocol, and a full regulatory strategy memo you can share with investors and board."
+    }
+  },
+  {
+    "case_id": "CP-021",
+    "product_name": "MentalWell Chat",
+    "one_liner": "AI chatbot for stress journaling and mental wellness support.",
+    "opus": {
+      "cdsco_class": null,
+      "cost_usd": 0.11859,
+      "elapsed_ms": 32104,
+      "usage": {
+        "input_tokens": 12523,
+        "output_tokens": 2239,
+        "cache_read": 0,
+        "cache_write": 0
+      },
+      "parse_ok": true,
+      "attempts": 1
+    },
+    "sonnet": {
+      "cdsco_class": null,
+      "cost_usd": 0.11921699999999999,
+      "elapsed_ms": 88464,
+      "usage": {
+        "input_tokens": 18539,
+        "output_tokens": 4240,
+        "cache_read": 0,
+        "cache_write": 0
+      },
+      "parse_ok": false,
+      "attempts": 2
+    },
+    "cdsco_match": false,
+    "_opus_card": {
+      "meta": {
+        "company_name": "Unknown",
+        "product_name": "AI Stress Journaling Chatbot",
+        "scoped_feature": null,
+        "product_type": "product",
+        "generated_at": "2025-01-15T00:00:00Z",
+        "conflict_resolved": null
+      },
+      "classification": {
+        "medical_device_status": "wellness_carve_out",
+        "device_type": "Consumer mental wellness chatbot (journaling support)",
+        "imdrf_category": null,
+        "cdsco_class": null,
+        "class_qualifier": null,
+        "ai_ml_flag": true,
+        "acp_required": false,
+        "export_only": false,
+        "novel_or_predicate": null
+      },
+      "readiness": {
+        "score": null,
+        "band": "not_applicable",
+        "dimensions": {
+          "regulatory_clarity": 0,
+          "quality_system": 0,
+          "technical_docs": 0,
+          "clinical_evidence": 0,
+          "submission_maturity": 0
+        },
+        "note": "Wellness carve-out — readiness scoring N/A. The product is regulated primarily under DPDP, not CDSCO MDR."
+      },
+      "risk": {
+        "level": "medium",
+        "rationale": "Mental health is a sensitive context; if the chatbot drifts toward clinical claims (diagnosing depression, recommending treatment) the classification could shift toward SaMD. Wellness positioning must be maintained carefully, and DPDP exposure on sensitive mental-health data is material."
+      },
+      "timeline": {
+        "estimate_months_low": 2,
+        "estimate_months_high": 4,
+        "display": "2–4 months",
+        "anchor": "DPDP readiness (privacy notice, consent flows, data minimization, grievance officer) is the main lift; no CDSCO timeline applies."
+      },
+      "regulations": {
+        "cdsco_mdr": {
+          "verdict": "not_applicable",
+          "rationale": "No diagnostic, therapeutic, or clinical-management claim. Journaling and supportive conversation typically fall outside CDSCO MDR scope, provided the product avoids diagnosing or treating mental illness.",
+          "forms": [],
+          "pathway_note": "Stays out of MDR scope only if marketing language avoids clinical claims (e.g. no 'treats depression', 'diagnoses anxiety')."
+        },
+        "cdsco_pharmacy": {
+          "verdict": "not_applicable",
+          "rationale": "No drug sale, dispensing, or distribution."
+        },
+        "dpdp": {
+          "verdict": "required",
+          "rationale": "Mental-health journal entries are sensitive personal data; consent, purpose limitation, and grievance redressal are required. May escalate to required_SDF if user base crosses ~10 lakh or sensitivity threshold triggers designation."
+        },
+        "icmr": {
+          "verdict": "conditional",
+          "rationale": "AI is used, but in a wellness context. ICMR AI ethical guidelines apply only if the product runs clinical validation studies or makes clinical claims requiring EC oversight."
+        },
+        "abdm": {
+          "verdict": "optional",
+          "rationale": "D2C consumer wellness app; ABHA / HIP-HIU integration is not needed unless the product later integrates with hospital workflows."
+        },
+        "nabh": {
+          "verdict": "not_applicable",
+          "rationale": "No hospital procurement or HIS/EHR scope."
+        },
+        "mci_telemed": {
+          "verdict": "not_applicable",
+          "rationale": "No registered medical practitioner is in the loop; the product is a self-help chatbot, not teleconsultation."
+        },
+        "irdai": {
+          "verdict": "not_applicable",
+          "rationale": "No insurance distribution, aggregation, or underwriting."
+        },
+        "nabl": {
+          "verdict": "not_applicable",
+          "rationale": "No lab operations, IVD validation, or report generation."
+        }
+      },
+      "top_gaps": [
+        {
+          "dim": "dpdp",
+          "gap_title": "No DPDP posture detected on sensitive mental-health data",
+          "fix_action": "Publish a DPDP-compliant privacy notice, implement granular consent at onboarding, appoint a grievance officer, and document a data-retention/erasure policy for journal entries this month.",
+          "severity": "high"
+        },
+        {
+          "dim": "regulatory_clarity",
+          "gap_title": "Wellness carve-out is fragile without explicit positioning",
+          "fix_action": "Audit all marketing copy, app-store descriptions, and in-app language to remove any phrasing that could imply diagnosis or treatment of mental illness; add an explicit 'not a medical device, not a substitute for professional mental-health care' disclaimer.",
+          "severity": "high"
+        },
+        {
+          "dim": "clinical_evidence",
+          "gap_title": "Crisis-handling protocol not evidenced",
+          "fix_action": "Document a safety protocol for self-harm / suicidal-ideation signals in user input — escalation to verified helplines (e.g. iCall, Vandrevala) and hand-off language — and have it reviewed by a licensed mental-health professional.",
+          "severity": "medium"
+        }
+      ],
+      "verdict": "Likely a wellness carve-out — outside CDSCO MDR scope as long as the chatbot avoids diagnostic or therapeutic claims. Primary regulatory exposure is DPDP, given the sensitivity of mental-health journal data.",
+      "why_regulated": "Although the product is not a medical device, it processes sensitive personal data (mental-health journaling) of Indian users, which brings it squarely under DPDP. Mental-health context also makes the wellness carve-out fragile if marketing language drifts toward clinical claims.",
+      "post_2025_samd_gap": false,
+      "tier0_card_tagline": "Wellness carve-out — DPDP is your real homework.",
+      "tier1_teaser": "₹499 unlocks a DPDP-readiness checklist tailored to mental-health data, sample privacy notice and consent language, and a marketing-copy audit framework to keep the wellness carve-out defensible.",
+      "tier2_teaser": "₹25K unlocks a full DPDP implementation playbook, a clinical-claims boundary memo (what you can and can't say without triggering CDSCO MDR), a crisis-escalation protocol reviewed against international wellness-app norms, and a 30-minute call with a regulatory advisor."
+    },
+    "_sonnet_card": null
+  },
+  {
+    "case_id": "CP-022",
+    "product_name": "StrokeFast",
+    "one_liner": "AI model that analyzes CT brain scans to detect possible stroke.",
+    "opus": {
+      "cdsco_class": "C",
+      "cost_usd": 0.11698,
+      "elapsed_ms": 30451,
+      "usage": {
+        "input_tokens": 12526,
+        "output_tokens": 2174,
+        "cache_read": 0,
+        "cache_write": 0
+      },
+      "parse_ok": true,
+      "attempts": 1
+    },
+    "sonnet": {
+      "cdsco_class": "C",
+      "cost_usd": 0.062769,
+      "elapsed_ms": 46945,
+      "usage": {
+        "input_tokens": 9263,
+        "output_tokens": 2332,
+        "cache_read": 0,
+        "cache_write": 0
+      },
+      "parse_ok": true,
+      "attempts": 1
+    },
+    "cdsco_match": true,
+    "_opus_card": {
+      "meta": {
+        "company_name": "Unknown",
+        "product_name": "AI Stroke CT Detection",
+        "scoped_feature": null,
+        "product_type": "product",
+        "generated_at": "2025-01-15T00:00:00Z",
+        "conflict_resolved": null
+      },
+      "classification": {
+        "medical_device_status": "is_medical_device",
+        "device_type": "AI diagnostic SaMD for stroke detection on CT brain imaging",
+        "imdrf_category": "III",
+        "cdsco_class": "C",
+        "class_qualifier": "AI-CDS",
+        "ai_ml_flag": true,
+        "acp_required": true,
+        "export_only": false,
+        "novel_or_predicate": null
+      },
+      "readiness": {
+        "score": 1,
+        "band": "red",
+        "dimensions": {
+          "regulatory_clarity": 1,
+          "quality_system": 0,
+          "technical_docs": 0,
+          "clinical_evidence": 0,
+          "submission_maturity": 0
+        },
+        "note": "Pre-foundation stage. No QMS, technical documentation, clinical validation, or regulator engagement detected. Major gaps before any submission is feasible."
+      },
+      "risk": {
+        "level": "high",
+        "rationale": "AI-driven diagnostic SaMD on a critical clinical state (stroke); diagnostic output likely drives urgent clinical management. Falls squarely within the CDSCO Oct 2025 SaMD draft scope."
+      },
+      "timeline": {
+        "estimate_months_low": 18,
+        "estimate_months_high": 28,
+        "display": "18–28 months",
+        "anchor": "Anchored to typical Class C AI-SaMD pathway: QMS build-out, IEC 62304 software lifecycle, EC-approved clinical validation, MD-12 test license, and central MD-9 manufacturing license."
+      },
+      "regulations": {
+        "cdsco_mdr": {
+          "verdict": "required",
+          "rationale": "AI software that diagnoses a serious/critical clinical state (stroke) is in scope as SaMD; central authority pathway likely applies.",
+          "forms": [
+            "MD-12",
+            "MD-9"
+          ],
+          "pathway_note": "SaMD pathway evolving · Class C central pathway likely · forms TBD pending Oct 2025 draft finalization"
+        },
+        "cdsco_pharmacy": {
+          "verdict": "not_applicable",
+          "rationale": "No drug sale, dispensing, or distribution involved."
+        },
+        "dpdp": {
+          "verdict": "required",
+          "rationale": "Processes sensitive personal health data (CT imaging); DPDP obligations apply. SDF designation may apply depending on scale."
+        },
+        "icmr": {
+          "verdict": "required",
+          "rationale": "AI in a clinical-diagnostic context; EC-approved prospective validation likely required per ICMR 2023 AI guidelines."
+        },
+        "abdm": {
+          "verdict": "conditional",
+          "rationale": "Depends on hospital deployment model. ABDM integration may be expected in government hospital channels; optional otherwise."
+        },
+        "nabh": {
+          "verdict": "required_for_procurement",
+          "rationale": "Stroke imaging AI typically deploys via hospital radiology workflows; NABH-accredited hospital procurement increasingly expects digital health standards alignment."
+        },
+        "mci_telemed": {
+          "verdict": "not_applicable",
+          "rationale": "No teleconsultation or RMP-patient interaction facilitated."
+        },
+        "irdai": {
+          "verdict": "not_applicable",
+          "rationale": "No insurance distribution or aggregation feature."
+        },
+        "nabl": {
+          "verdict": "conditional",
+          "rationale": "Not an IVD, but clinical validation studies may need NABL-accredited imaging/diagnostic site partnerships depending on study design."
+        }
+      },
+      "top_gaps": [
+        {
+          "dim": "quality_system",
+          "gap_title": "No ISO 13485 / IEC 62304 quality system detected",
+          "fix_action": "Engage an ISO 13485 + IEC 62304 consultant this month for a gap assessment; software lifecycle controls are foundational for any Class C SaMD submission.",
+          "severity": "high"
+        },
+        {
+          "dim": "clinical_evidence",
+          "gap_title": "No clinical validation or EC-approved study detected",
+          "fix_action": "Identify 2–3 partner hospitals for a retrospective validation cohort, then plan an EC-approved prospective study; CTRI registration is typically expected for AI diagnostic claims.",
+          "severity": "high"
+        },
+        {
+          "dim": "submission_maturity",
+          "gap_title": "No CDSCO engagement detected",
+          "fix_action": "Open a SUGAM account and request a pre-submission consultation with CDSCO to socialize the SaMD classification and ACP plan early.",
+          "severity": "medium"
+        }
+      ],
+      "verdict": "This is likely a Class C AI diagnostic SaMD under the CDSCO Oct 2025 draft, with high regulatory exposure and very low current readiness. The path is viable but foundation-building (QMS, clinical validation, CDSCO engagement) is needed before any submission is realistic.",
+      "why_regulated": "The product analyzes diagnostic imaging to detect a critical, time-sensitive clinical condition (stroke). Under the IMDRF matrix and the CDSCO Oct 2025 SaMD draft, software that diagnoses serious/critical conditions sits at Class C with central authority oversight.",
+      "post_2025_samd_gap": true,
+      "tier0_card_tagline": "Class C AI diagnostic SaMD · high risk · red readiness · 18–28 months to submission",
+      "tier1_teaser": "₹499 unlocks: detailed pathway map (MD-12 → MD-9), ACP template tailored to stroke-detection AI, ISO 13485 + IEC 62304 starter checklist, and a 90-day milestone plan.",
+      "tier2_teaser": "₹25K unlocks: full submission-grade dossier review, CDSCO pre-submission strategy memo, clinical validation protocol drafting with EC-ready documentation, and direct consultant matching."
+    },
+    "_sonnet_card": {
+      "meta": {
+        "company_name": "Unknown",
+        "product_name": "AI CT Brain Stroke Detection",
+        "scoped_feature": null,
+        "product_type": "product",
+        "generated_at": "2025-01-30T00:00:00Z",
+        "conflict_resolved": null
+      },
+      "classification": {
+        "medical_device_status": "is_medical_device",
+        "device_type": "AI-powered SaMD for CT brain scan analysis and possible stroke detection",
+        "imdrf_category": "III",
+        "cdsco_class": "C",
+        "class_qualifier": "AI-CDS",
+        "ai_ml_flag": true,
+        "acp_required": true,
+        "export_only": false,
+        "novel_or_predicate": "novel"
+      },
+      "readiness": {
+        "score": 1,
+        "band": "red",
+        "dimensions": {
+          "regulatory_clarity": 0,
+          "quality_system": 0,
+          "technical_docs": 0,
+          "clinical_evidence": 1,
+          "submission_maturity": 0
+        },
+        "note": "No certifications, no prior regulatory engagement, no quality system, and no documented technical or clinical evidence detected. One point awarded on clinical_evidence as stroke CT AI is an established research domain — a plausible pilot may exist — but no signals confirm it. Score anchored conservatively at 1/10."
+      },
+      "risk": {
+        "level": "high",
+        "rationale": "This product operates in a critical clinical state (acute stroke) where time-sensitive diagnostic output directly influences treatment decisions. AI-driven diagnosis in this context places it firmly in the high-risk SaMD tier under the IMDRF framework and the Oct 2025 CDSCO SaMD draft guidance. In-market or near-market deployment without CDSCO approval carries material regulatory and patient-safety exposure."
+      },
+      "trl": {
+        "level": 2,
+        "stage": "proof_of_principle",
+        "track": "investigational",
+        "completion_pct": 12,
+        "next_milestone": "Develop an in-house prototype with bench-level analytical performance data and conduct an FTO (freedom-to-operate) search to reach TRL 3, ahead of MD-12 test license submission at TRL 4.",
+        "rationale": "No prior regulatory work, no facility, no certifications, and no clinical evidence detected. Product description implies a concept or early model exists, but no prototype, design freeze, or any CDSCO interaction is evidenced. Anchored conservatively at TRL 2 (proof of principle) on the SERB/ANRF investigational track, given no predicate device was identified for the Indian market."
+      },
+      "timeline": {
+        "estimate_months_low": 24,
+        "estimate_months_high": 36,
+        "display": "24–36 months",
+        "anchor": "Estimated from TRL 2 baseline: QMS build (~6 months), technical documentation and design freeze (~4 months), Ethics Committee approval + pilot clinical investigation (~9–12 months), CDSCO MD-12 test license and MD-9 central pathway submission (~6–9 months). No predicate reduces any shortcut. Timeline assumes no major regulatory feedback loops; actual duration may vary depending on CDSCO review queue and clinical site availability."
+      },
+      "regulations": {
+        "cdsco_mdr": {
+          "verdict": "required",
+          "rationale": "An AI model that analyzes CT brain scans to detect possible stroke is software that diagnoses disease in a serious-to-critical clinical state, placing it squarely within the SaMD definition under MDR 2017 and the Oct 2025 CDSCO SaMD draft. Likely Class C based on the IMDRF serious/diagnose matrix, though the critical-care time-pressure of acute stroke may push toward Class C/D borderline. Central authority pathway applies; approval likely required before commercial deployment.",
+          "forms": [
+            "MD-12",
+            "MD-9"
+          ],
+          "pathway_note": "SaMD pathway evolving · forms TBD · no clear Indian predicate identified · central authority review anticipated · Algorithm Change Protocol (ACP) required per Oct 2025 draft"
+        },
+        "cdsco_pharmacy": {
+          "verdict": "not_applicable",
+          "rationale": "Product does not sell, distribute, or dispense drugs. Pharmacy regime under D&C Act 1940 is not triggered."
+        },
+        "dpdp": {
+          "verdict": "required",
+          "rationale": "Any deployment processing CT imaging data and clinical records of Indian patients involves sensitive personal health data under DPDP Act 2023. Consent framework, data minimisation, and breach notification obligations apply from day one. Scale-dependent SDF designation may follow depending on user volume."
+        },
+        "icmr": {
+          "verdict": "required",
+          "rationale": "AI in a clinical diagnostic context (stroke detection) will require Ethics Committee-approved validation studies prior to CDSCO submission. ICMR Ethical Guidelines for AI in Healthcare 2023 are directly applicable; CTRI registration of any prospective clinical investigation is expected."
+        },
+        "abdm": {
+          "verdict": "conditional",
+          "rationale": "If deployed in government or empanelled hospitals, ABDM integration (HIP/HIU certification, FHIR R4, CERT-In Safe-to-Host) may be required. For private hospital or standalone deployment, ABDM integration is strongly recommended but not currently mandated. Verdict conditional on deployment channel."
+        },
+        "nabh": {
+          "verdict": "required_for_procurement",
+          "rationale": "Hospitals purchasing AI diagnostic software for radiology workflows are increasingly requiring NABH Digital Health Standards compliance as a procurement gate. Founders targeting accredited hospital networks should plan for NABH alignment early."
+        },
+        "mci_telemed": {
+          "verdict": "not_applicable",
+          "rationale": "Product is a diagnostic AI tool, not a telemedicine consultation platform. NMC Telemedicine Practice Guidelines 2020 do not apply unless a remote-consultation feature is added in future."
+        },
+        "irdai": {
+          "verdict": "not_applicable",
+          "rationale": "Product does not distribute, aggregate, or underwrite insurance products. IRDAI licensing is not triggered."
+        },
+        "nabl": {
+          "verdict": "conditional",
+          "rationale": "Product analyzes CT imaging rather than laboratory specimens, so direct NABL accreditation is not triggered for the software itself. However, any clinical validation studies involving pathology or lab-based ground-truth generation should be conducted at NABL-accredited sites. Verdict conditional on validation study design."
+        }
+      },
+      "top_gaps": [
+        {
+          "dim": "quality_system",
+          "gap_title": "No ISO 13485 or IEC 62304 quality system in place",
+          "fix_action": "Engage an ISO 13485 and IEC 62304 consultant this week for a gap assessment; define your QMS scope and software development lifecycle documentation plan before any clinical site conversations begin.",
+          "severity": "high"
+        },
+        {
+          "dim": "clinical_evidence",
+          "gap_title": "No Ethics Committee approval or clinical validation evidence detected",
+          "fix_action": "Identify a lead clinical site (neurology / radiology department), draft a study protocol, and submit to an accredited Ethics Committee for IRB approval; register the study on CTRI once approved.",
+          "severity": "high"
+        },
+        {
+          "dim": "submission_maturity",
+          "gap_title": "No CDSCO engagement or pre-submission activity initiated",
+          "fix_action": "Create a SUGAM portal account and schedule a pre-submission meeting with CDSCO's medical device division to clarify the SaMD classification and ACP expectations for your specific stroke-detection use case.",
+          "severity": "high"
+        }
+      ],
+      "verdict": "This AI CT brain stroke-detection product is likely a Class C SaMD under CDSCO MDR 2017 and the Oct 2025 SaMD draft, operating in a high-acuity clinical state with no regulatory engagement, quality system, or clinical evidence detected — placing it in the red readiness band with high risk exposure and a realistic 24–36 month path to approval.",
+      "why_regulated": "Software that analyzes medical images to detect a life-threatening acute condition (stroke) directly influences clinical management decisions, meeting the IMDRF definition of SaMD at the serious-to-critical clinical state × diagnose/treat information-significance intersection — the highest-risk tier of the CDSCO classification matrix.",
+      "post_2025_samd_gap": true,
+      "tier0_card_tagline": "Likely Class C SaMD · High Risk · Red Readiness (1/10) · ~24–36 months to approval",
+      "tier1_teaser": "Unlock the full regulatory roadmap: step-by-step CDSCO SaMD pathway, ACP template outline, Ethics Committee submission checklist, SUGAM pre-submission guide, and a prioritised 90-day action plan — for ₹499.",
+      "tier2_teaser": "Engage ClearPath's expert team for ₹25K: a bespoke QMS gap assessment against ISO 13485 + IEC 62304, classification opinion letter suitable for investor and hospital-partner diligence, clinical study protocol framework, and a live 90-minute regulatory strategy session with a CDSCO-experienced advisor."
+    }
+  },
+  {
+    "case_id": "CP-023",
+    "product_name": "ABHA SyncPro",
+    "one_liner": "Tool that helps clinics create ABHA-linked digital health records.",
+    "opus": {
+      "cdsco_class": null,
+      "cost_usd": 0.117385,
+      "elapsed_ms": 31054,
+      "usage": {
+        "input_tokens": 12527,
+        "output_tokens": 2190,
+        "cache_read": 0,
+        "cache_write": 0
+      },
+      "parse_ok": true,
+      "attempts": 1
+    },
+    "sonnet": {
+      "cdsco_class": null,
+      "cost_usd": 0.11890500000000001,
+      "elapsed_ms": 82074,
+      "usage": {
+        "input_tokens": 18545,
+        "output_tokens": 4218,
+        "cache_read": 0,
+        "cache_write": 0
+      },
+      "parse_ok": false,
+      "attempts": 2
+    },
+    "cdsco_match": false,
+    "_opus_card": {
+      "meta": {
+        "company_name": "Unknown",
+        "product_name": "ABHA-linked digital health records tool",
+        "scoped_feature": null,
+        "product_type": "product",
+        "generated_at": "2025-01-15T00:00:00Z",
+        "conflict_resolved": null
+      },
+      "classification": {
+        "medical_device_status": "not_medical_device",
+        "device_type": "Health records / ABHA integration platform for clinics",
+        "imdrf_category": null,
+        "cdsco_class": null,
+        "class_qualifier": null,
+        "ai_ml_flag": false,
+        "acp_required": false,
+        "export_only": false,
+        "novel_or_predicate": null
+      },
+      "readiness": {
+        "score": null,
+        "band": "not_applicable",
+        "dimensions": {
+          "regulatory_clarity": 0,
+          "quality_system": 0,
+          "technical_docs": 0,
+          "clinical_evidence": 0,
+          "submission_maturity": 0
+        },
+        "note": "Records / ABHA integration tool is not a medical device — CDSCO MDR readiness scoring does not apply. Primary compliance load is DPDP and ABDM milestones."
+      },
+      "risk": {
+        "level": "low",
+        "rationale": "The product creates and links digital health records via ABHA; it does not diagnose, treat, or drive clinical management. Exposure is via DPDP (sensitive health data) and ABDM integration requirements, not the medical-device regime."
+      },
+      "timeline": {
+        "estimate_months_low": 4,
+        "estimate_months_high": 8,
+        "display": "4–8 months",
+        "anchor": "Typical timeline to complete ABDM Milestone 1 (ABHA + record linkage) and Milestone 2 (HIP), plus CERT-In Safe-to-Host certification and DPDP readiness."
+      },
+      "regulations": {
+        "cdsco_mdr": {
+          "verdict": "not_applicable",
+          "rationale": "Records creation and ABHA linkage do not diagnose, treat, or drive clinical management — the Oct 2025 SaMD draft explicitly carves out display / records / scheduling tools.",
+          "forms": [],
+          "pathway_note": "No CDSCO MDR pathway engaged."
+        },
+        "cdsco_pharmacy": {
+          "verdict": "not_applicable",
+          "rationale": "No drug sale, dispensing, or distribution involved."
+        },
+        "dpdp": {
+          "verdict": "required",
+          "rationale": "The tool processes sensitive personal health data of Indian patients; DPDP obligations (consent, purpose limitation, breach notification, DPO if scaled) likely apply. SDF designation may apply once user/clinic scale crosses thresholds."
+        },
+        "icmr": {
+          "verdict": "not_applicable",
+          "rationale": "No AI/ML in clinical decisioning and no clinical validation studies indicated."
+        },
+        "abdm": {
+          "verdict": "required",
+          "rationale": "ABHA linkage is the core function; HIP (Milestone 2) certification is typically needed to write records to ABHA, plus FHIR R4, OAuth 2.0, and CERT-In Safe-to-Host. HIU (M3) may also apply if the tool fetches records on the clinic's behalf."
+        },
+        "nabh": {
+          "verdict": "conditional",
+          "rationale": "If selling into NABH-accredited clinics/hospitals, NABH Digital Health Standards alignment is increasingly procurement-gated; otherwise optional."
+        },
+        "mci_telemed": {
+          "verdict": "not_applicable",
+          "rationale": "No teleconsultation facilitation indicated."
+        },
+        "irdai": {
+          "verdict": "not_applicable",
+          "rationale": "No insurance distribution or aggregation feature."
+        },
+        "nabl": {
+          "verdict": "not_applicable",
+          "rationale": "No own-lab operations or IVD validation involved."
+        }
+      },
+      "top_gaps": [
+        {
+          "dim": "abdm",
+          "gap_title": "ABDM HIP certification not yet established",
+          "fix_action": "Register on the ABDM Sandbox, complete Milestone 1 (ABHA creation + linkage) and begin Milestone 2 (HIP) testing this month.",
+          "severity": "high"
+        },
+        {
+          "dim": "dpdp",
+          "gap_title": "DPDP consent and data-handling framework needed",
+          "fix_action": "Draft a DPDP-aligned consent flow, data retention policy, and breach-response playbook; appoint a Data Protection Officer if user scale is approaching SDF thresholds.",
+          "severity": "high"
+        },
+        {
+          "dim": "abdm",
+          "gap_title": "CERT-In Safe-to-Host certificate likely required",
+          "fix_action": "Engage a CERT-In empanelled auditor for a Safe-to-Host security audit — typically a prerequisite for ABDM HIP go-live.",
+          "severity": "medium"
+        }
+      ],
+      "verdict": "Your tool is not a medical device — it's a records / ABHA integration platform, so CDSCO MDR does not apply. Your real regulatory load is DPDP (sensitive health data) and ABDM HIP certification, both of which are achievable on a 4–8 month track.",
+      "why_regulated": "The product handles sensitive personal health data of Indian patients (DPDP) and writes those records to the national ABHA framework (ABDM HIP/HIU obligations). It is regulated as a data + integration platform, not as a medical device.",
+      "post_2025_samd_gap": false,
+      "tier0_card_tagline": "Not a medical device — but DPDP and ABDM HIP certification are your real path.",
+      "tier1_teaser": "₹499 unlocks: ABDM Milestone 1/2/3 sequencing checklist, DPDP consent-flow template, CERT-In Safe-to-Host vendor shortlist, and a 4–8 month execution timeline tailored to your clinic-onboarding plan.",
+      "tier2_teaser": "₹25K unlocks: hands-on ABDM Sandbox walkthrough, HIP integration architecture review, DPDP/SDF readiness audit, NABH procurement-fit gap analysis, and direct intros to CERT-In empanelled auditors."
+    },
+    "_sonnet_card": null
+  },
+  {
+    "case_id": "CP-024",
+    "product_name": "OncoPath Assist",
+    "one_liner": "AI tool that suggests likely cancer grading from pathology slide images.",
+    "opus": {
+      "cdsco_class": "C",
+      "cost_usd": 0.120605,
+      "elapsed_ms": 33381,
+      "usage": {
+        "input_tokens": 12526,
+        "output_tokens": 2319,
+        "cache_read": 0,
+        "cache_write": 0
+      },
+      "parse_ok": true,
+      "attempts": 1
+    },
+    "sonnet": {
+      "cdsco_class": "C",
+      "cost_usd": 0.066384,
+      "elapsed_ms": 47434,
+      "usage": {
+        "input_tokens": 9263,
+        "output_tokens": 2573,
+        "cache_read": 0,
+        "cache_write": 0
+      },
+      "parse_ok": true,
+      "attempts": 1
+    },
+    "cdsco_match": true,
+    "_opus_card": {
+      "meta": {
+        "company_name": "Unknown",
+        "product_name": "AI Cancer Grading Tool",
+        "scoped_feature": null,
+        "product_type": "product",
+        "generated_at": "2025-01-15T00:00:00Z",
+        "conflict_resolved": null
+      },
+      "classification": {
+        "medical_device_status": "is_medical_device",
+        "device_type": "AI-based digital pathology grading software (IVD-SaMD)",
+        "imdrf_category": "III",
+        "cdsco_class": "C",
+        "class_qualifier": "IVD-SaMD",
+        "ai_ml_flag": true,
+        "acp_required": true,
+        "export_only": false,
+        "novel_or_predicate": null
+      },
+      "readiness": {
+        "score": 1,
+        "band": "red",
+        "dimensions": {
+          "regulatory_clarity": 0,
+          "quality_system": 0,
+          "technical_docs": 0,
+          "clinical_evidence": 1,
+          "submission_maturity": 0
+        },
+        "note": "Pre-foundational posture: no detected QMS, no documented technical/clinical evidence, no CDSCO engagement. The clinical_evidence dimension is given a charitable 1 because cancer-grading AI typically cannot exist without at least retrospective slide datasets, but this should be confirmed."
+      },
+      "risk": {
+        "level": "high",
+        "rationale": "AI-driven cancer grading is a diagnostic SaMD on a serious clinical state — it directly informs oncology treatment decisions. Likely Class C under the IMDRF matrix and squarely in scope of the Oct 2025 CDSCO SaMD draft."
+      },
+      "timeline": {
+        "estimate_months_low": 18,
+        "estimate_months_high": 30,
+        "display": "18–30 months",
+        "anchor": "Class C IVD-SaMD typically requires test license (MD-12), clinical performance evaluation (MD-23/MD-24), and central manufacturing license (MD-9) — anchored to CDSCO timelines for AI/ML diagnostics."
+      },
+      "regulations": {
+        "cdsco_mdr": {
+          "verdict": "required",
+          "rationale": "AI software that grades cancer from pathology images diagnoses/treats disease in a serious clinical state — likely Class C IVD-SaMD under the central pathway.",
+          "forms": [
+            "MD-12",
+            "MD-9",
+            "MD-23"
+          ],
+          "pathway_note": "SaMD pathway evolving · forms TBD; ACP (Algorithm Change Protocol) likely required per Oct 2025 CDSCO draft."
+        },
+        "cdsco_pharmacy": {
+          "verdict": "not_applicable",
+          "rationale": "No drug sale, distribution, or dispensing involved."
+        },
+        "dpdp": {
+          "verdict": "required",
+          "rationale": "Pathology slide images linked to patients constitute sensitive personal data; DPDP applies. SDF designation depends on scale."
+        },
+        "icmr": {
+          "verdict": "required",
+          "rationale": "AI in clinical diagnostic use; EC-approved clinical validation studies typically required under ICMR's 2023 AI-in-healthcare guidelines."
+        },
+        "abdm": {
+          "verdict": "conditional",
+          "rationale": "Depends on whether the tool integrates with hospital EHRs or government deployments; optional for private lab-only deployments."
+        },
+        "nabh": {
+          "verdict": "conditional",
+          "rationale": "If sold into NABH-accredited hospitals or pathology labs, procurement may be NABH-gated; otherwise not directly required."
+        },
+        "mci_telemed": {
+          "verdict": "not_applicable",
+          "rationale": "No doctor-patient teleconsultation feature."
+        },
+        "irdai": {
+          "verdict": "not_applicable",
+          "rationale": "No insurance distribution or aggregation."
+        },
+        "nabl": {
+          "verdict": "required",
+          "rationale": "IVD-SaMD validation typically requires NABL-accredited pathology lab partnerships (ISO 15189) for ground-truth datasets and clinical performance evaluation."
+        }
+      },
+      "top_gaps": [
+        {
+          "dim": "quality_system",
+          "gap_title": "No ISO 13485 / IEC 62304 QMS detected",
+          "fix_action": "Engage an ISO 13485 + IEC 62304 consultant this month for a gap assessment; both are baseline expectations for a Class C SaMD submission.",
+          "severity": "high"
+        },
+        {
+          "dim": "clinical_evidence",
+          "gap_title": "No NABL-accredited lab partnership detected",
+          "fix_action": "Identify and contract with at least one NABL-accredited (ISO 15189) pathology lab to anchor your validation dataset and clinical performance evaluation.",
+          "severity": "high"
+        },
+        {
+          "dim": "submission_maturity",
+          "gap_title": "No CDSCO engagement detected",
+          "fix_action": "Open a SUGAM account and request a CDSCO pre-submission meeting to clarify the SaMD pathway and ACP expectations before drafting MD-12.",
+          "severity": "high"
+        }
+      ],
+      "verdict": "Likely a Class C IVD-SaMD under CDSCO — diagnostic AI on cancer grading sits at the high end of regulatory exposure, and current readiness is at the foundational stage. The path is viable but multi-year; the next 90 days should focus on QMS, NABL lab partnership, and CDSCO pre-submission engagement.",
+      "why_regulated": "The tool grades cancer from pathology images, which directly drives oncology diagnosis and treatment decisions. Under the IMDRF matrix (serious clinical state × diagnose/treat) and the Oct 2025 CDSCO SaMD draft, this profile is typically Class C with an Algorithm Change Protocol requirement.",
+      "post_2025_samd_gap": true,
+      "tier0_card_tagline": "Diagnostic AI on cancer — likely Class C IVD-SaMD. Readiness 1/10. Foundational work needed before CDSCO engagement.",
+      "tier1_teaser": "₹499 unlocks the full submission map: MD-12 → MD-23 → MD-9 sequencing, ACP template anchored to your model architecture, and a 90-day action plan tied to CDSCO + NABL milestones.",
+      "tier2_teaser": "₹25K unlocks a hands-on regulatory sprint: ISO 13485/IEC 62304 gap audit, NABL lab partnership shortlist, draft MD-12 dossier, and a CDSCO pre-submission briefing pack."
+    },
+    "_sonnet_card": {
+      "meta": {
+        "company_name": "Unknown",
+        "product_name": "AI Cancer Grading Pathology Tool",
+        "scoped_feature": null,
+        "product_type": "product",
+        "generated_at": "2025-01-31T00:00:00Z",
+        "conflict_resolved": null
+      },
+      "classification": {
+        "medical_device_status": "is_medical_device",
+        "device_type": "AI-powered pathology slide analysis tool for cancer grading (IVD-SaMD)",
+        "imdrf_category": "III",
+        "cdsco_class": "C",
+        "class_qualifier": "IVD-SaMD",
+        "ai_ml_flag": true,
+        "acp_required": true,
+        "export_only": false,
+        "novel_or_predicate": "novel"
+      },
+      "readiness": {
+        "score": 1,
+        "band": "red",
+        "dimensions": {
+          "regulatory_clarity": 0,
+          "quality_system": 0,
+          "technical_docs": 0,
+          "clinical_evidence": 0,
+          "submission_maturity": 1
+        },
+        "note": "No certifications, partnerships, prior regulatory work, or clinical evidence detected. Wizard answers absent. Submission maturity awarded a minimal 1 only because the product description is sufficiently specific to anchor a class hypothesis — all other dimensions are at zero. Major foundational work required before any CDSCO pathway is viable."
+      },
+      "risk": {
+        "level": "high",
+        "rationale": "This is an AI diagnostic SaMD operating in a serious-to-critical clinical state (cancer grading from pathology slides), directly influencing clinical management decisions. Based on published CDSCO and IMDRF guidance, it likely falls into IVD-SaMD Class C territory, making it one of the higher-risk profiles in the SaMD landscape. The Oct 2025 CDSCO SaMD draft places AI tools that diagnose or drive clinical management firmly in scope."
+      },
+      "trl": {
+        "level": 2,
+        "stage": "proof_of_principle",
+        "track": "investigational",
+        "completion_pct": 12,
+        "next_milestone": "Complete design specifications, conduct FTO (Freedom to Operate) search, and initiate QMS gap assessment to progress toward an in-house prototype and analytical performance testing (TRL 3)",
+        "rationale": "No prototype evidence, no clinical data, no regulatory filings, no lab partnerships, and no certifications detected. Anchoring conservatively at TRL 2 (proof of principle) on the SERB/ANRF investigational track, as the product concept is clearly defined but no objective evidence of a functioning prototype or analytical validation exists in the detected signals. Novel IVD-SaMD with no Indian predicate reinforces the investigational track designation."
+      },
+      "timeline": {
+        "estimate_months_low": 24,
+        "estimate_months_high": 42,
+        "display": "24–42 months",
+        "anchor": "Novel IVD-SaMD with no predicate, no QMS, no clinical evidence, and no CDSCO interaction history. Timeline anchored to: QMS build (~6–9 months), clinical validation study design and execution (~12–18 months), and CDSCO central pathway submission and review (~6–12 months). These phases may overlap partially but the investigational track is materially heavier than the predicate path."
+      },
+      "regulations": {
+        "cdsco_mdr": {
+          "verdict": "required",
+          "rationale": "An AI tool that suggests cancer grading from pathology slides is software that directly influences clinical diagnosis — squarely within the SaMD definition under CDSCO MDR 2017 and the Oct 2025 CDSCO SaMD draft. Based on published guidance, the product likely qualifies as IVD-SaMD Class C, requiring the central authority pathway. No clear Indian predicate exists; an investigational route with clinical performance evaluation is the expected path.",
+          "forms": [
+            "MD-12",
+            "MD-9",
+            "MD-23"
+          ],
+          "pathway_note": "SaMD pathway evolving per Oct 2025 CDSCO draft · forms TBD · central authority pathway likely · IVD clinical performance evaluation (MD-23) anticipated · no confirmed Indian predicate at this time"
+        },
+        "cdsco_pharmacy": {
+          "verdict": "not_applicable",
+          "rationale": "This product does not sell, distribute, or dispense drugs or cosmetics. The Drugs & Cosmetics Act pharmacy regime does not apply."
+        },
+        "dpdp": {
+          "verdict": "required",
+          "rationale": "The product processes pathology slide images linked to identifiable patients — sensitive personal health data under the Digital Personal Data Protection Act 2023. Compliance is required at launch, even at low user volumes. If scale exceeds 10 lakh users or if a Significant Data Fiduciary designation is issued, obligations will escalate further."
+        },
+        "icmr": {
+          "verdict": "required",
+          "rationale": "Based on ICMR Ethical Guidelines for AI in Healthcare 2023, an AI tool making cancer-grading suggestions in a clinical context will likely require Ethics Committee approval for its clinical validation studies. IRB/EC engagement is expected before any prospective performance evaluation is conducted on Indian patient data."
+        },
+        "abdm": {
+          "verdict": "conditional",
+          "rationale": "ABDM integration is not immediately required for a pathology AI tool, but if the product is deployed in government hospitals or integrates with HIS/LIS systems that participate in ABDM, Health Information Provider (HIP) compliance and FHIR R4 structuring may be required. Recommended to assess at deployment planning stage."
+        },
+        "nabh": {
+          "verdict": "conditional",
+          "rationale": "If the product is sold into NABH-accredited hospitals or diagnostic centres, procurement processes increasingly require NABH-recognised digital health standards. Not a hard legal gate at this stage, but may become a practical procurement barrier depending on the target customer profile."
+        },
+        "mci_telemed": {
+          "verdict": "not_applicable",
+          "rationale": "This product does not facilitate doctor-patient teleconsultations or remote medical advice by Registered Medical Practitioners. The NMC Telemedicine Practice Guidelines 2020 do not apply."
+        },
+        "irdai": {
+          "verdict": "not_applicable",
+          "rationale": "The product does not distribute, sell, or underwrite health insurance products. IRDAI regulation does not apply."
+        },
+        "nabl": {
+          "verdict": "required",
+          "rationale": "As an IVD-SaMD, clinical performance evaluation will require validation against pathology specimens processed in accredited diagnostic laboratories. Based on typical IVD validation requirements, a NABL-accredited lab partnership is likely required to generate data that CDSCO will accept. No such partnership has been detected in the current signals."
+        }
+      },
+      "top_gaps": [
+        {
+          "dim": "quality_system",
+          "gap_title": "No ISO 13485 QMS or IEC 62304 software lifecycle process detected",
+          "fix_action": "Engage a CDSCO-experienced ISO 13485 / IEC 62304 consultant this week for a gap assessment; budget 6–9 months to build a compliant QMS before any CDSCO submission is possible. Both certifications are likely prerequisites for the central pathway.",
+          "severity": "high"
+        },
+        {
+          "dim": "clinical_evidence",
+          "gap_title": "No NABL-accredited lab partnership or clinical validation data detected",
+          "fix_action": "Identify and initiate a partnership with at least one NABL-accredited pathology laboratory to anchor your clinical performance evaluation dataset; simultaneously draft an Ethics Committee submission aligned with ICMR AI guidelines before any clinical data collection begins.",
+          "severity": "high"
+        },
+        {
+          "dim": "regulatory_clarity",
+          "gap_title": "No CDSCO engagement, no class hypothesis documented, no SUGAM account",
+          "fix_action": "Create a SUGAM portal account and book a pre-submission consultation with CDSCO's Central Licensing Authority to confirm the IVD-SaMD Class C classification hypothesis and understand the current state of the Oct 2025 SaMD draft pathway requirements.",
+          "severity": "high"
+        }
+      ],
+      "verdict": "This product is likely a regulated IVD-SaMD Class C medical device under CDSCO MDR 2017 and the Oct 2025 CDSCO SaMD draft, given that it uses AI to suggest cancer grading directly from pathology slides — a serious clinical diagnostic function with no clear Indian predicate. With no QMS, no clinical evidence, no lab partnerships, and no prior CDSCO engagement detected, readiness is critically low (1/10) relative to the high regulatory exposure; foundational quality system and clinical validation work must begin immediately before any submission pathway is viable.",
+      "why_regulated": "Software that suggests a cancer grade from a pathology image is directly influencing a clinical diagnosis decision — this is the core definition of IVD-SaMD under both IMDRF and the CDSCO Oct 2025 SaMD draft. Because the clinical state is serious (cancer) and the information significance is diagnostic (diagnose/treat), the IMDRF matrix anchors this at Category III, typically mapping to CDSCO Class C.",
+      "post_2025_samd_gap": true,
+      "tier0_card_tagline": "High-risk IVD-SaMD, critically low readiness — build your QMS and lab partnership before anything else.",
+      "tier1_teaser": "Tier 1 (₹499) unlocks: detailed CDSCO Class C pathway map with form-by-form sequencing, IEC 62304 software lifecycle checklist tailored to pathology AI, NABL lab partnership shortlist for IVD validation, and an ACP (Algorithm Change Protocol) template aligned with the Oct 2025 CDSCO SaMD draft.",
+      "tier2_teaser": "Tier 2 (₹25,000) unlocks: a regulatory strategy session with a CDSCO-experienced SaMD consultant, a custom QMS build roadmap for ISO 13485 + IEC 62304, a clinical performance evaluation protocol draft for submission to an Ethics Committee, and a SUGAM pre-submission dossier template specific to IVD-SaMD Class C."
+    }
+  },
+  {
+    "case_id": "CP-025",
+    "product_name": "PhysioMove",
+    "one_liner": "Computer vision app that tracks physiotherapy exercise adherence.",
+    "opus": {
+      "cdsco_class": "B",
+      "cost_usd": 0.11848,
+      "elapsed_ms": 33262,
+      "usage": {
+        "input_tokens": 12526,
+        "output_tokens": 2234,
+        "cache_read": 0,
+        "cache_write": 0
+      },
+      "parse_ok": true,
+      "attempts": 1
+    },
+    "sonnet": {
+      "cdsco_class": "B",
+      "cost_usd": 0.06726,
+      "elapsed_ms": 49983,
+      "usage": {
+        "input_tokens": 9260,
+        "output_tokens": 2632,
+        "cache_read": 0,
+        "cache_write": 0
+      },
+      "parse_ok": true,
+      "attempts": 1
+    },
+    "cdsco_match": true,
+    "_opus_card": {
+      "meta": {
+        "company_name": "Unknown",
+        "product_name": "CP-025",
+        "scoped_feature": null,
+        "product_type": "product",
+        "generated_at": "2025-01-15T00:00:00Z",
+        "conflict_resolved": null
+      },
+      "classification": {
+        "medical_device_status": "is_medical_device",
+        "device_type": "Computer-vision-based physiotherapy adherence and form-tracking software",
+        "imdrf_category": "II",
+        "cdsco_class": "B",
+        "class_qualifier": "AI-CDS",
+        "ai_ml_flag": true,
+        "acp_required": true,
+        "export_only": false,
+        "novel_or_predicate": null
+      },
+      "readiness": {
+        "score": 1,
+        "band": "red",
+        "dimensions": {
+          "regulatory_clarity": 0,
+          "quality_system": 0,
+          "technical_docs": 1,
+          "clinical_evidence": 0,
+          "submission_maturity": 0
+        },
+        "note": "No certifications, partnerships, or prior regulatory work detected. Product appears to be early-stage with foundational gaps across most readiness dimensions."
+      },
+      "risk": {
+        "level": "high",
+        "rationale": "Computer-vision software that drives a non-trivial element of physiotherapy management likely qualifies as SaMD under the Oct 2025 CDSCO draft. AI/ML in a clinical-care workflow elevates exposure even though the underlying clinical state is non-serious."
+      },
+      "timeline": {
+        "estimate_months_low": 12,
+        "estimate_months_high": 18,
+        "display": "12–18 months",
+        "anchor": "Anchored to typical Class B SaMD pathway: ISO 13485 + IEC 62304 build-out (~6 months), validation study and EC approval (~4–6 months), CDSCO state-authority filing and review (~3–6 months)."
+      },
+      "regulations": {
+        "cdsco_mdr": {
+          "verdict": "required",
+          "rationale": "Computer-vision tracking that informs or drives physiotherapy adherence likely qualifies as SaMD under the Oct 2025 CDSCO draft; non-serious clinical state with information that drives management points to Class B.",
+          "forms": [
+            "MD-5",
+            "MD-12"
+          ],
+          "pathway_note": "SaMD pathway evolving · forms TBD; state-authority pathway likely for Class B."
+        },
+        "cdsco_pharmacy": {
+          "verdict": "not_applicable",
+          "rationale": "No drug sales, dispensing, or distribution involved."
+        },
+        "dpdp": {
+          "verdict": "required",
+          "rationale": "App processes video/biometric data of Indian users; movement and health data are sensitive personal data under DPDP. SDF designation may apply at scale."
+        },
+        "icmr": {
+          "verdict": "required",
+          "rationale": "AI/ML in a clinical-care workflow; validation studies for adherence-tracking accuracy will typically need EC approval per ICMR's 2023 AI ethics guidance."
+        },
+        "abdm": {
+          "verdict": "optional",
+          "rationale": "Direct-to-patient or clinic-facing tool; ABDM integration is not required but may be valuable if integrating with hospital workflows."
+        },
+        "nabh": {
+          "verdict": "conditional",
+          "rationale": "If selling into NABH-accredited hospitals or rehab centres, procurement may be NABH-gated; otherwise optional."
+        },
+        "mci_telemed": {
+          "verdict": "not_applicable",
+          "rationale": "No doctor-patient teleconsultation feature described."
+        },
+        "irdai": {
+          "verdict": "not_applicable",
+          "rationale": "No insurance distribution or aggregation feature."
+        },
+        "nabl": {
+          "verdict": "not_applicable",
+          "rationale": "No clinical lab operations or IVD components."
+        }
+      },
+      "top_gaps": [
+        {
+          "dim": "quality_system",
+          "gap_title": "No ISO 13485 quality management system detected",
+          "fix_action": "Engage an ISO 13485 consultant for a gap assessment and draft a 6-month QMS rollout plan tailored to a software-only medical device.",
+          "severity": "high"
+        },
+        {
+          "dim": "quality_system",
+          "gap_title": "No IEC 62304 software lifecycle process detected",
+          "fix_action": "Adopt an IEC 62304-aligned SDLC: define software safety class, set up risk-traceability, and version-control your design history file from the next sprint onward.",
+          "severity": "high"
+        },
+        {
+          "dim": "clinical_evidence",
+          "gap_title": "No validation study or clinical partnership detected for adherence-tracking accuracy",
+          "fix_action": "Partner with a physiotherapy clinic or academic hospital to run a prospective validation study (sensitivity/specificity of exercise detection) under EC oversight; register on CTRI.",
+          "severity": "medium"
+        }
+      ],
+      "verdict": "Likely a Class B AI-CDS SaMD under the evolving Oct 2025 CDSCO draft. Readiness is currently low across all dimensions — foundational QMS, software-lifecycle, and clinical-evidence work are needed before any CDSCO submission is viable.",
+      "why_regulated": "Computer-vision software that monitors and guides a patient's physiotherapy regimen typically informs or drives clinical management, which brings it into SaMD scope. The AI/ML element adds an Algorithm Change Protocol obligation under the draft guidance.",
+      "post_2025_samd_gap": true,
+      "tier0_card_tagline": "Likely Class B AI-CDS SaMD · Readiness 1/10 · 12–18 months to filing",
+      "tier1_teaser": "Tier 1 (₹499) unlocks: a dimension-by-dimension readiness deep-dive, a sequenced 90-day action plan, ISO 13485 / IEC 62304 starter checklists, and a CDSCO pre-submission outline tuned to your Class B SaMD pathway.",
+      "tier2_teaser": "Tier 2 (₹25K) unlocks: a regulator-ready dossier scaffold (DHF, risk file, V&V protocol templates), an EC-ready clinical validation protocol for adherence accuracy, ACP draft for your CV model, and a guided MD-12 / MD-5 filing roadmap with consultant introductions."
+    },
+    "_sonnet_card": {
+      "meta": {
+        "company_name": "Unknown",
+        "product_name": "Physiotherapy Exercise Adherence Tracker",
+        "scoped_feature": null,
+        "product_type": "product",
+        "generated_at": "2025-01-30T10:00:00Z",
+        "conflict_resolved": null
+      },
+      "classification": {
+        "medical_device_status": "is_medical_device",
+        "device_type": "AI/computer-vision SaMD tracking rehabilitation exercise adherence and correctness in a clinical physiotherapy context",
+        "imdrf_category": "II",
+        "cdsco_class": "B",
+        "class_qualifier": "AI-CDS",
+        "ai_ml_flag": true,
+        "acp_required": true,
+        "export_only": false,
+        "novel_or_predicate": "novel"
+      },
+      "readiness": {
+        "score": 2,
+        "band": "red",
+        "dimensions": {
+          "regulatory_clarity": 0,
+          "quality_system": 0,
+          "technical_docs": 1,
+          "clinical_evidence": 0,
+          "submission_maturity": 0
+        },
+        "note": "No certifications, no prior regulatory engagement, no clinical validation signals, and no QMS detected. A single point is credited for technical_docs on the basis that a computer-vision product of this nature typically carries some form of internal design or architecture documentation, but no explicit Design History File or risk analysis was confirmed. All other dimensions are at zero — material foundation work is required before any CDSCO submission pathway can begin."
+      },
+      "risk": {
+        "level": "high",
+        "rationale": "The product uses AI/computer vision to assess exercise execution and adherence in a rehabilitation (physiotherapy) context — a serious clinical state where incorrect feedback or missed non-adherence could delay recovery or cause harm. Based on published CDSCO and IMDRF guidance, this profile likely qualifies as a Class B SaMD (serious state × drive/inform information significance), and the Oct 2025 CDSCO SaMD draft places AI-CDS tools squarely within the regulated perimeter. Risk is high irrespective of current low readiness."
+      },
+      "trl": {
+        "level": 2,
+        "stage": "proof_of_principle",
+        "track": "investigational",
+        "completion_pct": 12,
+        "next_milestone": "Freeze product specification and conduct freedom-to-operate (FTO) search; build in-house prototype with bench-level computer vision performance testing to reach TRL 3, which anchors the MD-12 test license submission at TRL 4.",
+        "rationale": "No certifications, no prior regulatory work, no clinical validation, and no facility detected. The product appears to exist at an early proof-of-principle or early PoC stage. Anchored conservatively at TRL 2 (spec exists, no confirmed prototype with tested analytical performance) on the SERB/ANRF investigational track, given novel_or_predicate is 'novel' and no predicate Indian device was identified."
+      },
+      "timeline": {
+        "estimate_months_low": 12,
+        "estimate_months_high": 20,
+        "display": "12–20 months",
+        "anchor": "Estimate assumes investigational track (novel product, no clear Indian predicate). Starting from TRL 2/3 today, the range covers: QMS establishment (~3–4 months), IEC 62304 software lifecycle documentation (~2–3 months overlapping), clinical validation study design and Ethics Committee approval (~3–4 months), MD-12 test license submission and CDSCO processing (~3–5 months), and MD-5 manufacturing/import license filing (~2–4 months). Evolving SaMD guidance may compress or extend this range."
+      },
+      "regulations": {
+        "cdsco_mdr": {
+          "verdict": "required",
+          "rationale": "A computer-vision AI product that monitors and evaluates physiotherapy exercise performance is likely a SaMD under the CDSCO MDR 2017 and the Oct 2025 SaMD draft guidance — software that influences clinical management of a serious condition (musculoskeletal rehabilitation). Based on the IMDRF serious-state × drive matrix, this likely maps to Class B; the SaMD pathway is evolving and exact forms remain subject to CDSCO clarification.",
+          "forms": [
+            "MD-12",
+            "MD-5"
+          ],
+          "pathway_note": "SaMD pathway evolving · forms TBD. MD-12 is likely the first submission (test license / clinical investigation approval); MD-5 (state authority) is the probable manufacturing/marketing license path for Class B. Engage CDSCO pre-submission consultation before committing to a form set."
+        },
+        "cdsco_pharmacy": {
+          "verdict": "not_applicable",
+          "rationale": "The product does not sell, dispense, or distribute drugs or pharmaceuticals. The Drugs & Cosmetics Act pharmacy regime does not apply."
+        },
+        "dpdp": {
+          "verdict": "required",
+          "rationale": "The product processes video or image data of Indian patients performing physiotherapy exercises — this constitutes sensitive personal data (health/biometric) under the Digital Personal Data Protection Act 2023. Compliance is required from launch. SDF designation is not triggered at this stage given the absence of scale signals, but should be re-evaluated if user base exceeds ~10 lakh."
+        },
+        "icmr": {
+          "verdict": "required",
+          "rationale": "The product deploys AI in a clinical rehabilitation context. Based on ICMR Ethical Guidelines for AI in Healthcare 2023, any clinical validation study — which will be necessary for CDSCO submission — will likely require Ethics Committee (EC) approval. ICMR guidelines on AI bias, explainability, and data governance also apply during development."
+        },
+        "abdm": {
+          "verdict": "conditional",
+          "rationale": "ABDM integration is not mandatory for a standalone physiotherapy adherence tracker in private/D2C deployment. However, if the product is deployed in government hospitals or integrated with ABHA-linked health records, M2 (HIP) or M3 (HIU) compliance would be required. Recommended to plan for FHIR R4 compatibility from the outset to avoid costly retrofits."
+        },
+        "nabh": {
+          "verdict": "conditional",
+          "rationale": "If the product is sold to NABH-accredited hospitals or rehabilitation centres, procurement processes increasingly expect NABH Digital Health Standards alignment. Not a legal mandate for the product itself, but effectively required for hospital channel access."
+        },
+        "mci_telemed": {
+          "verdict": "not_applicable",
+          "rationale": "The product tracks exercise adherence via computer vision; it does not facilitate doctor-patient teleconsultations or remote medical advice by a Registered Medical Practitioner. NMC Telemedicine Guidelines 2020 do not apply."
+        },
+        "irdai": {
+          "verdict": "not_applicable",
+          "rationale": "The product does not distribute, sell, or underwrite health insurance products. IRDAI licensing requirements are not triggered."
+        },
+        "nabl": {
+          "verdict": "not_applicable",
+          "rationale": "The product is not an IVD, does not operate clinical or pathology laboratories, and does not generate lab-based diagnostic reports. NABL accreditation is not applicable."
+        }
+      },
+      "top_gaps": [
+        {
+          "dim": "quality_system",
+          "gap_title": "No ISO 13485 QMS or IEC 62304 software lifecycle framework detected",
+          "fix_action": "Engage an ISO 13485 / IEC 62304 consultant this week for a gap assessment and to draft a QMS implementation roadmap — this is the single longest-lead-time item on the path to CDSCO submission.",
+          "severity": "high"
+        },
+        {
+          "dim": "clinical_evidence",
+          "gap_title": "No clinical validation study, IRB/EC engagement, or CTRI registration detected",
+          "fix_action": "Identify a physiotherapy department at a teaching hospital willing to co-design a validation study; draft an Ethics Committee application in parallel with your QMS setup — EC approval typically takes 2–4 months and is on the critical path for MD-12.",
+          "severity": "high"
+        },
+        {
+          "dim": "submission_maturity",
+          "gap_title": "No prior CDSCO engagement, no SUGAM account, no pre-submission consultation on record",
+          "fix_action": "Create a SUGAM portal account and file for a pre-submission consultation with CDSCO's SaMD cell to confirm classification and the expected form set under the evolving Oct 2025 SaMD guidance — this costs nothing and materially de-risks the timeline.",
+          "severity": "medium"
+        }
+      ],
+      "verdict": "This computer-vision physiotherapy adherence tracker likely qualifies as a Class B AI-CDS SaMD under CDSCO MDR 2017 and the Oct 2025 SaMD draft guidance, meaning regulatory approval will probably be required before commercial deployment. With no QMS, no clinical validation, and no prior CDSCO engagement detected, the product is currently at the earliest readiness stage — the most urgent priority is establishing a Quality Management System and initiating a clinical validation pathway in parallel.",
+      "why_regulated": "The product uses AI to assess and provide feedback on patient exercise execution in a rehabilitation context — software that influences clinical management of a serious musculoskeletal condition falls within the SaMD perimeter based on published CDSCO and IMDRF guidance. The AI/ML component additionally triggers Algorithm Change Protocol (ACP) obligations under the Oct 2025 CDSCO SaMD draft.",
+      "post_2025_samd_gap": true,
+      "tier0_card_tagline": "Class B AI-CDS SaMD · Red readiness · QMS and clinical validation are your critical path",
+      "tier1_teaser": "Tier 1 (₹499) unlocks: a regulation-by-regulation compliance checklist with form numbers and deadlines, a 12-month milestone Gantt anchored to your TRL 2 baseline, and a prioritised vendor shortlist for ISO 13485 / IEC 62304 gap assessments in India.",
+      "tier2_teaser": "Tier 2 (₹25,000) unlocks: a senior regulatory consultant review of your product architecture against the Oct 2025 CDSCO SaMD draft, a draft QMS scope document and IEC 62304 software development plan, an Ethics Committee application template tailored to physiotherapy AI validation, and a SUGAM pre-submission dossier outline — everything needed to move from TRL 2 to TRL 4 with confidence."
+    }
+  }
+]

@@ -9,14 +9,16 @@ export type OpusUsage = {
 
 /**
  * Per-1M token rates for Claude Opus 4.7.
- * Approximate — pulled from public pricing for Opus 4.x at time of writing.
- * Update if Anthropic publishes Opus 4.7-specific numbers.
+ * Verified against docs/model-and-cost-policy.md Section 2 (2026-05-06).
+ * Was previously holding Opus 4.x estimates (3x higher); corrected
+ * 2026-05-07 — historical telemetry pre-correction is unreliable for
+ * Opus calls. See docs/sprint-recaps/sprint-1.md "cost telemetry note".
  */
 const PRICE_PER_MILLION = {
-  input: 15.0,
-  cache_write: 18.75,
-  cache_read: 1.5,
-  output: 75.0,
+  input: 5.0,
+  cache_write: 6.25,
+  cache_read: 0.5,
+  output: 25.0,
 } as const;
 
 export function computeOpusCost(usage: OpusUsage): number {

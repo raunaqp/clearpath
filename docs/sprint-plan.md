@@ -125,13 +125,16 @@
 - A/B test each switch with 5-10 cases before locking in (calibration data already exists)
 - If Sonnet quality on Draft Pack insufficient, revert to Opus 4.7 for Draft Pack only
 
-**Acceptance:**
-- [ ] All model IDs match `docs/model-and-cost-policy.md` Section 1
-- [ ] Per-assessment cost (free tier) drops from ~$0.10 to **~$0.017 with caching** (or ~$0.038 if caching deferred)
-- [ ] Cache hit rate >40% visible in `/admin/costs` (after Story 1.4 ships)
-- [ ] Eval scores (story 1.3) don't regress vs. Opus baseline
-- [ ] Draft Pack quality maintained (manual review of 5 cases)
-- [ ] All `max_tokens` caps set per cost-policy Section 4
+**Acceptance (updated 2026-05-07 post-eval — see `docs/sprint-recaps/sprint-1.md` for evidence):**
+- [x] Locked stack: pre-router → Haiku 4.5; synthesizer stays Opus 4.7 (eval-validated revert from Sonnet candidate); draft-pack → Sonnet 4.6. **Stack: Haiku/Opus/Sonnet** (NOT the originally planned Haiku/Sonnet/Sonnet — Sonnet failed accuracy bar on synth).
+- [x] **Per-assessment cost (free tier): ~$0.12 actual** (Haiku pre-router ~$0.002 + Opus synth ~$0.118). Original target of ~$0.017 assumed Sonnet on synth + caching; that path failed eval. $0.12 is the new floor for the locked stack.
+- [x] **Per-assessment cost (Tier 1): ~$0.18 actual** (free tier + Sonnet draft-pack with caching). 99.7% gross margin at ₹4,999. Healthy.
+- [ ] Cache hit rate >40% visible in `/admin/costs` (deferred to Story 1.4)
+- [x] Eval scores: 13/13 pre-router match, 8/10 synth match (Sonnet candidate failed 9/10 bar → reverted), 5/5 draft-pack match on rerun with Opus-synth input.
+- [x] Draft Pack quality maintained — manual prose review on 5 cases passed; CP-016 wellness carry-over case explicitly verified (both Opus-DP and Sonnet-DP acknowledged wellness positioning, picked Class A as conservative anchor with explicit caveat — neither invented an inappropriate Class B).
+- [x] `max_tokens` caps in code: pre-router 2000, synth 4000, draft-pack 8000. Cost-policy Section 4 says 1024/4096/16384 — deviations documented in sprint-1 recap (pre-router needs >1024 for structured signals; draft-pack 8000 was eval-validated, raising to 16384 deferred unless we hit the cap).
+- [x] `lib/engine/opus-cost.ts` corrected to Opus 4.7 rates (was holding Opus 4.x rates, 3× inflated). Forward telemetry now accurate. Historical Opus telemetry pre-commit is unreliable.
+- [ ] `docs/model-and-cost-policy.md` Section 1 + Section 5 updates (separate backlog: pre-router doesn't output cdsco_class; synth medians are ~2× low).
 
 ---
 
@@ -435,6 +438,12 @@
 - FDA medtech expansion
 - /upgrade A/B test infrastructure (PostHog flags)
 - ABDM/IHIP integration depth
+- **Hybrid classification architecture (LLM verdict + classical ML confidence)**
+  - Trigger: ≥500 QC-reviewed cases + ≥3 months QC flowing + ONE of (QC correction rate >15% OR partner demand for confidence scores OR volume >100K/mo)
+  - Earliest realistic: Month 9-12 / Sprint 8-10
+  - Anti-trigger: QC correction <5%, no partner asks, no cost pressure
+  - Build new XGBoost on QC-reviewed CDSCO labels (NOT port of SAE classifier)
+  - See `docs/decisions/2026-05-06-llm-classification-architecture.md`
 
 ---
 

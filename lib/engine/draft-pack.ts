@@ -6,12 +6,12 @@ import {
 } from "@/lib/engine/draft-pack-prompts";
 import { softenCertainty } from "@/lib/engine/soften-certainty";
 import {
-  computeOpusCost,
+  computeSonnetCost,
   trackApiCost,
-  type OpusUsage,
-} from "@/lib/engine/opus-cost";
+  type TokenUsage,
+} from "@/lib/engine/cost";
 
-const MODEL = "claude-opus-4-7";
+const MODEL = "claude-sonnet-4-6";
 const MAX_TOKENS = 8000;
 const STRICT_SUFFIX =
   "\n\nReturn STRICT JSON ONLY. No preamble. No trailing text.";
@@ -26,7 +26,7 @@ export type DraftPackInput = {
 
 export type DraftPackResult = {
   content: DraftPackContent;
-  usage: OpusUsage;
+  usage: TokenUsage;
   costUsd: number;
 };
 
@@ -97,7 +97,7 @@ function softenContent(c: DraftPackContent): DraftPackContent {
   };
 }
 
-function usageFrom(response: Anthropic.Message): OpusUsage {
+function usageFrom(response: Anthropic.Message): TokenUsage {
   return {
     input_tokens: response.usage.input_tokens,
     cache_read: response.usage.cache_read_input_tokens ?? 0,
@@ -127,7 +127,7 @@ export async function generateDraftPackContent(
     2
   );
 
-  let totalUsage: OpusUsage = {
+  let totalUsage: TokenUsage = {
     input_tokens: 0,
     cache_read: 0,
     cache_write: 0,
@@ -162,7 +162,7 @@ export async function generateDraftPackContent(
       cache_write: totalUsage.cache_write + usage.cache_write,
       output_tokens: totalUsage.output_tokens + usage.output_tokens,
     };
-    totalCost += computeOpusCost(usage);
+    totalCost += computeSonnetCost(usage);
 
     const first = response.content[0];
     const rawText = first && first.type === "text" ? first.text : "";
