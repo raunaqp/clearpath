@@ -9,7 +9,7 @@ import { generateDraftPack } from "@/lib/engine/draft-pack-generator";
 // caller sees a connection error — the caller's UI must treat that
 // as a failure path (don't fake success). The order will be left in
 // 'generating' state and an admin retry (or CLI run) recovers.
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const schema = z.object({ order_id: z.string().uuid() });
 
