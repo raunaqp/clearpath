@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { PRE_ROUTER_SYSTEM_PROMPT } from "./system-prompts";
-import { computeSonnetCost, trackApiCost, type TokenUsage } from "./cost";
+import { computeHaikuCost, trackApiCost, type TokenUsage } from "./cost";
 
 export type PreRouterPdf =
   | { type: "cached"; sha256: string; summary: string }
@@ -93,7 +93,7 @@ const EMPTY_SIGNALS: DetectedSignals = {
   facility_details: null,
 };
 
-const MODEL = "claude-sonnet-4-6";
+const MODEL = "claude-haiku-4-5-20251001";
 
 type ParsedModelJson = {
   product_type?: unknown;
@@ -389,6 +389,7 @@ ${freshPdfs.length === 0 ? "No fresh PDFs attached." : `Fresh PDFs (${freshPdfs.
   const response = await client.messages.create({
     model: MODEL,
     max_tokens: 2000,
+    temperature: 0,
     system: [
       {
         type: "text",
@@ -420,7 +421,7 @@ ${freshPdfs.length === 0 ? "No fresh PDFs attached." : `Fresh PDFs (${freshPdfs.
     output_tokens: response.usage.output_tokens,
   };
 
-  const cost_usd = computeSonnetCost(usage);
+  const cost_usd = computeHaikuCost(usage);
   const cache_hit = usage.cache_read > 0;
 
   await trackApiCost({

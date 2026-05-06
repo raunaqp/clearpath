@@ -7,20 +7,38 @@ export type TokenUsage = {
   output_tokens: number;
 };
 
-const PRICE_PER_MILLION = {
+const SONNET_PRICE_PER_MILLION = {
   input: 3.0,
   cache_write: 3.75,
   cache_read: 0.3,
   output: 15.0,
 };
 
-export function computeSonnetCost(usage: TokenUsage): number {
+const HAIKU_PRICE_PER_MILLION = {
+  input: 1.0,
+  cache_write: 1.25,
+  cache_read: 0.1,
+  output: 5.0,
+};
+
+function compute(
+  usage: TokenUsage,
+  rates: { input: number; cache_write: number; cache_read: number; output: number }
+): number {
   return (
-    (usage.input_tokens * PRICE_PER_MILLION.input) / 1_000_000 +
-    (usage.cache_write * PRICE_PER_MILLION.cache_write) / 1_000_000 +
-    (usage.cache_read * PRICE_PER_MILLION.cache_read) / 1_000_000 +
-    (usage.output_tokens * PRICE_PER_MILLION.output) / 1_000_000
+    (usage.input_tokens * rates.input) / 1_000_000 +
+    (usage.cache_write * rates.cache_write) / 1_000_000 +
+    (usage.cache_read * rates.cache_read) / 1_000_000 +
+    (usage.output_tokens * rates.output) / 1_000_000
   );
+}
+
+export function computeSonnetCost(usage: TokenUsage): number {
+  return compute(usage, SONNET_PRICE_PER_MILLION);
+}
+
+export function computeHaikuCost(usage: TokenUsage): number {
+  return compute(usage, HAIKU_PRICE_PER_MILLION);
 }
 
 export async function trackApiCost(props: {
