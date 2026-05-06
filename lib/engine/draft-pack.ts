@@ -6,12 +6,13 @@ import {
 } from "@/lib/engine/draft-pack-prompts";
 import { softenCertainty } from "@/lib/engine/soften-certainty";
 import {
-  computeSonnetCost,
+  calculateCallCost,
   trackApiCost,
   type TokenUsage,
-} from "@/lib/engine/cost";
+  type ModelKey,
+} from "@/lib/engine/cost-calculator";
 
-const MODEL = "claude-sonnet-4-6";
+const MODEL: ModelKey = "claude-sonnet-4-6";
 const MAX_TOKENS = 8000;
 const STRICT_SUFFIX =
   "\n\nReturn STRICT JSON ONLY. No preamble. No trailing text.";
@@ -162,7 +163,7 @@ export async function generateDraftPackContent(
       cache_write: totalUsage.cache_write + usage.cache_write,
       output_tokens: totalUsage.output_tokens + usage.output_tokens,
     };
-    totalCost += computeSonnetCost(usage);
+    totalCost += calculateCallCost(MODEL, usage);
 
     const first = response.content[0];
     const rawText = first && first.type === "text" ? first.text : "";
