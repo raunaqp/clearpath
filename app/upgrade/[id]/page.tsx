@@ -155,6 +155,14 @@ export default async function UpgradePage({
                 cross-check against the Draft Pack narrative, and push the
                 submission through CDSCO.
               </p>
+              <p className="text-sm text-[#0E1411] leading-relaxed mt-2">
+                Every Concierge filing is reviewed by a{" "}
+                <span className="font-medium">former CDSCO regulator</span>, a{" "}
+                <span className="font-medium">practising clinician</span> in
+                your therapeutic area, and a{" "}
+                <span className="font-medium">scientific subject-matter expert</span>{" "}
+                before submission — so what you file is what reviewers expect to see.
+              </p>
             </div>
 
             {/* What happens next — process timeline, addresses

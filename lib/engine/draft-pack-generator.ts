@@ -573,16 +573,16 @@ async function appendForms(
     // alongside their team.
     sep.drawRectangle({
       x: 56,
-      y: 165,
+      y: 130,
       width: 480,
-      height: 145,
+      height: 220,
       color: rgb(0.98, 0.93, 0.90),
       borderColor: rgb(0.88, 0.72, 0.64),
       borderWidth: 0.5,
     });
     sep.drawText("WHAT'S INCLUDED IN THE Rs 499 DRAFT PACK", {
       x: 70,
-      y: 285,
+      y: 325,
       size: 8,
       font: helveticaBold,
       color: rgb(0.6, 0.24, 0.11),
@@ -591,7 +591,7 @@ async function appendForms(
       "This appendix gives you the blank CDSCO form. Your Draft Pack content above gives you the *narrative* you'll need — intended use, device description, risk classification, clinical context — written in CDSCO-aligned language. The form itself you fill in using your company-specific data: legal entity, manufacturing site address, CIN, signatory, ISO 13485 certificate number, etc.",
       {
         x: 70,
-        y: 268,
+        y: 308,
         size: 9,
         font: helvetica,
         color: rgb(0.1, 0.1, 0.1),
@@ -601,16 +601,16 @@ async function appendForms(
     );
     sep.drawText("NEED THE FORM ITSELF FILLED OUT?", {
       x: 70,
-      y: 215,
+      y: 235,
       size: 8,
       font: helveticaBold,
       color: rgb(0.6, 0.24, 0.11),
     });
     sep.drawText(
-      "Concierge (Rs 50K) is where our team fills these forms alongside you — populating each field with your company-specific data, cross-checking against the narrative in this Draft Pack, and reviewing for CDSCO consistency. Includes 12 months of revisions.",
+      "Concierge (Rs 50K) is where our team fills these forms alongside you — populating each field with your company-specific data, cross-checking against the narrative in this Draft Pack, and reviewing for CDSCO consistency. Every filing is reviewed by a former CDSCO regulator, a practising clinician in your therapeutic area, and a scientific subject-matter expert before submission. Includes 12 months of revisions.",
       {
         x: 70,
-        y: 198,
+        y: 218,
         size: 9,
         font: helvetica,
         color: rgb(0.1, 0.1, 0.1),

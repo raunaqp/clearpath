@@ -16,16 +16,22 @@ export function ConciergeValueBlock() {
     <div className="mb-5 rounded-lg bg-[#FAEDE5] border border-[#E0B8A4] px-4 py-3">
       <div className="flex items-baseline gap-2 mb-1.5">
         <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-[#993C1D]">
-          Need it done sooner?
+          Need it done sooner — and reviewed by the right people?
         </span>
       </div>
       <p className="text-sm text-[#0E1411] leading-relaxed">
         Our Concierge team handles document generation, regulatory
-        coordination and CDSCO submission alongside you — typically
-        in <span className="font-medium">weeks</span>, where a traditional
-        regulatory consultant would take <span className="font-medium">6–12 months</span>{" "}
-        for the same scope. ₹50K covers 12 months of ongoing review and
-        revisions.
+        coordination and CDSCO submission alongside you — typically in{" "}
+        <span className="font-medium">weeks</span>, where a traditional
+        regulatory consultant would take{" "}
+        <span className="font-medium">6–12 months</span> for the same
+        scope. ₹50K covers 12 months of ongoing review and revisions.
+      </p>
+      <p className="text-sm text-[#0E1411] leading-relaxed mt-2">
+        Every Concierge filing is reviewed by a former CDSCO regulator,
+        a practising clinician in your therapeutic area, and a
+        scientific subject-matter expert before it leaves your hands —
+        so what you submit is what reviewers expect to see.
       </p>
     </div>
   );
