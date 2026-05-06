@@ -553,7 +553,7 @@ async function appendForms(
       color: rgb(0.42, 0.42, 0.42),
     });
     sep.drawText(
-      "Fill this form using the drafted content from earlier sections — Intended Use (Section 02), Device Description (Section 03), Risk Classification (Section 04), and Clinical Context (Section 05). Cross-reference your wording so the form, the Device Master File, and any clinical evaluation say the same thing.",
+      "Fill this form using the drafted content from earlier sections — Intended Use (Section 03), Device Description (Section 04), Risk Classification (Section 05), and Clinical Context (Section 06). Cross-reference your wording so the form, the Device Master File, and any clinical evaluation say the same thing.",
       {
         x: 56,
         y: 460,
@@ -564,6 +564,61 @@ async function appendForms(
         lineHeight: 14,
       }
     );
+
+    // Tier 2 vs Concierge distinction — partners reading the appendix
+    // need to know what they're getting and what they're not. Tier 2
+    // (this Draft Pack at Rs 499) is the *narrative starter*; the form
+    // itself is an exercise the founder still owns. Concierge (Rs 50K)
+    // is where ClearPath actively fills the form for the founder
+    // alongside their team.
+    sep.drawRectangle({
+      x: 56,
+      y: 165,
+      width: 480,
+      height: 145,
+      color: rgb(0.98, 0.93, 0.90),
+      borderColor: rgb(0.88, 0.72, 0.64),
+      borderWidth: 0.5,
+    });
+    sep.drawText("WHAT'S INCLUDED IN THE Rs 499 DRAFT PACK", {
+      x: 70,
+      y: 285,
+      size: 8,
+      font: helveticaBold,
+      color: rgb(0.6, 0.24, 0.11),
+    });
+    sep.drawText(
+      "This appendix gives you the blank CDSCO form. Your Draft Pack content above gives you the *narrative* you'll need — intended use, device description, risk classification, clinical context — written in CDSCO-aligned language. The form itself you fill in using your company-specific data: legal entity, manufacturing site address, CIN, signatory, ISO 13485 certificate number, etc.",
+      {
+        x: 70,
+        y: 268,
+        size: 9,
+        font: helvetica,
+        color: rgb(0.1, 0.1, 0.1),
+        maxWidth: 455,
+        lineHeight: 12,
+      }
+    );
+    sep.drawText("NEED THE FORM ITSELF FILLED OUT?", {
+      x: 70,
+      y: 215,
+      size: 8,
+      font: helveticaBold,
+      color: rgb(0.6, 0.24, 0.11),
+    });
+    sep.drawText(
+      "Concierge (Rs 50K) is where our team fills these forms alongside you — populating each field with your company-specific data, cross-checking against the narrative in this Draft Pack, and reviewing for CDSCO consistency. Includes 12 months of revisions.",
+      {
+        x: 70,
+        y: 198,
+        size: 9,
+        font: helvetica,
+        color: rgb(0.1, 0.1, 0.1),
+        maxWidth: 455,
+        lineHeight: 12,
+      }
+    );
+
     sep.drawText(
       "ClearPath · Regulatory Draft Pack — appendix separator. Not legal advice.",
       {

@@ -113,6 +113,12 @@ const styles = StyleSheet.create({
     color: TEXT_DARK,
     marginBottom: 8,
   },
+  bold: {
+    fontFamily: "Helvetica-Bold",
+  },
+  italic: {
+    fontStyle: "italic",
+  },
   placeholder: {
     fontSize: 10,
     color: TEXT_MUTED,
@@ -496,6 +502,32 @@ export const DraftPackDocument = ({
           SERB / ANRF MAHA MedTech Mission framework — the same vocabulary
           BIRAC, MAHA MedTech evaluators, and IKP Eden use when assessing
           medtech funding applications.
+        </Text>
+        <Text style={styles.body}>
+          The two panels below answer different questions. <Text style={styles.bold}>Technology Readiness Level</Text> tells you how mature the
+          product itself is — has the device moved from idea, to prototype, to clinical evidence, to active CDSCO filing.{" "}
+          <Text style={styles.bold}>Document Completeness</Text> tells you how much of the CDSCO submission packet you have in place — typically a
+          Class C/D submission needs 10 categories of documents (DMF, ISO 13485 cert, IEC 62304 evidence, RMF, CER, EP checklist, IFU, test
+          reports, ACP for AI/ML, and the application form itself). The two move together but not lockstep — a TRL 6 product can have
+          5/10 documents in place if the team has been writing as they build.
+        </Text>
+        <Text style={styles.body}>
+          Both numbers are estimates based on what you uploaded plus what your wizard answers signal. <Text style={styles.bold}>Tier 2 (this Draft Pack)
+          gives you the narrative drafts</Text> for sections 03–10 below. <Text style={styles.bold}>Tier 3 Concierge verifies each uploaded document</Text>{" "}
+          against actual CDSCO requirements and flags substantive gaps your team needs to close before filing.
+        </Text>
+        <Text style={styles.body}>
+          <Text style={styles.bold}>How to read the Documents number.</Text>{" "}
+          <Text style={styles.italic}>Uploaded</Text> means you actually shared
+          the file with us during intake — we&apos;ve recorded it but haven&apos;t
+          yet read it carefully. <Text style={styles.italic}>Claimed (not yet
+          verified)</Text> means your wizard answers signalled the document
+          exists but you didn&apos;t share it with us. Both count toward the
+          completeness score below, because both are credible signals — but
+          they&apos;re not the same. The CDSCO reviewer sees neither until
+          the dossier lands. Tier 3 Concierge reads each uploaded document
+          side-by-side with the CDSCO requirement it&apos;s meant to satisfy
+          and flags content gaps the founder needs to close.
         </Text>
 
         <View style={styles.maturityRow}>
