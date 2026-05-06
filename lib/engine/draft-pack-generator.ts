@@ -172,10 +172,27 @@ export async function generateDraftPack(
     assessment.readiness_card !== null
       ? (assessment.readiness_card as { meta?: ReadinessCardMeta }).meta ?? {}
       : {};
+  // Robust productName resolution. Order:
+  //   1. card.meta.product_name from synthesizer (preferred)
+  //   2. card.meta.company_name fallback
+  //   3. First proper-noun phrase from one_liner (heuristic)
+  //   4. assessment.name as last resort (e.g. "Demo: Vyuhaa CerviAI")
+  //
+  // Avoids the "Unnamed product" hole when synthesizer returned empty
+  // strings for the meta fields (which it should not, but does sometimes
+  // when the URL scrape was sparse).
+  function extractFirstProperNoun(text: string): string | null {
+    // Look for a 2-3 word capitalized phrase at the start of the one-liner.
+    // E.g. "Vyuhaa CerviAI is..." → "Vyuhaa CerviAI"
+    const match = text.match(/^([A-Z][A-Za-z0-9-]+(?:\s+[A-Z][A-Za-z0-9-]+){0,2})\b/);
+    return match ? match[1].trim() : null;
+  }
   const productName =
     cardMeta.product_name?.trim() ||
     cardMeta.company_name?.trim() ||
-    assessment.one_liner.slice(0, 60);
+    extractFirstProperNoun(assessment.one_liner) ||
+    assessment.name?.replace(/^Demo:\s*/i, "").trim() ||
+    "Your product";
 
   const cardParsed = ReadinessCardSchema.safeParse(assessment.readiness_card);
   if (!cardParsed.success) {
@@ -239,6 +256,22 @@ export async function generateDraftPack(
       ? runCompletenessForCard(validatedCard, checkerDocs)
       : null;
 
+    // Compute relevant forms once here so:
+    //   1) Section 09 in the PDF lists exactly the forms that match the
+    //      device profile (no hardcoded MD-7/MD-12/MD-14/MD-22 list)
+    //   2) The list and the appended-appendix pages stay consistent
+    //      (forms with available=true get appended; downloadable=false
+    //      get listed but not appended)
+    // Single getRelevantForms() call shared between the template and the
+    // append loop below.
+    const relevantFormsForPack = validatedCard
+      ? getRelevantForms(validatedCard).map((f) => ({
+          id: f.id,
+          description: f.description,
+          available: f.available,
+        }))
+      : [];
+
     // `DraftPackDocument` wraps a `<Document>`, but @react-pdf/renderer's
     // type for `renderToBuffer` insists on `ReactElement<DocumentProps>`
     // directly (rejecting a wrapping function-component). The runtime
@@ -256,6 +289,7 @@ export async function generateDraftPack(
       regulations: validatedCard?.regulations,
       trl: trlForPack,
       completeness: completenessForPack,
+      relevantForms: relevantFormsForPack,
     });
     mainPdfBuffer = await renderToBuffer(
       element as unknown as React.ReactElement<DocumentProps>

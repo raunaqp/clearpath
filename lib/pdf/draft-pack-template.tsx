@@ -380,6 +380,7 @@ export const DraftPackDocument = ({
   regulations,
   trl,
   completeness,
+  relevantForms,
 }: {
   data: DraftPackData;
   content?: DraftPackContent;
@@ -388,6 +389,16 @@ export const DraftPackDocument = ({
   trl?: ReadinessCard["trl"];
   /** Completeness result from the Risk Card. Renders the documents panel. */
   completeness?: CompletenessResult | null;
+  /** Forms relevant to this device profile (per lib/cdsco/relevant-forms.ts).
+   * Drives the dynamic Section 09 listing — split between forms appended
+   * to this PDF (available + url) and forms the founder downloads from
+   * cdsco.gov.in. Fixes the inconsistency where MD-14 was listed as
+   * 'included' when in fact it was skipped during append (no mirror PDF). */
+  relevantForms?: Array<{
+    id: string;
+    description: string;
+    available: boolean;
+  }>;
 }) => (
   <Document
     title={`ClearPath Draft Pack — ${data.product_name}`}
@@ -468,467 +479,15 @@ export const DraftPackDocument = ({
       <Footer productName={data.product_name} />
     </Page>
 
-    {/* 3. Intended Use Statement */}
-    <Page size="A4" style={styles.page}>
-      <SectionHeader kicker="SECTION 02" title="Intended Use Statement" />
-      {content?.intended_use ? (
-        <>
-          <Text style={styles.h2}>Indication</Text>
-          <Text style={styles.body}>{content.intended_use.indication}</Text>
-          <Text style={styles.h2}>Intended User</Text>
-          <Text style={styles.body}>
-            {content.intended_use.intended_user}
-          </Text>
-          <Text style={styles.h2}>Use Environment</Text>
-          <Text style={styles.body}>
-            {content.intended_use.use_environment}
-          </Text>
-          <Text style={styles.h2}>Contraindications &amp; Limitations</Text>
-          <Text style={styles.body}>
-            {content.intended_use.contraindications}
-          </Text>
-        </>
-      ) : (
-        <>
-          <Placeholder>
-            Content placeholder — populated by Opus call. The intended use
-            must match exactly across CDSCO Form MD-3 / MD-9, the Device
-            Master File, and any clinical evaluation.
-          </Placeholder>
-          <Text style={styles.h2}>Indication</Text>
-          <Text style={styles.body}>
-            Placeholder paragraph describing the medical condition or
-            clinical scenario the product addresses.
-          </Text>
-          <Text style={styles.h2}>Intended User</Text>
-          <Text style={styles.body}>
-            Placeholder — clinician, technician, lay user, or
-            self-administered.
-          </Text>
-          <Text style={styles.h2}>Use Environment</Text>
-          <Text style={styles.body}>
-            Placeholder — hospital, home, ambulatory, telehealth, etc.
-          </Text>
-          <Text style={styles.h2}>Contraindications &amp; Limitations</Text>
-          <Text style={styles.body}>
-            Placeholder — populations excluded, off-label warnings.
-          </Text>
-        </>
-      )}
-      <Footer productName={data.product_name} />
-    </Page>
-
-    {/* 4. Device Description (page 1) */}
-    <Page size="A4" style={styles.page}>
-      <SectionHeader kicker="SECTION 03" title="Device Description" />
-      {content?.device_description ? (
-        <>
-          <Text style={styles.h2}>Components &amp; Architecture</Text>
-          <Text style={styles.body}>
-            {content.device_description.components_architecture}
-          </Text>
-          <Text style={styles.h2}>Principle of Operation</Text>
-          <Text style={styles.body}>
-            {content.device_description.principle_of_operation}
-          </Text>
-          <Text style={styles.h2}>Materials, Standards, Interfaces</Text>
-          <Text style={styles.body}>
-            {content.device_description.materials_standards}
-          </Text>
-        </>
-      ) : (
-        <>
-          <Placeholder>
-            Content placeholder — populated by Opus call.
-          </Placeholder>
-          <Text style={styles.h2}>Components &amp; Architecture</Text>
-          <Text style={styles.body}>
-            Placeholder — hardware modules, software components, cloud /
-            back-end services.
-          </Text>
-          <Text style={styles.h2}>Principle of Operation</Text>
-          <Text style={styles.body}>
-            Placeholder — how the device achieves its intended use, step by
-            step.
-          </Text>
-          <Text style={styles.h2}>Materials, Standards, Interfaces</Text>
-          <Text style={styles.body}>
-            Placeholder — biocompatibility, IEC/ISO standards claimed, data
-            interfaces.
-          </Text>
-        </>
-      )}
-    </Page>
-
-    {/* Device Description (page 2) */}
-    <Page size="A4" style={styles.page}>
-      {content?.device_description ? (
-        <>
-          <Text style={styles.h2}>Variants &amp; Accessories</Text>
-          <Text style={styles.body}>
-            {content.device_description.variants_accessories}
-          </Text>
-          <Text style={styles.h2}>Lifecycle &amp; Disposal</Text>
-          <Text style={styles.body}>
-            {content.device_description.lifecycle_disposal}
-          </Text>
-        </>
-      ) : (
-        <>
-          <Text style={styles.h2}>Variants &amp; Accessories</Text>
-          <Text style={styles.body}>
-            Placeholder — model numbers, SKUs, accessories included in the
-            application.
-          </Text>
-          <Text style={styles.h2}>Lifecycle &amp; Disposal</Text>
-          <Text style={styles.body}>
-            Placeholder — service life, reprocessing, end-of-life handling.
-          </Text>
-        </>
-      )}
-      <Footer productName={data.product_name} />
-    </Page>
-
-    {/* 5. Risk Classification Justification */}
-    <Page size="A4" style={styles.page}>
-      <SectionHeader
-        kicker="SECTION 04"
-        title="Risk Classification Justification"
-      />
-      {content?.risk_classification ? (
-        <>
-          <Text style={styles.h2}>IMDRF SaMD Mapping</Text>
-          <View style={styles.imdrfTable}>
-            <View style={styles.imdrfRow}>
-              <Text style={styles.imdrfCellHead}>SIGNIFICANCE OF INFO</Text>
-              <Text style={styles.imdrfCellHead}>HEALTHCARE SITUATION</Text>
-              <Text style={styles.imdrfCellHead}>SaMD CATEGORY</Text>
-            </View>
-            <View style={styles.imdrfRow}>
-              <Text style={styles.imdrfCell}>
-                {content.risk_classification.imdrf_significance}
-              </Text>
-              <Text style={styles.imdrfCell}>
-                {content.risk_classification.imdrf_situation}
-              </Text>
-              <Text style={styles.imdrfCell}>
-                {content.risk_classification.imdrf_category}
-              </Text>
-            </View>
-            <View style={styles.imdrfRowLast}>
-              <Text style={styles.imdrfCell}>Rationale</Text>
-              <Text style={[styles.imdrfCell, { flex: 2 }]}>
-                {content.risk_classification.imdrf_rationale}
-              </Text>
-            </View>
-          </View>
-          <Text style={styles.h2}>CDSCO Class (proposed)</Text>
-          <Text style={styles.body}>
-            Class {content.risk_classification.cdsco_class} —{" "}
-            {content.risk_classification.cdsco_rationale}
-          </Text>
-        </>
-      ) : (
-        <>
-          <Placeholder>
-            Content placeholder — populated by Opus call. Maps the product
-            onto the IMDRF SaMD framework, then to CDSCO MDR 2017 risk
-            class A/B/C/D.
-          </Placeholder>
-          <Text style={styles.h2}>IMDRF SaMD Mapping</Text>
-          <View style={styles.imdrfTable}>
-            <View style={styles.imdrfRow}>
-              <Text style={styles.imdrfCellHead}>SIGNIFICANCE OF INFO</Text>
-              <Text style={styles.imdrfCellHead}>HEALTHCARE SITUATION</Text>
-              <Text style={styles.imdrfCellHead}>SaMD CATEGORY</Text>
-            </View>
-            <View style={styles.imdrfRow}>
-              <Text style={styles.imdrfCell}>placeholder</Text>
-              <Text style={styles.imdrfCell}>placeholder</Text>
-              <Text style={styles.imdrfCell}>placeholder (I–IV)</Text>
-            </View>
-            <View style={styles.imdrfRowLast}>
-              <Text style={styles.imdrfCell}>Rationale</Text>
-              <Text style={[styles.imdrfCell, { flex: 2 }]}>placeholder</Text>
-            </View>
-          </View>
-          <Text style={styles.h2}>CDSCO Class (proposed)</Text>
-          <Text style={styles.body}>
-            Placeholder — Class A / B / C / D with one-paragraph rationale.
-          </Text>
-        </>
-      )}
-      <Footer productName={data.product_name} />
-    </Page>
-
-    {/* 6. Clinical Context */}
-    <Page size="A4" style={styles.page}>
-      <SectionHeader kicker="SECTION 05" title="Clinical Context" />
-      {content?.clinical_context ? (
-        <>
-          <Text style={styles.h2}>Clinical Need</Text>
-          <Text style={styles.body}>
-            {content.clinical_context.clinical_need}
-          </Text>
-          <Text style={styles.h2}>Predicate or Equivalent Devices</Text>
-          <Text style={styles.body}>
-            {content.clinical_context.predicate_devices}
-          </Text>
-          <Text style={styles.h2}>Clinical Evidence Plan</Text>
-          <Text style={styles.body}>
-            {content.clinical_context.evidence_plan}
-          </Text>
-        </>
-      ) : (
-        <>
-          <Placeholder>
-            Content placeholder — populated by Opus call.
-          </Placeholder>
-          <Text style={styles.h2}>Clinical Need</Text>
-          <Text style={styles.body}>
-            Placeholder — burden of disease in India, current standard of
-            care, gap the product addresses.
-          </Text>
-          <Text style={styles.h2}>Predicate or Equivalent Devices</Text>
-          <Text style={styles.body}>
-            Placeholder — comparable approved devices, points of similarity
-            and divergence.
-          </Text>
-          <Text style={styles.h2}>Clinical Evidence Plan</Text>
-          <Text style={styles.body}>
-            Placeholder — literature review, performance studies, ongoing
-            or planned clinical investigations.
-          </Text>
-        </>
-      )}
-      <Footer productName={data.product_name} />
-    </Page>
-
-    {/* 7. Essential Principles checklist (static) */}
-    <Page size="A4" style={styles.page}>
-      <SectionHeader
-        kicker="SECTION 06"
-        title="Essential Principles Checklist"
-      />
-      <Text style={styles.body}>
-        Per CDSCO MDR 2017, every device must demonstrate conformity with
-        the Essential Principles of Safety and Performance. The applicant
-        ticks each principle as Met / Not Applicable / In Progress, and
-        references the evidence in the Device Master File.
-      </Text>
-      <ChecklistItem>
-        EP-1 — General requirements: device performs as intended without
-        compromising clinical condition or safety.
-      </ChecklistItem>
-      <ChecklistItem>
-        EP-2 — Risk management: residual risks acceptable when weighed
-        against benefit.
-      </ChecklistItem>
-      <ChecklistItem>
-        EP-3 — Performance over device lifetime under normal use
-        conditions.
-      </ChecklistItem>
-      <ChecklistItem>
-        EP-4 — Transport &amp; storage do not adversely affect performance.
-      </ChecklistItem>
-      <ChecklistItem>
-        EP-5 — Side effects are acceptable when weighed against intended
-        performance.
-      </ChecklistItem>
-      <ChecklistItem>
-        EP-6 — Chemical, physical, biological properties are appropriate.
-      </ChecklistItem>
-      <ChecklistItem>
-        EP-7 — Infection &amp; microbial contamination controls.
-      </ChecklistItem>
-      <ChecklistItem>
-        EP-8 — Devices incorporating materials of biological origin.
-      </ChecklistItem>
-      <ChecklistItem>
-        EP-9 — Construction &amp; environmental properties.
-      </ChecklistItem>
-      <ChecklistItem>EP-10 — Devices with measuring function.</ChecklistItem>
-      <ChecklistItem>EP-11 — Protection against radiation.</ChecklistItem>
-      <ChecklistItem>
-        EP-12 — Software, electronic programmable systems, energy sources.
-      </ChecklistItem>
-      <ChecklistItem>
-        EP-13 — Active devices and devices connected to them.
-      </ChecklistItem>
-      <ChecklistItem>EP-14 — Mechanical &amp; thermal risks.</ChecklistItem>
-      <ChecklistItem>
-        EP-15 — Devices delivering medicinal products / energy.
-      </ChecklistItem>
-      <ChecklistItem>
-        EP-16 — Information supplied by the manufacturer (labelling, IFU).
-      </ChecklistItem>
-      <Footer productName={data.product_name} />
-    </Page>
-
-    {/* 8. Algorithm Change Protocol */}
-    <Page size="A4" style={styles.page}>
-      <SectionHeader
-        kicker="SECTION 07"
-        title="Algorithm Change Protocol"
-      />
-      {content?.algorithm_change_protocol?.applicable ? (
-        <>
-          <Text style={styles.h2}>Pre-Specifications (PCCP)</Text>
-          <Text style={styles.body}>
-            {content.algorithm_change_protocol.pccp ?? "—"}
-          </Text>
-          <Text style={styles.h2}>Algorithm Change Protocol</Text>
-          <Text style={styles.body}>
-            {content.algorithm_change_protocol.change_protocol ?? "—"}
-          </Text>
-          <Text style={styles.h2}>Real-World Performance Monitoring</Text>
-          <Text style={styles.body}>
-            {content.algorithm_change_protocol.real_world_monitoring ?? "—"}
-          </Text>
-        </>
-      ) : content?.algorithm_change_protocol &&
-        content.algorithm_change_protocol.applicable === false ? (
-        <Text style={styles.body}>
-          This section is not applicable — the product does not contain an
-          adaptive or learning-enabled component, so a Predetermined Change
-          Control Plan is not required under the Oct 2025 CDSCO SaMD
-          guidance.
-        </Text>
-      ) : (
-        <>
-          <Placeholder>
-            Content placeholder — populated by Opus call. Required for
-            AI/ML SaMD per the Oct 2025 CDSCO SaMD draft. Skip if the
-            device contains no adaptive or learning-enabled component.
-          </Placeholder>
-          <Text style={styles.h2}>Pre-Specifications (PCCP)</Text>
-          <Text style={styles.body}>
-            Placeholder — what the model is allowed to learn or change
-            post-deployment.
-          </Text>
-          <Text style={styles.h2}>Algorithm Change Protocol</Text>
-          <Text style={styles.body}>
-            Placeholder — data sources, retraining cadence, validation
-            gates, rollback policy.
-          </Text>
-          <Text style={styles.h2}>Real-World Performance Monitoring</Text>
-          <Text style={styles.body}>
-            Placeholder — drift detection, complaint signal handling,
-            post-market surveillance loop.
-          </Text>
-        </>
-      )}
-      <Footer productName={data.product_name} />
-    </Page>
-
-    {/* 9. Glossary + References (static) */}
-    <Page size="A4" style={styles.page}>
-      <SectionHeader kicker="SECTION 08" title="Glossary &amp; References" />
-      <Text style={styles.h2}>Glossary</Text>
-      <Bullet>
-        <Text>
-          CDSCO — Central Drugs Standard Control Organisation, India&apos;s
-          medical device regulator.
-        </Text>
-      </Bullet>
-      <Bullet>
-        <Text>
-          MDR 2017 — Medical Devices Rules, 2017 (with subsequent
-          amendments).
-        </Text>
-      </Bullet>
-      <Bullet>
-        <Text>SaMD — Software as a Medical Device.</Text>
-      </Bullet>
-      <Bullet>
-        <Text>
-          IMDRF — International Medical Device Regulators Forum.
-        </Text>
-      </Bullet>
-      <Bullet>
-        <Text>
-          PCCP — Predetermined Change Control Plan, for adaptive AI/ML
-          systems.
-        </Text>
-      </Bullet>
-      <Bullet>
-        <Text>DPDP — Digital Personal Data Protection Act, 2023.</Text>
-      </Bullet>
-      <Bullet>
-        <Text>ABDM — Ayushman Bharat Digital Mission.</Text>
-      </Bullet>
-      <Text style={styles.h2}>References</Text>
-      <Bullet>
-        <Text>CDSCO Medical Devices Rules, 2017 (cdsco.gov.in).</Text>
-      </Bullet>
-      <Bullet>
-        <Text>CDSCO Draft Guidance on SaMD, October 2025.</Text>
-      </Bullet>
-      <Bullet>
-        <Text>
-          IMDRF SaMD: Possible Framework for Risk Categorization (N12).
-        </Text>
-      </Bullet>
-      <Bullet>
-        <Text>
-          ICMR Ethical Guidelines for AI in Healthcare, 2023.
-        </Text>
-      </Bullet>
-      <Bullet>
-        <Text>Digital Personal Data Protection Act, 2023.</Text>
-      </Bullet>
-      <Footer productName={data.product_name} />
-    </Page>
-
-    {/* 10. Applicable Regulations & Forms */}
-    <Page size="A4" style={styles.page}>
-      <SectionHeader
-        kicker="SECTION 09"
-        title="Applicable Regulations &amp; Forms"
-      />
-      <Text style={styles.body}>
-        Based on your product profile, the following regulations apply.
-        Each entry below shows what you need to do and where to submit.
-      </Text>
-
-      {regulations ? (
-        applicableRegulations(regulations).map((reg) => (
-          <RegulationBlock key={reg.key} reg={reg} />
-        ))
-      ) : (
-        <Placeholder>
-          Regulation analysis not available — generated when a Readiness
-          Card is associated with this Draft Pack.
-        </Placeholder>
-      )}
-
-      <View style={styles.formsFooter} wrap={false}>
-        <Text style={styles.h2}>Forms included in this Draft Pack</Text>
-        <Bullet>MD-7 — Manufacturing license, Class C/D</Bullet>
-        <Bullet>MD-12 — Test license (clinical investigation)</Bullet>
-        <Bullet>MD-14 — Import license</Bullet>
-        <Bullet>MD-22 — Clinical Investigation approval</Bullet>
-        <Text style={styles.h2}>Forms to download from cdsco.gov.in</Text>
-        <Bullet>MD-5 — Manufacturing license, Class A/B (state authority)</Bullet>
-        <Bullet>MD-9 — Manufacturing license, Class C/D (alt route)</Bullet>
-        <Bullet>MD-20 — Export No Objection Certificate</Bullet>
-        <Bullet>MD-23 — Clinical Performance Evaluation for IVDs</Bullet>
-        <Text style={[styles.regLabel, { marginTop: 8 }]}>
-          Forms appended to this PDF as appendices are listed in the
-          appendix separator pages that follow.
-        </Text>
-      </View>
-
-      <Footer productName={data.product_name} />
-    </Page>
-
-    {/* 11. Maturity & Document Completeness — added so the Draft Pack
-         carries the same TRL + completeness numbers the founder sees on
-         the Risk Card. Pure data, no LLM. */}
+    {/* 2. Maturity & Document Completeness — placed right after the
+         executive summary so the founder sees their position before
+         diving into device descriptions and clinical context. Carries
+         over the same TRL + completeness numbers from the Risk Card,
+         pure data, no LLM call. */}
     {(trl || completeness) ? (
       <Page size="A4" style={styles.page}>
         <SectionHeader
-          kicker="SECTION 10"
+          kicker="SECTION 02"
           title="Maturity &amp; Document Completeness"
         />
         <Text style={styles.body}>
@@ -1037,7 +596,9 @@ export const DraftPackDocument = ({
                         : ""}
                     </Text>
                     <Text style={styles.maturityNote}>
-                      Estimated from uploaded files + your wizard answers.
+                      Estimated from your uploads + readiness signals. Tier 2
+                      verifies content of each document against CDSCO
+                      requirements.
                     </Text>
                   </>
                 );
@@ -1068,6 +629,488 @@ export const DraftPackDocument = ({
         <Footer productName={data.product_name} />
       </Page>
     ) : null}
+
+    {/* 3. Intended Use Statement */}
+    <Page size="A4" style={styles.page}>
+      <SectionHeader kicker="SECTION 03" title="Intended Use Statement" />
+      {content?.intended_use ? (
+        <>
+          <Text style={styles.h2}>Indication</Text>
+          <Text style={styles.body}>{content.intended_use.indication}</Text>
+          <Text style={styles.h2}>Intended User</Text>
+          <Text style={styles.body}>
+            {content.intended_use.intended_user}
+          </Text>
+          <Text style={styles.h2}>Use Environment</Text>
+          <Text style={styles.body}>
+            {content.intended_use.use_environment}
+          </Text>
+          <Text style={styles.h2}>Contraindications &amp; Limitations</Text>
+          <Text style={styles.body}>
+            {content.intended_use.contraindications}
+          </Text>
+        </>
+      ) : (
+        <>
+          <Placeholder>
+            Content placeholder — populated by Opus call. The intended use
+            must match exactly across CDSCO Form MD-3 / MD-9, the Device
+            Master File, and any clinical evaluation.
+          </Placeholder>
+          <Text style={styles.h2}>Indication</Text>
+          <Text style={styles.body}>
+            Placeholder paragraph describing the medical condition or
+            clinical scenario the product addresses.
+          </Text>
+          <Text style={styles.h2}>Intended User</Text>
+          <Text style={styles.body}>
+            Placeholder — clinician, technician, lay user, or
+            self-administered.
+          </Text>
+          <Text style={styles.h2}>Use Environment</Text>
+          <Text style={styles.body}>
+            Placeholder — hospital, home, ambulatory, telehealth, etc.
+          </Text>
+          <Text style={styles.h2}>Contraindications &amp; Limitations</Text>
+          <Text style={styles.body}>
+            Placeholder — populations excluded, off-label warnings.
+          </Text>
+        </>
+      )}
+      <Footer productName={data.product_name} />
+    </Page>
+
+    {/* 4. Device Description (page 1) */}
+    <Page size="A4" style={styles.page}>
+      <SectionHeader kicker="SECTION 04" title="Device Description" />
+      {content?.device_description ? (
+        <>
+          <Text style={styles.h2}>Components &amp; Architecture</Text>
+          <Text style={styles.body}>
+            {content.device_description.components_architecture}
+          </Text>
+          <Text style={styles.h2}>Principle of Operation</Text>
+          <Text style={styles.body}>
+            {content.device_description.principle_of_operation}
+          </Text>
+          <Text style={styles.h2}>Materials, Standards, Interfaces</Text>
+          <Text style={styles.body}>
+            {content.device_description.materials_standards}
+          </Text>
+        </>
+      ) : (
+        <>
+          <Placeholder>
+            Content placeholder — populated by Opus call.
+          </Placeholder>
+          <Text style={styles.h2}>Components &amp; Architecture</Text>
+          <Text style={styles.body}>
+            Placeholder — hardware modules, software components, cloud /
+            back-end services.
+          </Text>
+          <Text style={styles.h2}>Principle of Operation</Text>
+          <Text style={styles.body}>
+            Placeholder — how the device achieves its intended use, step by
+            step.
+          </Text>
+          <Text style={styles.h2}>Materials, Standards, Interfaces</Text>
+          <Text style={styles.body}>
+            Placeholder — biocompatibility, IEC/ISO standards claimed, data
+            interfaces.
+          </Text>
+        </>
+      )}
+    </Page>
+
+    {/* Device Description (page 2) */}
+    <Page size="A4" style={styles.page}>
+      {content?.device_description ? (
+        <>
+          <Text style={styles.h2}>Variants &amp; Accessories</Text>
+          <Text style={styles.body}>
+            {content.device_description.variants_accessories}
+          </Text>
+          <Text style={styles.h2}>Lifecycle &amp; Disposal</Text>
+          <Text style={styles.body}>
+            {content.device_description.lifecycle_disposal}
+          </Text>
+        </>
+      ) : (
+        <>
+          <Text style={styles.h2}>Variants &amp; Accessories</Text>
+          <Text style={styles.body}>
+            Placeholder — model numbers, SKUs, accessories included in the
+            application.
+          </Text>
+          <Text style={styles.h2}>Lifecycle &amp; Disposal</Text>
+          <Text style={styles.body}>
+            Placeholder — service life, reprocessing, end-of-life handling.
+          </Text>
+        </>
+      )}
+      <Footer productName={data.product_name} />
+    </Page>
+
+    {/* 5. Risk Classification Justification */}
+    <Page size="A4" style={styles.page}>
+      <SectionHeader
+        kicker="SECTION 05"
+        title="Risk Classification Justification"
+      />
+      {content?.risk_classification ? (
+        <>
+          <Text style={styles.h2}>IMDRF SaMD Mapping</Text>
+          <View style={styles.imdrfTable}>
+            <View style={styles.imdrfRow}>
+              <Text style={styles.imdrfCellHead}>SIGNIFICANCE OF INFO</Text>
+              <Text style={styles.imdrfCellHead}>HEALTHCARE SITUATION</Text>
+              <Text style={styles.imdrfCellHead}>SaMD CATEGORY</Text>
+            </View>
+            <View style={styles.imdrfRow}>
+              <Text style={styles.imdrfCell}>
+                {content.risk_classification.imdrf_significance}
+              </Text>
+              <Text style={styles.imdrfCell}>
+                {content.risk_classification.imdrf_situation}
+              </Text>
+              <Text style={styles.imdrfCell}>
+                {content.risk_classification.imdrf_category}
+              </Text>
+            </View>
+            <View style={styles.imdrfRowLast}>
+              <Text style={styles.imdrfCell}>Rationale</Text>
+              <Text style={[styles.imdrfCell, { flex: 2 }]}>
+                {content.risk_classification.imdrf_rationale}
+              </Text>
+            </View>
+          </View>
+          <Text style={styles.h2}>CDSCO Class (proposed)</Text>
+          <Text style={styles.body}>
+            Class {content.risk_classification.cdsco_class} —{" "}
+            {content.risk_classification.cdsco_rationale}
+          </Text>
+        </>
+      ) : (
+        <>
+          <Placeholder>
+            Content placeholder — populated by Opus call. Maps the product
+            onto the IMDRF SaMD framework, then to CDSCO MDR 2017 risk
+            class A/B/C/D.
+          </Placeholder>
+          <Text style={styles.h2}>IMDRF SaMD Mapping</Text>
+          <View style={styles.imdrfTable}>
+            <View style={styles.imdrfRow}>
+              <Text style={styles.imdrfCellHead}>SIGNIFICANCE OF INFO</Text>
+              <Text style={styles.imdrfCellHead}>HEALTHCARE SITUATION</Text>
+              <Text style={styles.imdrfCellHead}>SaMD CATEGORY</Text>
+            </View>
+            <View style={styles.imdrfRow}>
+              <Text style={styles.imdrfCell}>placeholder</Text>
+              <Text style={styles.imdrfCell}>placeholder</Text>
+              <Text style={styles.imdrfCell}>placeholder (I–IV)</Text>
+            </View>
+            <View style={styles.imdrfRowLast}>
+              <Text style={styles.imdrfCell}>Rationale</Text>
+              <Text style={[styles.imdrfCell, { flex: 2 }]}>placeholder</Text>
+            </View>
+          </View>
+          <Text style={styles.h2}>CDSCO Class (proposed)</Text>
+          <Text style={styles.body}>
+            Placeholder — Class A / B / C / D with one-paragraph rationale.
+          </Text>
+        </>
+      )}
+      <Footer productName={data.product_name} />
+    </Page>
+
+    {/* 6. Clinical Context */}
+    <Page size="A4" style={styles.page}>
+      <SectionHeader kicker="SECTION 06" title="Clinical Context" />
+      {content?.clinical_context ? (
+        <>
+          <Text style={styles.h2}>Clinical Need</Text>
+          <Text style={styles.body}>
+            {content.clinical_context.clinical_need}
+          </Text>
+          <Text style={styles.h2}>Predicate or Equivalent Devices</Text>
+          <Text style={styles.body}>
+            {content.clinical_context.predicate_devices}
+          </Text>
+          <Text style={styles.h2}>Clinical Evidence Plan</Text>
+          <Text style={styles.body}>
+            {content.clinical_context.evidence_plan}
+          </Text>
+        </>
+      ) : (
+        <>
+          <Placeholder>
+            Content placeholder — populated by Opus call.
+          </Placeholder>
+          <Text style={styles.h2}>Clinical Need</Text>
+          <Text style={styles.body}>
+            Placeholder — burden of disease in India, current standard of
+            care, gap the product addresses.
+          </Text>
+          <Text style={styles.h2}>Predicate or Equivalent Devices</Text>
+          <Text style={styles.body}>
+            Placeholder — comparable approved devices, points of similarity
+            and divergence.
+          </Text>
+          <Text style={styles.h2}>Clinical Evidence Plan</Text>
+          <Text style={styles.body}>
+            Placeholder — literature review, performance studies, ongoing
+            or planned clinical investigations.
+          </Text>
+        </>
+      )}
+      <Footer productName={data.product_name} />
+    </Page>
+
+    {/* 7. Essential Principles checklist (static) */}
+    <Page size="A4" style={styles.page}>
+      <SectionHeader
+        kicker="SECTION 07"
+        title="Essential Principles Checklist"
+      />
+      <Text style={styles.body}>
+        Per CDSCO MDR 2017, every device must demonstrate conformity with
+        the Essential Principles of Safety and Performance. The applicant
+        ticks each principle as Met / Not Applicable / In Progress, and
+        references the evidence in the Device Master File.
+      </Text>
+      <ChecklistItem>
+        EP-1 — General requirements: device performs as intended without
+        compromising clinical condition or safety.
+      </ChecklistItem>
+      <ChecklistItem>
+        EP-2 — Risk management: residual risks acceptable when weighed
+        against benefit.
+      </ChecklistItem>
+      <ChecklistItem>
+        EP-3 — Performance over device lifetime under normal use
+        conditions.
+      </ChecklistItem>
+      <ChecklistItem>
+        EP-4 — Transport &amp; storage do not adversely affect performance.
+      </ChecklistItem>
+      <ChecklistItem>
+        EP-5 — Side effects are acceptable when weighed against intended
+        performance.
+      </ChecklistItem>
+      <ChecklistItem>
+        EP-6 — Chemical, physical, biological properties are appropriate.
+      </ChecklistItem>
+      <ChecklistItem>
+        EP-7 — Infection &amp; microbial contamination controls.
+      </ChecklistItem>
+      <ChecklistItem>
+        EP-8 — Devices incorporating materials of biological origin.
+      </ChecklistItem>
+      <ChecklistItem>
+        EP-9 — Construction &amp; environmental properties.
+      </ChecklistItem>
+      <ChecklistItem>EP-10 — Devices with measuring function.</ChecklistItem>
+      <ChecklistItem>EP-11 — Protection against radiation.</ChecklistItem>
+      <ChecklistItem>
+        EP-12 — Software, electronic programmable systems, energy sources.
+      </ChecklistItem>
+      <ChecklistItem>
+        EP-13 — Active devices and devices connected to them.
+      </ChecklistItem>
+      <ChecklistItem>EP-14 — Mechanical &amp; thermal risks.</ChecklistItem>
+      <ChecklistItem>
+        EP-15 — Devices delivering medicinal products / energy.
+      </ChecklistItem>
+      <ChecklistItem>
+        EP-16 — Information supplied by the manufacturer (labelling, IFU).
+      </ChecklistItem>
+      <Footer productName={data.product_name} />
+    </Page>
+
+    {/* 8. Algorithm Change Protocol */}
+    <Page size="A4" style={styles.page}>
+      <SectionHeader
+        kicker="SECTION 08"
+        title="Algorithm Change Protocol"
+      />
+      {content?.algorithm_change_protocol?.applicable ? (
+        <>
+          <Text style={styles.h2}>Pre-Specifications (PCCP)</Text>
+          <Text style={styles.body}>
+            {content.algorithm_change_protocol.pccp ?? "—"}
+          </Text>
+          <Text style={styles.h2}>Algorithm Change Protocol</Text>
+          <Text style={styles.body}>
+            {content.algorithm_change_protocol.change_protocol ?? "—"}
+          </Text>
+          <Text style={styles.h2}>Real-World Performance Monitoring</Text>
+          <Text style={styles.body}>
+            {content.algorithm_change_protocol.real_world_monitoring ?? "—"}
+          </Text>
+        </>
+      ) : content?.algorithm_change_protocol &&
+        content.algorithm_change_protocol.applicable === false ? (
+        <Text style={styles.body}>
+          This section is not applicable — the product does not contain an
+          adaptive or learning-enabled component, so a Predetermined Change
+          Control Plan is not required under the Oct 2025 CDSCO SaMD
+          guidance.
+        </Text>
+      ) : (
+        <>
+          <Placeholder>
+            Content placeholder — populated by Opus call. Required for
+            AI/ML SaMD per the Oct 2025 CDSCO SaMD draft. Skip if the
+            device contains no adaptive or learning-enabled component.
+          </Placeholder>
+          <Text style={styles.h2}>Pre-Specifications (PCCP)</Text>
+          <Text style={styles.body}>
+            Placeholder — what the model is allowed to learn or change
+            post-deployment.
+          </Text>
+          <Text style={styles.h2}>Algorithm Change Protocol</Text>
+          <Text style={styles.body}>
+            Placeholder — data sources, retraining cadence, validation
+            gates, rollback policy.
+          </Text>
+          <Text style={styles.h2}>Real-World Performance Monitoring</Text>
+          <Text style={styles.body}>
+            Placeholder — drift detection, complaint signal handling,
+            post-market surveillance loop.
+          </Text>
+        </>
+      )}
+      <Footer productName={data.product_name} />
+    </Page>
+
+    {/* 9. Glossary + References (static) */}
+    <Page size="A4" style={styles.page}>
+      <SectionHeader kicker="SECTION 09" title="Glossary &amp; References" />
+      <Text style={styles.h2}>Glossary</Text>
+      <Bullet>
+        <Text>
+          CDSCO — Central Drugs Standard Control Organisation, India&apos;s
+          medical device regulator.
+        </Text>
+      </Bullet>
+      <Bullet>
+        <Text>
+          MDR 2017 — Medical Devices Rules, 2017 (with subsequent
+          amendments).
+        </Text>
+      </Bullet>
+      <Bullet>
+        <Text>SaMD — Software as a Medical Device.</Text>
+      </Bullet>
+      <Bullet>
+        <Text>
+          IMDRF — International Medical Device Regulators Forum.
+        </Text>
+      </Bullet>
+      <Bullet>
+        <Text>
+          PCCP — Predetermined Change Control Plan, for adaptive AI/ML
+          systems.
+        </Text>
+      </Bullet>
+      <Bullet>
+        <Text>DPDP — Digital Personal Data Protection Act, 2023.</Text>
+      </Bullet>
+      <Bullet>
+        <Text>ABDM — Ayushman Bharat Digital Mission.</Text>
+      </Bullet>
+      <Text style={styles.h2}>References</Text>
+      <Bullet>
+        <Text>CDSCO Medical Devices Rules, 2017 (cdsco.gov.in).</Text>
+      </Bullet>
+      <Bullet>
+        <Text>CDSCO Draft Guidance on SaMD, October 2025.</Text>
+      </Bullet>
+      <Bullet>
+        <Text>
+          IMDRF SaMD: Possible Framework for Risk Categorization (N12).
+        </Text>
+      </Bullet>
+      <Bullet>
+        <Text>
+          ICMR Ethical Guidelines for AI in Healthcare, 2023.
+        </Text>
+      </Bullet>
+      <Bullet>
+        <Text>Digital Personal Data Protection Act, 2023.</Text>
+      </Bullet>
+      <Footer productName={data.product_name} />
+    </Page>
+
+    {/* 10. Applicable Regulations & Forms */}
+    <Page size="A4" style={styles.page}>
+      <SectionHeader
+        kicker="SECTION 10"
+        title="Applicable Regulations &amp; Forms"
+      />
+      <Text style={styles.body}>
+        Based on your product profile, the following regulations apply.
+        Each entry below shows what you need to do and where to submit.
+      </Text>
+
+      {regulations ? (
+        applicableRegulations(regulations).map((reg) => (
+          <RegulationBlock key={reg.key} reg={reg} />
+        ))
+      ) : (
+        <Placeholder>
+          Regulation analysis not available — generated when a Readiness
+          Card is associated with this Draft Pack.
+        </Placeholder>
+      )}
+
+      <View style={styles.formsFooter} wrap={false}>
+        {(() => {
+          const forms = relevantForms ?? [];
+          const appended = forms.filter((f) => f.available);
+          const downloadable = forms.filter((f) => !f.available);
+          return (
+            <>
+              {appended.length > 0 && (
+                <>
+                  <Text style={styles.h2}>
+                    Forms appended to this Draft Pack
+                  </Text>
+                  {appended.map((f) => (
+                    <Bullet key={f.id}>
+                      {f.id} — {f.description}
+                    </Bullet>
+                  ))}
+                </>
+              )}
+              {downloadable.length > 0 && (
+                <>
+                  <Text style={styles.h2}>
+                    Forms to download from cdsco.gov.in
+                  </Text>
+                  {downloadable.map((f) => (
+                    <Bullet key={f.id}>
+                      {f.id} — {f.description}
+                    </Bullet>
+                  ))}
+                </>
+              )}
+              {forms.length === 0 && (
+                <Placeholder>
+                  No CDSCO forms identified for this device profile.
+                </Placeholder>
+              )}
+              <Text style={[styles.regLabel, { marginTop: 8 }]}>
+                Appended forms appear as appendix pages later in this
+                document.
+              </Text>
+            </>
+          );
+        })()}
+      </View>
+
+      <Footer productName={data.product_name} />
+    </Page>
   </Document>
 );
 

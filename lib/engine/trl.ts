@@ -262,9 +262,19 @@ export function deriveTRL(card: ReadinessCard): NonNullable<ReadinessCard["trl"]
 
   let level: TRLLevel = 1;
 
+  // Existence floor: a product that has been classified by Opus (cdsco_class
+  // is set) cannot honestly be TRL=1 (Ideation). The fact that we're
+  // assessing it means the team has a thesis. Floor at TRL=2 (Concept
+  // Formulated) when classified, regardless of how Opus scored dimensions.
+  // Real TRL=1 only applies to wellness / not-classified products.
+  const isClassified = !!card.classification.cdsco_class;
+  const dimsSum =
+    submissionMaturity + clinicalEvidence + qualitySystem + technicalDocs;
+
   // Ideation → Proof of Principle: nothing built
   if (technicalDocs === 0 && qualitySystem === 0 && submissionMaturity === 0 && clinicalEvidence === 0) {
-    level = 1;
+    // Floor at 2 if classified (we know it exists as a product idea)
+    level = isClassified ? 2 : 1;
   } else if (technicalDocs === 0 && (qualitySystem >= 1 || submissionMaturity >= 1)) {
     // Spec exists but no prototype
     level = 2;
@@ -294,6 +304,12 @@ export function deriveTRL(card: ReadinessCard): NonNullable<ReadinessCard["trl"]
   ) {
     // Fully mature — note: deriveTRL almost never returns 9; that needs PMS evidence
     level = 8;
+  }
+
+  // Belt-and-braces: if classified and dims sum > 0, never below 3.
+  // A product with any dim signal has a working spec or prototype.
+  if (isClassified && dimsSum > 0 && level < 3) {
+    level = 3;
   }
 
   const def = getTRLDefinition(level, track);
