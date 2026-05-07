@@ -194,9 +194,73 @@ Both are above the 1024-token cache minimum (pre-router prompt ~4500 tokens, syn
 
 - **audit readiness-card cache behavior.** the cache in `run-synthesis.ts:175-190` is currently silent and has no invalidation tied to synth prompt-tuning commits. Risk: customer receives stale cached output after a synth prompt fix that should have changed the verdict. Partner-facing risk if a regulator-style reviewer sees inconsistent classifications across similar inputs. Decide: keep with explicit invalidation on prompt-version bumps, add a TTL, or remove entirely. Logged during 1.4b fix, 2026-05-07.
 
-## stories 1.3-1.6 — not yet started
+- **re-label 50-case calibration set with regulatory advisor (former CDSCO official) when one is recruited (Sprint 6+ per advisor recruitment plan).** Expected divergence: 3–5 cases out of 50. Cases where advisor disagrees with founder + LLMs become high-signal eval data. Set lives at `data/calibration/clearpath_synthetic_50_full_schema_v2_1.json`; current labels are LLM-generated (OpenAI), founder-validated, Gemini-cross-validated. Logged during Story 1.3 pivot, 2026-05-08.
 
-- 1.3 35-case eval — depends on 1.2 lock-in
+## story 1.3 — 50-case eval — ✅ DONE (2026-05-08)
+
+**Pivot 2026-05-08:** founder uploaded a complete 50-case calibration set with `expected_cdsco_class` + `or_acceptable` + `rationale` + `labeled_by` + `labeled_at` populated. Provenance: LLM-generated (OpenAI), founder-validated (Raunaq), cross-validated against Gemini. The earlier 35-case labeling work was superseded — the 35 overlapped with the 50, so running both was redundant.
+
+- Primary calibration: `data/calibration/clearpath_synthetic_50_full_schema_v2_1.json`
+- Validator: `scripts/validate-calibration-50.ts` (passes).
+- Eval runner: `scripts/recon-50.ts` (Batch API, 50% off list rates).
+- Eval bar: ≥90% TOLERANT (`predicted ∈ {expected} ∪ or_acceptable`); STRICT also reported, internal-only.
+
+### v1 recon (first run, locked Haiku/Opus stack)
+
+| | |
+|---|---|
+| Tolerant match | **47/50 (94.0%)** — bar ≥90% PASS on first run |
+| Strict match | 38/50 (76.0%) |
+| Disagreements | 3 |
+| Pre-router errors / parse-fails | 0 / 0 |
+| Synth parse-fails (Zod schema) | 4/48 — see Story 1.3.5 backlog |
+| Cost (Batch API) | $3.17 ($0.04 pre-router + $3.13 synth) |
+| Time | 707s (~12 min) |
+
+Founder bucketing of the 3 disagreements (full record in `data/eval/sprint-1-3/disagreements.md`):
+- **CP-006 MediAdhere → LABEL_WRONG.** Reminder-only adherence is wellness/non-device. Corrected label B/[C] → null/[A]. Audit-trail fields `label_corrected_at`, `label_correction_reason` added.
+- **CP-038 Insulin Advisor → BORDERLINE.** Open-loop "advisor" lives at C/D boundary. No label change; CP-038 stays a known strict + tolerant miss. Revisit with regulatory advisor.
+- **CP-046 MedVoice Scribe → OPUS_WRONG.** Real over-classification: Opus said Class B SaMD; AI medical scribes that transcribe doctor-patient conversations into EHR are documentation, not clinical decision support. Default null/[A]. Synth prompt fix added.
+
+### Synth prompt fix (CP-046)
+
+Added a new "Documentation / scribe tools" modifier to the IMDRF × CDSCO matrix in `lib/engine/synthesizer-system-prompt.ts`. Differentiates AI-assisted medical documentation (scribes, dictation aids, note-taking → null/A) from AI clinical decision support (Class B+). Integrated cleanly with existing modifiers; no duplication.
+
+**Prod deploy note:** synth prompt changed → `CACHE_VERSION` env var must be bumped on Vercel before deploy (per the comment at the top of the prompt file). Otherwise stale cached cards will be served. Logged for Story 1.5.
+
+### v2 recon (after label correction + prompt fix)
+
+| | v1 | v2 |
+|---|---|---|
+| Tolerant match | 47/50 (94.0%) | **49/50 (98.0%)** ↑ |
+| Strict match | 38/50 (76.0%) | 40/50 (80.0%) ↑ |
+| Disagreements | 3 | **1** (CP-038, the known borderline) |
+| Synth parse-fails (Zod) | 4/48 | 1/48 ↓ |
+| Cost (Batch API) | $3.17 | $2.70 |
+| Time | 707s | 709s |
+
+**CP-046 verification:** v1 predicted Class B, v2 predicts `null` — fix lands.
+**CP-006 verification:** v1 expected B (mismatch with predicted null), v2 expected null after relabel (matches).
+**Zero tolerant regressions** on the 47 cases that already matched in v1.
+
+Three predictions flipped between v1 and v2; all three stay tolerant:
+- CP-046 B → null (the fix)
+- CP-026 D → C (improvement: D was tolerant-via-`or_acceptable`; C is now a strict match)
+- CP-013 C → B (slight strict regression: was strict in v1; in v2 tolerant via `or_acceptable=[B]`. Worth a flag — the scribe modifier may have nudged Opus's interpretation of borderline B/C cases. Not blocking; revisit if pattern shows in future eval runs)
+
+### Cost + time totals
+
+- v1 + v2 = $3.17 + $2.70 = **$5.87** total Story 1.3 spend (well under the $5–10 envelope projected in the plan).
+- Wall time ≈ 24 min batch processing + dev work.
+
+## story 1.3.5 — synth schema-validation drift (NEW backlog item)
+
+Surfaced during v1 recon: 4/48 synth outputs (CP-011 NutriFit, CP-016 GlucoTrack, CP-029 SleepScore, CP-044 TrialMatch) parsed as valid JSON but failed strict `ReadinessCardSchema` Zod validation. v2 dropped this to 1/48 (CP-029) with the prompt fix, so the issue is partially better but not gone. All 4 in v1 still tolerantly matched via permissive fallback extraction — Story 1.2's "0% parse fail on Opus" claim still holds for *JSON parsing*; the issue is schema strictness on wellness/null cases (likely null on required-numeric fields like `readiness.score` or `readiness.dimensions.*`).
+
+Action: investigate which Zod field rejects, decide whether to relax the schema or tighten the prompt. Separate commit. Logged 2026-05-08.
+
+## stories 1.4-1.6 — not yet started
+
 - 1.4 cost dashboard — depends on 1.2 lock-in (per-model split needs real data)
-- 1.5 production deploy — gated on 1.1-1.4
+- 1.5 production deploy — gated on 1.1-1.4 (will need `CACHE_VERSION` bump per Story 1.3 prompt change)
 - 1.6 gst application — founder task, parallel

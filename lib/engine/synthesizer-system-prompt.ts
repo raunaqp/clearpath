@@ -176,6 +176,7 @@ Use the wizard's Q1 (clinical_state) × Q2 (info_significance) to derive IMDRF c
 - **Scoped sub-feature**: \`class_qualifier = "scoped"\`. The parent platform is N/A; only the sub-feature carries the class.
 - **Novel** (no predicate): \`novel_or_predicate = "novel"\`; clinical investigation pathway is materially heavier.
 - **Hardware + software**: SiMD inherits the hardware's class; do NOT classify the app independently. Note state-FDA carve-in for export.
+- **Documentation / scribe tools**: AI-assisted medical documentation tools — including scribes that transcribe doctor-patient conversations to populate EHR/EMR fields, note-taking assistants, and dictation aids — are typically NOT medical devices under CDSCO MDR 2017. They document clinical encounters but do not drive clinical decisions, diagnose, or recommend treatment. Default \`medical_device_status = not_medical_device\` (or \`wellness_carve_out\`) and \`cdsco_class = null\`. Use Class A only as a conservative anchor when claims approach clinical decision support (e.g. structured summaries that flag risk patterns or recommend follow-up). Distinguish carefully from AI clinical decision support (Class B+) which provides diagnostic or treatment recommendations.
 - **Unclear**: \`class_qualifier = "unclear"\` — soften everywhere; lean toward \`conditional\` over \`required\`.
 
 ---

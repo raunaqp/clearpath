@@ -1,0 +1,2075 @@
+{
+  "summary": {
+    "run_at": "2026-05-07T20:57:40.414Z",
+    "elapsed_sec": 709,
+    "calibration_file": "data/calibration/clearpath_synthetic_50_full_schema_v2_1.json",
+    "total_cases": 50,
+    "tolerant_match": {
+      "hits": 49,
+      "pct": 0.98
+    },
+    "strict_match": {
+      "hits": 40,
+      "pct": 0.8
+    },
+    "pre_router_errors": 0,
+    "pre_router_parse_fails": 0,
+    "synth_attempted": 48,
+    "synth_parse_fails": 1,
+    "cost_usd": {
+      "pre_router": 0.043279399999999996,
+      "synth": 2.6606625,
+      "grand_total": 2.7039419
+    },
+    "usage": {
+      "pre_router": {
+        "input_tokens": 2420,
+        "output_tokens": 11278,
+        "cache_read": 221088,
+        "cache_write": 4512
+      },
+      "synth": {
+        "input_tokens": 17199,
+        "output_tokens": 105954,
+        "cache_read": 198960,
+        "cache_write": 397920
+      }
+    },
+    "bar_tolerant": 0.9,
+    "passes_bar": true
+  },
+  "rows": [
+    {
+      "case_id": "CP-001",
+      "product_name": "SymptomGuide",
+      "one_liner": "Consumer symptom education app that explains common symptoms and suggests when to consult a doctor.",
+      "expected_cdsco_class": null,
+      "or_acceptable": [
+        "A"
+      ],
+      "label_rationale": "General symptom education without diagnosis or treatment recommendation is likely non-device. Class A may apply if positioned as low-risk health information software.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0034035,
+        "usage": {
+          "input_tokens": 52,
+          "output_tokens": 223,
+          "cache_read": 0,
+          "cache_write": 4512
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": null,
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.065179375,
+        "usage": {
+          "input_tokens": 363,
+          "output_tokens": 2033,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-002",
+      "product_name": "VitalsWatch Remote",
+      "one_liner": "Remote patient monitoring dashboard that displays vitals from connected home devices.",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [],
+      "label_rationale": "Real-time vitals display with threshold-based alerts for clinician review is active patient monitoring, so Class B is the safer label. Class A would only fit passive fitness-style display without clinical alerts.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008041,
+        "usage": {
+          "input_tokens": 47,
+          "output_tokens": 222,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "B",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.067444375,
+        "usage": {
+          "input_tokens": 359,
+          "output_tokens": 2215,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-003",
+      "product_name": "RetinaScreen AI",
+      "one_liner": "AI system that screens retinal fundus images for diabetic retinopathy risk.",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "B"
+      ],
+      "label_rationale": "AI diabetic retinopathy screening influences diagnosis/referral for a serious condition. Class B may apply only if strictly preliminary triage with mandatory specialist review.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0007716,
+        "usage": {
+          "input_tokens": 52,
+          "output_tokens": 208,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "C",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.066124375,
+        "usage": {
+          "input_tokens": 361,
+          "output_tokens": 2109,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-004",
+      "product_name": "PneumoCXR AI",
+      "one_liner": "AI model that detects pneumonia patterns from chest X-rays.",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "D"
+      ],
+      "label_rationale": "AI chest X-ray pneumonia detection can drive clinical diagnosis and treatment for serious disease. Class D may apply if used for emergency or autonomous diagnosis.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0007846,
+        "usage": {
+          "input_tokens": 48,
+          "output_tokens": 214,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "C",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.03142625,
+        "usage": {
+          "input_tokens": 357,
+          "output_tokens": 2194,
+          "cache_read": 12435,
+          "cache_write": 0
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-005",
+      "product_name": "HospOps Suite",
+      "one_liner": "Hospital billing, inventory, and administrative workflow management platform.",
+      "expected_cdsco_class": null,
+      "or_acceptable": [],
+      "label_rationale": "Hospital billing, inventory, and administrative workflow software is not intended for medical diagnosis, treatment, or monitoring. It should remain outside CDSCO device classification.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "out_of_scope",
+        "next_action": "reject",
+        "elapsed_ms": null,
+        "cost_usd": 0.0009831,
+        "usage": {
+          "input_tokens": 45,
+          "output_tokens": 294,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": false,
+        "parse_ok": false,
+        "predicted_cdsco_class": null,
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0,
+        "usage": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cache_read": 0,
+          "cache_write": 0
+        },
+        "skipped_reason": "pre_router_next_action=reject"
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-006",
+      "product_name": "MediAdhere",
+      "one_liner": "Medication adherence app that reminds patients to take prescribed medicines and alerts caregivers.",
+      "expected_cdsco_class": null,
+      "or_acceptable": [
+        "A"
+      ],
+      "label_rationale": "Reminder-only medication adherence app without active dose recommendation is wellness/non-device. Class A may apply if positioned as low-risk health information software with any borderline clinical positioning.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008071,
+        "usage": {
+          "input_tokens": 53,
+          "output_tokens": 222,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": null,
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.067156875,
+        "usage": {
+          "input_tokens": 364,
+          "output_tokens": 2191,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-007",
+      "product_name": "ArrhythmiaAlert",
+      "one_liner": "AI system that analyzes ECG signals and flags possible arrhythmias.",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "B"
+      ],
+      "label_rationale": "AI ECG arrhythmia detection supports diagnosis of potentially serious cardiovascular conditions. Class B may apply if it only flags recordings for clinician review without diagnostic claims.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0007761,
+        "usage": {
+          "input_tokens": 51,
+          "output_tokens": 210,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "C",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.065879375,
+        "usage": {
+          "input_tokens": 358,
+          "output_tokens": 2090,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-008",
+      "product_name": "AutoInsulin Loop",
+      "one_liner": "Closed-loop software that recommends or controls insulin delivery based on CGM readings.",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "D"
+      ],
+      "label_rationale": "Standalone insulin dose recommendation is high-risk treatment decision software and should be treated at least as Class C with Class D-level safety controls. Class D may apply if integrated with or controlling a high-risk insulin pump/autonomous closed loop.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008216,
+        "usage": {
+          "input_tokens": 52,
+          "output_tokens": 228,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "D",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.069166875,
+        "usage": {
+          "input_tokens": 363,
+          "output_tokens": 2352,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": false,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-009",
+      "product_name": "RehabCoach",
+      "one_liner": "Digital physiotherapy app that guides prescribed exercises and tracks adherence.",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [
+        "A"
+      ],
+      "label_rationale": "Digital physiotherapy guidance supports rehabilitation management. Class A may apply where it only provides exercise education and adherence tracking.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008066,
+        "usage": {
+          "input_tokens": 47,
+          "output_tokens": 223,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "B",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.067536875,
+        "usage": {
+          "input_tokens": 361,
+          "output_tokens": 2222,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-010",
+      "product_name": "SepsisWatch",
+      "one_liner": "Hospital AI that predicts sepsis risk using vitals, labs, and EHR data.",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "D"
+      ],
+      "label_rationale": "Sepsis prediction influences urgent clinical management for a critical condition. Class D may apply if alerts directly trigger emergency intervention without clinician confirmation.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0007751,
+        "usage": {
+          "input_tokens": 54,
+          "output_tokens": 209,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "C",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.066609375,
+        "usage": {
+          "input_tokens": 365,
+          "output_tokens": 2147,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-011",
+      "product_name": "NutriFit Coach",
+      "one_liner": "Consumer nutrition and fitness coaching app with calorie tracking and activity plans.",
+      "expected_cdsco_class": null,
+      "or_acceptable": [
+        "A"
+      ],
+      "label_rationale": "Consumer nutrition and fitness coaching is likely wellness-only. Class A may apply if explicit health-condition monitoring claims are introduced.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008121000000000001,
+        "usage": {
+          "input_tokens": 48,
+          "output_tokens": 225,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": null,
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.066576875,
+        "usage": {
+          "input_tokens": 362,
+          "output_tokens": 2145,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-012",
+      "product_name": "SpiroHome",
+      "one_liner": "Portable spirometry app that captures lung function readings for remote review.",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [
+        "C"
+      ],
+      "label_rationale": "Remote spirometry supports clinical monitoring of respiratory disease. Class C may apply if diagnostic or treatment escalation claims are made.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008021,
+        "usage": {
+          "input_tokens": 48,
+          "output_tokens": 221,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "B",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.03311125,
+        "usage": {
+          "input_tokens": 356,
+          "output_tokens": 2329,
+          "cache_read": 12435,
+          "cache_write": 0
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-013",
+      "product_name": "OralCancer ScreenAI",
+      "one_liner": "Mobile imaging AI that flags suspicious oral lesions for referral.",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "B"
+      ],
+      "label_rationale": "AI oral cancer screening supports detection/referral for a serious condition. Class B may apply only for very limited triage with clear clinician confirmation.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0007416,
+        "usage": {
+          "input_tokens": 47,
+          "output_tokens": 197,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "B",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.066634375,
+        "usage": {
+          "input_tokens": 360,
+          "output_tokens": 2150,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": false,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-014",
+      "product_name": "ABDM ConsentBridge",
+      "one_liner": "ABDM consent manager that enables consent-based health record exchange.",
+      "expected_cdsco_class": null,
+      "or_acceptable": [],
+      "label_rationale": "ABDM consent manager or health record exchange software is health IT infrastructure, not a medical device. No CDSCO device class should be assigned.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "regulator",
+        "next_action": "reject",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008221,
+        "usage": {
+          "input_tokens": 48,
+          "output_tokens": 229,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": false,
+        "parse_ok": false,
+        "predicted_cdsco_class": null,
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0,
+        "usage": {
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "cache_read": 0,
+          "cache_write": 0
+        },
+        "skipped_reason": "pre_router_next_action=reject"
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-015",
+      "product_name": "WoundTrack",
+      "one_liner": "Smartphone app that tracks wound healing progress and sends updates to clinicians.",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [
+        "C"
+      ],
+      "label_rationale": "Wound monitoring software supports clinical monitoring and follow-up. Class C may apply if it diagnoses infection or recommends treatment changes.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008001,
+        "usage": {
+          "input_tokens": 49,
+          "output_tokens": 220,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "B",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.03035875,
+        "usage": {
+          "input_tokens": 360,
+          "output_tokens": 2108,
+          "cache_read": 12435,
+          "cache_write": 0
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-016",
+      "product_name": "GlucoTrack Lite",
+      "one_liner": "Mobile app that logs glucose readings and gives lifestyle nudges for diabetics.",
+      "expected_cdsco_class": "A",
+      "or_acceptable": [
+        null
+      ],
+      "label_rationale": "Glucose trend visualization for diabetes self-management is low-risk chronic disease monitoring software. It may be non-device only if claims are restricted to wellness logging without diabetes management language.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008426,
+        "usage": {
+          "input_tokens": 49,
+          "output_tokens": 237,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": null,
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.03161625,
+        "usage": {
+          "input_tokens": 363,
+          "output_tokens": 2208,
+          "cache_read": 12435,
+          "cache_write": 0
+        }
+      },
+      "match_strict": false,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-017",
+      "product_name": "CardioAI Triage",
+      "one_liner": "AI model that reads ECG images and flags possible myocardial infarction.",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "D"
+      ],
+      "label_rationale": "ECG myocardial infarction triage drives clinical management for a serious or critical condition. Class D may apply if used for emergency diagnosis without adequate clinician review.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008041,
+        "usage": {
+          "input_tokens": 52,
+          "output_tokens": 221,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "C",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.068624375,
+        "usage": {
+          "input_tokens": 356,
+          "output_tokens": 2310,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-018",
+      "product_name": "DermaLens",
+      "one_liner": "Smartphone-based skin lesion classifier for suspicious mole detection.",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [],
+      "label_rationale": "Skin cancer risk flagging influences diagnosis and referral for a serious condition. This fits Class C SaMD.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0007796,
+        "usage": {
+          "input_tokens": 48,
+          "output_tokens": 212,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "C",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.03042875,
+        "usage": {
+          "input_tokens": 358,
+          "output_tokens": 2114,
+          "cache_read": 12435,
+          "cache_write": 0
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-019",
+      "product_name": "SurgiPlan XR",
+      "one_liner": "XR-based surgical planning tool for orthopedic implant placement.",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [
+        "C"
+      ],
+      "label_rationale": "Surgical planning software influences clinical management but remains clinician-supervised. Class C may apply if it directly determines implant placement or surgical action.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008231,
+        "usage": {
+          "input_tokens": 50,
+          "output_tokens": 229,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "C",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.067001875,
+        "usage": {
+          "input_tokens": 357,
+          "output_tokens": 2180,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": false,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-020",
+      "product_name": "BabyBeat Home",
+      "one_liner": "Home fetal heartbeat listening device connected to a mobile app.",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [
+        "C"
+      ],
+      "label_rationale": "Home fetal heartbeat monitoring can influence pregnancy care-seeking. Class C may apply if diagnostic fetal distress claims are made.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "hardware_software",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008191,
+        "usage": {
+          "input_tokens": 47,
+          "output_tokens": 228,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "B",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.03238625,
+        "usage": {
+          "input_tokens": 361,
+          "output_tokens": 2270,
+          "cache_read": 12435,
+          "cache_write": 0
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-021",
+      "product_name": "MentalWell Chat",
+      "one_liner": "AI chatbot for stress journaling and mental wellness support.",
+      "expected_cdsco_class": null,
+      "or_acceptable": [
+        "A"
+      ],
+      "label_rationale": "Non-clinical mental wellness journaling is likely outside medical device scope. If it claims mental health screening or clinical management, Class A may be the lower-bound class.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008661000000000001,
+        "usage": {
+          "input_tokens": 46,
+          "output_tokens": 247,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": null,
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.068491875,
+        "usage": {
+          "input_tokens": 353,
+          "output_tokens": 2300,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-022",
+      "product_name": "StrokeFast",
+      "one_liner": "AI model that analyzes CT brain scans to detect possible stroke.",
+      "expected_cdsco_class": "D",
+      "or_acceptable": [
+        "C"
+      ],
+      "label_rationale": "Stroke CT triage relates to a critical condition and can drive urgent clinical management. Class C may apply if strictly prioritization-only with radiologist confirmation.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0007746000000000001,
+        "usage": {
+          "input_tokens": 48,
+          "output_tokens": 210,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "C",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.067811875,
+        "usage": {
+          "input_tokens": 356,
+          "output_tokens": 2245,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": false,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-023",
+      "product_name": "ABHA SyncPro",
+      "one_liner": "Tool that helps clinics create ABHA-linked digital health records.",
+      "expected_cdsco_class": null,
+      "or_acceptable": [],
+      "label_rationale": "ABDM record creation and exchange is health IT infrastructure. It does not diagnose, treat, or monitor a disease.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0009426,
+        "usage": {
+          "input_tokens": 49,
+          "output_tokens": 277,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": null,
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.065564375,
+        "usage": {
+          "input_tokens": 357,
+          "output_tokens": 2065,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-024",
+      "product_name": "OncoPath Assist",
+      "one_liner": "AI tool that suggests likely cancer grading from pathology slide images.",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "D"
+      ],
+      "label_rationale": "Cancer grading support influences diagnosis and clinical management for a serious disease. Class D may apply if output is used as primary diagnosis.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0007646,
+        "usage": {
+          "input_tokens": 48,
+          "output_tokens": 206,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "C",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.069861875,
+        "usage": {
+          "input_tokens": 356,
+          "output_tokens": 2409,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-025",
+      "product_name": "PhysioMove",
+      "one_liner": "Computer vision app that tracks physiotherapy exercise adherence.",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [
+        "A"
+      ],
+      "label_rationale": "Physiotherapy tracking supports rehabilitation management but is not generally life-critical. Class A may apply if only adherence or wellness feedback is claimed.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0007881,
+        "usage": {
+          "input_tokens": 45,
+          "output_tokens": 216,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "B",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.067986875,
+        "usage": {
+          "input_tokens": 356,
+          "output_tokens": 2259,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-026",
+      "product_name": "ICU Deterioration AI",
+      "one_liner": "Predictive model that alerts ICU teams about patient deterioration risk.",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "D"
+      ],
+      "label_rationale": "ICU deterioration prediction drives clinical management in a critical care environment. Class D may apply if the alert directly triggers emergency intervention.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0007976,
+        "usage": {
+          "input_tokens": 49,
+          "output_tokens": 219,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "C",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.066839375,
+        "usage": {
+          "input_tokens": 357,
+          "output_tokens": 2167,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-027",
+      "product_name": "MediClaims Bot",
+      "one_liner": "AI assistant that helps hospitals prepare insurance pre-authorization documents.",
+      "expected_cdsco_class": null,
+      "or_acceptable": [],
+      "label_rationale": "Insurance pre-authorization documentation is administrative and does not influence clinical diagnosis or treatment. It should not be classified as a medical device.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008536,
+        "usage": {
+          "input_tokens": 46,
+          "output_tokens": 242,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": null,
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.03465875,
+        "usage": {
+          "input_tokens": 360,
+          "output_tokens": 2452,
+          "cache_read": 12435,
+          "cache_write": 0
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-028",
+      "product_name": "DoseRight",
+      "one_liner": "Software that calculates pediatric drug dosage based on age, weight, and diagnosis.",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "B"
+      ],
+      "label_rationale": "Pediatric drug dose calculation affects medication safety and clinical treatment. Class B may apply only for transparent calculator-style support with full clinician verification.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0007716,
+        "usage": {
+          "input_tokens": 52,
+          "output_tokens": 208,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "C",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.069764375,
+        "usage": {
+          "input_tokens": 362,
+          "output_tokens": 2400,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-029",
+      "product_name": "SleepScore Ring",
+      "one_liner": "Wearable ring that tracks sleep quality, HRV, and recovery.",
+      "expected_cdsco_class": null,
+      "or_acceptable": [
+        "A"
+      ],
+      "label_rationale": "Consumer sleep, HRV, and recovery tracking is wellness-only if no diagnosis or treatment claims are made. Class A may apply if medical monitoring claims are introduced.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008586,
+        "usage": {
+          "input_tokens": 51,
+          "output_tokens": 243,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": false,
+        "predicted_cdsco_class": null,
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.068209375,
+        "usage": {
+          "input_tokens": 360,
+          "output_tokens": 2276,
+          "cache_read": 0,
+          "cache_write": 12435
+        },
+        "raw": "{\n  \"meta\": {\n    \"company_name\": \"Unknown\",\n    \"product_name\": \"Wearable Ring (Sleep/HRV/Recovery Tracker)\",\n    \"scoped_feature\": null,\n    \"product_type\": \"hardware_software\",\n    \"generated_at\": \"2025-01-23T00:00:00Z\",\n    \"conflict_resolved\": null\n  },\n  \"classification\": {\n    \"medical_device_status\": \"wellness_carve_out\",\n    \"device_type\": \"Consumer wearable wellness tracker (sleep, HRV, recovery)\",\n    \"imdrf_category\": null,\n    \"cdsco_class\": null,\n    \"class_qualifier\": null,\n    \"ai_ml_flag\": false,\n    \"acp_required\": false,\n    \"export_only\": false,\n    \"novel_or_predicate\": \"has_predicate\"\n  },\n  \"readiness\": {\n    \"score\": null,\n    \"band\": \"not_applicable\",\n    \"dimensions\": {\n      \"regulatory_clarity\": 0,\n      \"quality_system\": 0,\n      \"technical_docs\": 0,\n      \"clinical_evidence\": 0,\n      \"submission_maturity\": 0\n    },\n    \"note\": \"Wellness carve-out — readiness scoring is not applicable. Sleep/HRV/recovery wearables without diagnostic or treatment claims sit outside CDSCO MDR scope.\"\n  },\n  \"risk\": {\n    \"level\": \"low\",\n    \"rationale\": \"Lifestyle/wellness positioning with no diagnostic, monitoring, or treatment claims for a specific disease. Primary regulatory exposure is DPDP for biometric data; classification can shift if the product later claims to detect arrhythmias, sleep apnea, or any clinical condition.\"\n  },\n  \"trl\": {\n    \"level\": null,\n    \"stage\": null,\n    \"track\": null,\n    \"completion_pct\": null,\n    \"next_milestone\": null,\n    \"rationale\": \"TRL is a medical-device framework; wellness wearables sit outside it.\"\n  },\n  \"timeline\": {\n    \"estimate_months_low\": 3,\n    \"estimate_months_high\": 6,\n    \"display\": \"3–6 months\",\n    \"anchor\": \"DPDP readiness (privacy notice, consent flows, data minimisation, security controls) and BIS/wireless certification for hardware. No CDSCO submission required at current scope.\"\n  },\n  \"regulations\": {\n    \"cdsco_mdr\": {\n      \"verdict\": \"not_applicable\",\n      \"rationale\": \"No diagnostic or therapeutic claims; sleep/HRV/recovery metrics are wellness indicators, not clinical management. Verdict shifts to 'required' the moment the product claims to detect arrhythmia, sleep apnea, or any disease state.\",\n      \"forms\": [],\n      \"pathway_note\": \"Wellness positioning keeps this out of MDR scope; revisit if clinical claims are added.\"\n    },\n    \"cdsco_pharmacy\": {\n      \"verdict\": \"not_applicable\",\n      \"rationale\": \"No drug sales, distribution, or dispensing.\"\n    },\n    \"dpdp\": {\n      \"verdict\": \"required\",\n      \"rationale\": \"Continuous biometric data (heart rate, HRV, sleep) from Indian users qualifies as personal — and arguably sensitive — data. SDF designation may apply at scale (≥10 lakh users).\"\n    },\n    \"icmr\": {\n      \"verdict\": \"not_applicable\",\n      \"rationale\": \"No AI in clinical context and no clinical validation studies in scope at present.\"\n    },\n    \"abdm\": {\n      \"verdict\": \"optional\",\n      \"rationale\": \"Direct-to-consumer wearable with no hospital integration; ABDM is not required but ABHA-linking could be value-add.\"\n    },\n    \"nabh\": {\n      \"verdict\": \"not_applicable\",\n      \"rationale\": \"Consumer device; not sold into hospital procurement at this scope.\"\n    },\n    \"mci_telemed\": {\n      \"verdict\": \"not_applicable\",\n      \"rationale\": \"No doctor-patient consultation feature.\"\n    },\n    \"irdai\": {\n      \"verdict\": \"not_applicable\",\n      \"rationale\": \"No insurance distribution or aggregation in current scope; revisit if wellness-linked insurance products are bundled.\"\n    },\n    \"nabl\": {\n      \"verdict\": \"not_applicable\",\n      \"rationale\": \"No lab operations or IVD validation.\"\n    }\n  },\n  \"top_gaps\": [\n    {\n      \"dim\": \"dpdp\",\n      \"gap_title\": \"DPDP compliance for continuous biometric data\",\n      \"fix_action\": \"Draft a DPDP-aligned privacy notice, consent flow, and data-minimisation policy this week; engage a DPDP consultant for a 4-week readiness sprint.\",\n      \"severity\": \"high\"\n    },\n    {\n      \"dim\": \"regulatory_clarity\",\n      \"gap_title\": \"Marketing claims discipline (wellness vs medical)\",\n      \"fix_action\": \"Establish a claims-review checklist: avoid 'detects', 'diagnoses', 'monitors disease', 'arrhythmia', 'sleep apnea'. Any drift toward clinical claims flips this into Class B/C SaMD territory.\",\n      \"severity\": \"high\"\n    },\n    {\n      \"dim\": \"quality_system\",\n      \"gap_title\": \"Hardware certification readiness (BIS / wireless)\",\n      \"fix_action\": \"Confirm BIS registration and WPC/ETA approval for the wireless module; these typically apply to consumer wearables independent of CDSCO.\",\n      \"severity\": \"medium\"\n    }\n  ],\n  \"verdict\": \"Likely a wellness wearable outside CDSCO MDR scope, provided no diagnostic or disease-monitoring claims are made. Primary exposure is DPDP for continuous biometric data, plus standard hardware certifications. Since your product has a hardware component, state FDA approval may also apply depending on your manufacturing setup.\",\n  \"why_regulated\": \"Sleep, HRV, and recovery framed as wellness metrics typically fall under the wellness carve-out. The classification is fragile, though — clinical claims (arrhythmia detection, sleep apnea screening) would pull this into Class B/C SaMD overnight.\",\n  \"post_2025_samd_gap\": false,\n  \"tier0_card_tagline\": \"Wellness wearable today — one clinical claim away from Class B SaMD.\",\n  \"tier1_teaser\": \"₹499 unlocks a claims-discipline playbook, DPDP readiness checklist, and the exact threshold where this product crosses into CDSCO MDR scope.\",\n  \"tier2_teaser\": \"₹25K unlocks hands-on DPDP implementation, hardware certification mapping (BIS/WPC), and a forward-looking SaMD pathway plan if you intend to add clinical features.\"\n}"
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-030",
+      "product_name": "TB CXR Assist",
+      "one_liner": "AI tool that screens chest X-rays for signs of pulmonary tuberculosis.",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "B"
+      ],
+      "label_rationale": "TB chest X-ray screening supports detection of a serious infectious disease. Class B may apply if used only for workflow prioritization and not diagnostic output.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0007736,
+        "usage": {
+          "input_tokens": 51,
+          "output_tokens": 209,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "C",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.03159375,
+        "usage": {
+          "input_tokens": 364,
+          "output_tokens": 2206,
+          "cache_read": 12435,
+          "cache_write": 0
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-031",
+      "product_name": "FeverMap",
+      "one_liner": "Dashboard that predicts dengue outbreak risk using weather and case data.",
+      "expected_cdsco_class": null,
+      "or_acceptable": [],
+      "label_rationale": "Dengue hotspot forecasting is population-level public health planning, not patient-specific diagnosis, treatment, or monitoring. It should remain outside CDSCO medical device classification.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008771,
+        "usage": {
+          "input_tokens": 48,
+          "output_tokens": 251,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": null,
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.03084625,
+        "usage": {
+          "input_tokens": 360,
+          "output_tokens": 2147,
+          "cache_read": 12435,
+          "cache_write": 0
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-032",
+      "product_name": "NurseCopilot",
+      "one_liner": "LLM assistant for nurses to summarize patient notes and suggest care checklist items.",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [
+        "A"
+      ],
+      "label_rationale": "Nursing checklist generation can influence clinical workflow and patient management. Class A may apply if documentation-only with mandatory human review.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008541,
+        "usage": {
+          "input_tokens": 52,
+          "output_tokens": 241,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "B",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.069961875,
+        "usage": {
+          "input_tokens": 361,
+          "output_tokens": 2416,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-033",
+      "product_name": "OralScan AI",
+      "one_liner": "Mobile imaging tool that flags possible oral cancer lesions.",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [],
+      "label_rationale": "Oral cancer lesion flagging supports screening and referral for a serious condition. This fits Class C SaMD.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0007931,
+        "usage": {
+          "input_tokens": 45,
+          "output_tokens": 218,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "C",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.066879375,
+        "usage": {
+          "input_tokens": 358,
+          "output_tokens": 2170,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-034",
+      "product_name": "Hospital Queue Optimizer",
+      "one_liner": "AI tool that predicts OPD crowding and suggests appointment slots.",
+      "expected_cdsco_class": null,
+      "or_acceptable": [],
+      "label_rationale": "OPD queue optimization is hospital operations software and does not diagnose, treat, or monitor patients. It should remain outside CDSCO medical device scope.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008251,
+        "usage": {
+          "input_tokens": 49,
+          "output_tokens": 230,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": null,
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.065419375,
+        "usage": {
+          "input_tokens": 359,
+          "output_tokens": 2053,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-035",
+      "product_name": "BP Patch",
+      "one_liner": "Wearable patch that continuously estimates blood pressure.",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "B"
+      ],
+      "label_rationale": "Continuous blood pressure estimation supports monitoring and management of hypertension. Class B may apply if only trend display is claimed without clinical decision support.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "hardware_software",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008631,
+        "usage": {
+          "input_tokens": 45,
+          "output_tokens": 246,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "C",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.03249125,
+        "usage": {
+          "input_tokens": 358,
+          "output_tokens": 2279,
+          "cache_read": 12435,
+          "cache_write": 0
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-036",
+      "product_name": "PregRisk AI",
+      "one_liner": "AI tool that predicts high-risk pregnancy from ANC records.",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "B"
+      ],
+      "label_rationale": "High-risk pregnancy prediction influences care prioritization for maternal health. Class B may apply if used only for non-diagnostic referral support.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008621,
+        "usage": {
+          "input_tokens": 48,
+          "output_tokens": 245,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "C",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.03217875,
+        "usage": {
+          "input_tokens": 358,
+          "output_tokens": 2254,
+          "cache_read": 12435,
+          "cache_write": 0
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-037",
+      "product_name": "LabReport Explainer",
+      "one_liner": "Consumer app that explains lab reports in simple language.",
+      "expected_cdsco_class": "A",
+      "or_acceptable": [
+        null
+      ],
+      "label_rationale": "Lab report explanation that interprets clinical values into health status crosses from pure education into low-risk interpretive medical software. It may be non-device only if it strictly avoids interpretation and provides generic educational content.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008576,
+        "usage": {
+          "input_tokens": 44,
+          "output_tokens": 244,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": null,
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.03297125,
+        "usage": {
+          "input_tokens": 350,
+          "output_tokens": 2319,
+          "cache_read": 12435,
+          "cache_write": 0
+        }
+      },
+      "match_strict": false,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-038",
+      "product_name": "Insulin Advisor",
+      "one_liner": "App that recommends insulin dose changes based on CGM and meal logs.",
+      "expected_cdsco_class": "D",
+      "or_acceptable": [],
+      "label_rationale": "Insulin dose recommendation directly drives therapy for a potentially life-threatening condition. This should be treated as Class D SaMD.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0007876000000000001,
+        "usage": {
+          "input_tokens": 49,
+          "output_tokens": 215,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "C",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.03267375,
+        "usage": {
+          "input_tokens": 356,
+          "output_tokens": 2294,
+          "cache_read": 12435,
+          "cache_write": 0
+        }
+      },
+      "match_strict": false,
+      "match_tolerant": false,
+      "disagreement_bucket": "UNSURE"
+    },
+    {
+      "case_id": "CP-039",
+      "product_name": "ClinicBot Reception",
+      "one_liner": "WhatsApp bot that books appointments and collects patient intake details.",
+      "expected_cdsco_class": null,
+      "or_acceptable": [],
+      "label_rationale": "Appointment booking and intake automation is administrative. It is not intended for medical diagnosis, treatment, or monitoring.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008121000000000001,
+        "usage": {
+          "input_tokens": 48,
+          "output_tokens": 225,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": null,
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.066759375,
+        "usage": {
+          "input_tokens": 355,
+          "output_tokens": 2161,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-040",
+      "product_name": "Smart Nebulizer",
+      "one_liner": "Connected nebulizer that tracks medication sessions and adherence.",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [
+        "C"
+      ],
+      "label_rationale": "A smart nebulizer app that tracks treatment adherence is Class B patient/treatment support. Class C applies if the software adjusts nebulization sessions, controls therapy, or changes treatment instructions.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "hardware_software",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008311,
+        "usage": {
+          "input_tokens": 46,
+          "output_tokens": 233,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "B",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.065774375,
+        "usage": {
+          "input_tokens": 361,
+          "output_tokens": 2081,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-041",
+      "product_name": "DentalAlign Planner",
+      "one_liner": "Software that generates orthodontic aligner plans from dental scans.",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "B"
+      ],
+      "label_rationale": "Orthodontic aligner treatment planning influences therapeutic intervention. Class B may apply only if it is simulation-only and not used to finalize treatment plans.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008071,
+        "usage": {
+          "input_tokens": 48,
+          "output_tokens": 223,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "B",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.065069375,
+        "usage": {
+          "input_tokens": 354,
+          "output_tokens": 2026,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": false,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-042",
+      "product_name": "ElderFall Alert",
+      "one_liner": "Wearable fall detection device for elderly users.",
+      "expected_cdsco_class": "A",
+      "or_acceptable": [
+        "B"
+      ],
+      "label_rationale": "Fall detection and fall-prevention alarms are low-risk safety monitoring when they do not make neurological or diagnostic claims. Class B may apply only if positioned as clinical patient monitoring for a disease condition.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0007306,
+        "usage": {
+          "input_tokens": 45,
+          "output_tokens": 193,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "B",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.066796875,
+        "usage": {
+          "input_tokens": 350,
+          "output_tokens": 2165,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": false,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-043",
+      "product_name": "Antibiotic Steward",
+      "one_liner": "Clinical tool that recommends antibiotic choices based on symptoms and local resistance data.",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "D"
+      ],
+      "label_rationale": "Antibiotic recommendation affects prescribing and treatment for potentially serious infections. Class D may apply where incorrect output could cause critical harm or antimicrobial failure.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0007711,
+        "usage": {
+          "input_tokens": 51,
+          "output_tokens": 208,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "C",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.067216875,
+        "usage": {
+          "input_tokens": 363,
+          "output_tokens": 2196,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-044",
+      "product_name": "TrialMatch India",
+      "one_liner": "Platform that matches patients to clinical trials using diagnosis and location.",
+      "expected_cdsco_class": null,
+      "or_acceptable": [
+        "A"
+      ],
+      "label_rationale": "Clinical trial matching is informational if it does not recommend treatment. Class A may apply if eligibility pre-screening is positioned as medical decision support.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008261000000000001,
+        "usage": {
+          "input_tokens": 46,
+          "output_tokens": 231,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": null,
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.065924375,
+        "usage": {
+          "input_tokens": 356,
+          "output_tokens": 2094,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-045",
+      "product_name": "RemoteSpiro",
+      "one_liner": "Portable spirometer with app-based COPD monitoring.",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [
+        "C"
+      ],
+      "label_rationale": "Remote spirometry measures and monitors lung function. Class C may apply if diagnostic or treatment escalation claims are made.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "hardware_software",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008266,
+        "usage": {
+          "input_tokens": 47,
+          "output_tokens": 231,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "B",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.068404375,
+        "usage": {
+          "input_tokens": 358,
+          "output_tokens": 2292,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-046",
+      "product_name": "MedVoice Scribe",
+      "one_liner": "AI medical scribe that converts doctor-patient conversations into structured notes.",
+      "expected_cdsco_class": null,
+      "or_acceptable": [
+        "A"
+      ],
+      "label_rationale": "AI medical scribing is documentation support if no clinical recommendations are generated. Class A may apply if summaries influence low-risk clinical management.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008071,
+        "usage": {
+          "input_tokens": 48,
+          "output_tokens": 223,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": null,
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.03217875,
+        "usage": {
+          "input_tokens": 358,
+          "output_tokens": 2254,
+          "cache_read": 12435,
+          "cache_write": 0
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-047",
+      "product_name": "WoundHeal Vision",
+      "one_liner": "AI app that tracks wound healing progress from smartphone photos.",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [
+        "C"
+      ],
+      "label_rationale": "Wound healing image tracking supports clinical monitoring. Class C may apply if it diagnoses infection, necrosis, or recommends treatment changes.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0007406,
+        "usage": {
+          "input_tokens": 45,
+          "output_tokens": 197,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "B",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.02990625,
+        "usage": {
+          "input_tokens": 354,
+          "output_tokens": 2073,
+          "cache_read": 12435,
+          "cache_write": 0
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-048",
+      "product_name": "Fertility Window App",
+      "one_liner": "App that predicts fertility window using cycle history and symptoms.",
+      "expected_cdsco_class": null,
+      "or_acceptable": [
+        "A",
+        "B"
+      ],
+      "label_rationale": "Cycle and fertility tracking is usually wellness if not contraceptive or infertility treatment software. Class B may apply if used for contraception or fertility treatment decisions.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008511,
+        "usage": {
+          "input_tokens": 46,
+          "output_tokens": 241,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": null,
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.068054375,
+        "usage": {
+          "input_tokens": 353,
+          "output_tokens": 2265,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-049",
+      "product_name": "Sepsis Sentinel",
+      "one_liner": "Hospital AI system that predicts sepsis risk from EHR and lab data.",
+      "expected_cdsco_class": "D",
+      "or_acceptable": [
+        "C"
+      ],
+      "label_rationale": "Sepsis prediction relates to a critical condition and can drive urgent intervention. Class C may apply only with strict clinician confirmation and prioritization-only claims.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0007836000000000001,
+        "usage": {
+          "input_tokens": 51,
+          "output_tokens": 213,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "C",
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.067156875,
+        "usage": {
+          "input_tokens": 359,
+          "output_tokens": 2192,
+          "cache_read": 0,
+          "cache_write": 12435
+        }
+      },
+      "match_strict": false,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-050",
+      "product_name": "PharmaAdherence Coach",
+      "one_liner": "App that reminds patients to take medicines and rewards adherence.",
+      "expected_cdsco_class": null,
+      "or_acceptable": [
+        "A"
+      ],
+      "label_rationale": "Medication reminders and rewards are adherence support, not treatment decision software. Class A may apply if positioned as low-risk patient management software.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008016,
+        "usage": {
+          "input_tokens": 47,
+          "output_tokens": 221,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": null,
+        "rationale_string": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.02995375,
+        "usage": {
+          "input_tokens": 353,
+          "output_tokens": 2077,
+          "cache_read": 12435,
+          "cache_write": 0
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    }
+  ]
+}
