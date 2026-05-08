@@ -173,7 +173,17 @@ export const ReadinessCardSchema = z.object({
    * progress reading next to readiness. Computed deterministically from
    * detected_signals + classification when not provided by Opus.
    *
-   * `null` for non-medical-device / wellness paths.
+   * Three accepted shapes (Story 1.3.5):
+   *   a) `trl: null`                                — idiomatic for non-devices
+   *   b) `trl: { ...all-null-fields, rationale: "TRL N/A …" }` — Opus's
+   *      natural emission for wellness cases when asked to "set trl to null"
+   *   c) `trl: { level, stage, track, completion_pct, next_milestone, rationale }`
+   *      — fully populated for medical devices.
+   *
+   * Loosened from required-string `next_milestone` / `rationale` to nullable
+   * after Story 1.3 recon found Opus produces shape (b) for ~2–8% of
+   * wellness/non-device assessments. See `docs/sprint-recaps/sprint-1.md`
+   * Story 1.3.5 close-out and `data/eval/sprint-1-3/schema-validation-diagnostic.md`.
    */
   trl: z
     .object({
@@ -181,9 +191,10 @@ export const ReadinessCardSchema = z.object({
       stage: TRLStageSchema.nullable(),
       track: TRLTrackEnum.nullable(),
       completion_pct: z.number().int().min(0).max(100).nullable(),
-      next_milestone: z.string(),
-      rationale: z.string(),
+      next_milestone: z.string().nullable(),
+      rationale: z.string().nullable(),
     })
+    .nullable()
     .optional(),
 
   timeline: z.object({

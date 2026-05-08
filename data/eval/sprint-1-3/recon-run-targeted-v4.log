@@ -1,0 +1,76 @@
+
+[recon-50] calibration: /Users/raunaqpradhan/my-weekender-project/clearpath/data/calibration/clearpath_synthetic_50_full_schema_v2_1.json
+[recon-50] case filter active: 9/50 cases (ids: CP-001, CP-016, CP-017, CP-019, CP-020, CP-021, CP-024, CP-045, CP-046)
+
+[batch:pre-router] submitting 9 requests...
+[batch:pre-router] id=msgbatch_019UFN4D7kfmWAaENQtWdjQ3 status=in_progress
+[batch:pre-router] +30s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:pre-router] +61s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:pre-router] +91s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:pre-router] +122s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:pre-router] +152s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:pre-router] +183s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:pre-router] +213s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:pre-router] +244s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:pre-router] +275s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:pre-router] +305s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:pre-router] +336s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:pre-router] +366s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:pre-router] +397s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:pre-router] +427s  status=ended  succ=9 proc=0 err=0 exp=0 cancel=0
+[batch:pre-router] done in 427s
+
+[recon-50] synth candidates: 9/9 (rest were pre-router rejected/errored)
+
+[batch:synth] submitting 9 requests...
+[batch:synth] id=msgbatch_01JLTkUVT4WSz9WhSBNQDFA3 status=in_progress
+[batch:synth] +31s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +61s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +92s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +122s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +153s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +183s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +214s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +244s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +275s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +305s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +336s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +366s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +397s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +427s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +457s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +488s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +519s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +549s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +579s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +610s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +640s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +671s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +701s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +732s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +762s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +793s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +823s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +854s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+[batch:synth] +884s  status=in_progress  succ=0 proc=9 err=0 exp=0 cancel=0
+
+[recon-50] failed: APIConnectionError: Connection error.
+    at Anthropic.makeRequest (/Users/raunaqpradhan/my-weekender-project/clearpath/node_modules/@anthropic-ai/sdk/src/client.ts:695:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async runBatch (/Users/raunaqpradhan/my-weekender-project/clearpath/scripts/recon-50.ts:136:15)
+    at async main (/Users/raunaqpradhan/my-weekender-project/clearpath/scripts/recon-50.ts:409:7) {
+  status: undefined,
+  headers: undefined,
+  requestID: undefined,
+  error: undefined,
+  type: null,
+  cause: [TypeError: fetch failed] {
+    [cause]: Error: getaddrinfo ENOTFOUND api.anthropic.com
+        at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:121:26) {
+      errno: -3008,
+      code: 'ENOTFOUND',
+      syscall: 'getaddrinfo',
+      hostname: 'api.anthropic.com'
+    }
+  }
+}

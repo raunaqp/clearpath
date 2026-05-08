@@ -10,11 +10,17 @@
  *   - STRICT  (internal):        predicted == expected_cdsco_class exactly
  *
  * Run:
- *   npx tsx scripts/recon-50.ts            # writes recon-run.json + disagreements.md
- *   npx tsx scripts/recon-50.ts v2         # writes recon-run-v2.json + disagreements-v2.md
+ *   npx tsx scripts/recon-50.ts                                       # full 50-case run, writes recon-run.json + disagreements.md
+ *   npx tsx scripts/recon-50.ts v2                                    # full 50-case run, suffix -v2
+ *   npx tsx scripts/recon-50.ts targeted-v4 CP-045,CP-001,CP-016       # targeted: only the listed case_ids
  *
- * The optional positional arg becomes a filename suffix so re-runs (after
- * a prompt fix or label correction) don't clobber prior artifacts.
+ * Args:
+ *   argv[2] (optional) — filename suffix tag (e.g. "v2", "targeted-v4")
+ *   argv[3] (optional) — comma-separated case_id whitelist; if present, calibration is filtered to that subset
+ *
+ * The tag suffix lets re-runs (after a prompt fix or label correction) avoid
+ * clobbering prior artifacts. The case-filter mode is for cheap targeted
+ * verification (~$0.60 for 9 cases vs. ~$3 for the full 50).
  *
  * Outputs (no tag):
  *   data/eval/sprint-1-3/recon-run.json
@@ -187,6 +193,9 @@ type ReconRow = {
     parse_ok: boolean;
     predicted_cdsco_class: string | null;
     rationale_string: string | null;
+    trl_level: number | null;
+    trl_stage: string | null;
+    trl_track: string | null;
     elapsed_ms: number | null;
     cost_usd: number;
     usage: Usage;
@@ -208,20 +217,40 @@ async function main() {
   const tag = rawTag && rawTag.length > 0 ? rawTag : null;
   const suffix = tag ? `-${tag}` : "";
 
+  // Optional case_id whitelist (comma-separated). When present, the calibration
+  // set is filtered to only these case_ids before batching. Used for targeted
+  // verification of specific fixes without paying for a full 50-case run.
+  const rawCases = process.argv[3]?.trim();
+  const caseFilter = rawCases && rawCases.length > 0
+    ? new Set(rawCases.split(",").map((s) => s.trim()).filter(Boolean))
+    : null;
+
   // ---- 1. validate + load calibration ----
   const calibPath = path.resolve(
     process.cwd(),
     "data/calibration/clearpath_synthetic_50_full_schema_v2_1.json"
   );
   console.log(`\n[recon-50] calibration: ${calibPath}`);
-  const calib = JSON.parse(fs.readFileSync(calibPath, "utf8")) as {
+  const fullCalib = JSON.parse(fs.readFileSync(calibPath, "utf8")) as {
     cases: CalibrationCase[];
   };
-  if (calib.cases.length !== 50) {
-    console.error(`Expected 50 cases, got ${calib.cases.length}. Run validator first.`);
+  if (fullCalib.cases.length !== 50) {
+    console.error(`Expected 50 cases in calibration, got ${fullCalib.cases.length}. Run validator first.`);
     process.exit(1);
   }
-  console.log(`[recon-50] loaded ${calib.cases.length} cases`);
+  const calib = caseFilter
+    ? { ...fullCalib, cases: fullCalib.cases.filter((c) => caseFilter.has(c.case_id)) }
+    : fullCalib;
+  if (caseFilter) {
+    const missing = [...caseFilter].filter((id) => !fullCalib.cases.some((c) => c.case_id === id));
+    if (missing.length > 0) {
+      console.error(`[recon-50] case filter requested ids not in calibration: ${missing.join(", ")}`);
+      process.exit(1);
+    }
+    console.log(`[recon-50] case filter active: ${calib.cases.length}/${fullCalib.cases.length} cases (ids: ${[...caseFilter].sort().join(", ")})`);
+  } else {
+    console.log(`[recon-50] loaded ${calib.cases.length} cases (full set)`);
+  }
 
   const outDir = path.resolve(process.cwd(), "data/eval/sprint-1-3");
   fs.mkdirSync(outDir, { recursive: true });
@@ -387,6 +416,9 @@ async function main() {
       parse_ok: boolean;
       predicted_cdsco_class: string | null;
       rationale_string: string | null;
+      trl_level: number | null;
+      trl_stage: string | null;
+      trl_track: string | null;
       cost_usd: number;
       usage: Usage;
       skipped_reason?: string;
@@ -403,6 +435,9 @@ async function main() {
         parse_ok: false,
         predicted_cdsco_class: null,
         rationale_string: null,
+        trl_level: null,
+        trl_stage: null,
+        trl_track: null,
         cost_usd: 0,
         usage: emptyUsage(),
         skipped_reason: !pr.ok
@@ -420,6 +455,9 @@ async function main() {
         parse_ok: false,
         predicted_cdsco_class: null,
         rationale_string: null,
+        trl_level: null,
+        trl_stage: null,
+        trl_track: null,
         cost_usd: 0,
         usage: emptyUsage(),
         error: "no result row from batch",
@@ -432,6 +470,9 @@ async function main() {
         parse_ok: false,
         predicted_cdsco_class: null,
         rationale_string: null,
+        trl_level: null,
+        trl_stage: null,
+        trl_track: null,
         cost_usd: 0,
         usage: emptyUsage(),
         error: `batch result type=${row.result.type}`,
@@ -445,8 +486,25 @@ async function main() {
     const json = stripJson(text);
     let predicted: string | null = null;
     let rationaleString: string | null = null;
+    let trlLevel: number | null = null;
+    let trlStage: string | null = null;
+    let trlTrack: string | null = null;
     let parse_ok = false;
     let raw: string | undefined = text;
+
+    // Permissive extraction helper used both in success and fallback paths
+    // — captures TRL fields regardless of whether the full Zod schema passes,
+    // so post-hoc per-stage analysis is possible across all runs.
+    const extractTrl = (obj: unknown) => {
+      const o = obj as { trl?: { level?: unknown; stage?: unknown; track?: unknown } | null };
+      const t = o?.trl;
+      if (t && typeof t === "object") {
+        if (typeof t.level === "number") trlLevel = t.level;
+        if (typeof t.stage === "string") trlStage = t.stage;
+        if (typeof t.track === "string") trlTrack = t.track;
+      }
+    };
+
     if (json) {
       try {
         const obj = JSON.parse(json);
@@ -457,6 +515,7 @@ async function main() {
         rationaleString =
           (validated.classification as { rationale?: string } | undefined)?.rationale ??
           null;
+        extractTrl(validated);
         parse_ok = true;
         raw = undefined;
       } catch {
@@ -471,6 +530,7 @@ async function main() {
             predicted = cls ?? null;
           }
           rationaleString = obj.classification?.rationale ?? null;
+          extractTrl(obj);
         } catch {
           // give up
         }
@@ -481,6 +541,9 @@ async function main() {
       parse_ok,
       predicted_cdsco_class: predicted,
       rationale_string: rationaleString,
+      trl_level: trlLevel,
+      trl_stage: trlStage,
+      trl_track: trlTrack,
       cost_usd: cost,
       usage,
       raw,
@@ -537,6 +600,9 @@ async function main() {
         parse_ok: sy.parse_ok,
         predicted_cdsco_class: sy.predicted_cdsco_class,
         rationale_string: sy.rationale_string,
+        trl_level: sy.trl_level,
+        trl_stage: sy.trl_stage,
+        trl_track: sy.trl_track,
         elapsed_ms: null,
         cost_usd: sy.cost_usd,
         usage: sy.usage,

@@ -255,13 +255,13 @@ Pick the track from \`classification.novel_or_predicate\`:
 |-----|-------|----------------------------------|
 | 1 | Ideation | Problem statement documented |
 | 2 | Proof of Principle | Spec + FTO search, no prototype |
-| 3 | Early-stage PoC | In-house prototype + analytical perf tested |
-| 4 | Advanced PoC (Design Freeze) | MD-12 (Test License) submitted |
-| 5 | Test-batch Evaluation | MD-13 obtained + MD-22/MD-24 submitted |
-| 6 | Pilot CI/CPE | MD-23/MD-25 obtained, pilot data |
-| 7 | Pivotal CI/CPE | Pivotal complete, MD-26/MD-28 submitted |
+| 3 | Early PoC | In-house prototype + analytical perf tested |
+| 4 | Advanced PoC | Design freeze; MD-12 (Test License) submitted |
+| 5 | Test Batch | MD-13 obtained + MD-22/MD-24 submitted (test batch evaluation) |
+| 6 | Pilot Study | MD-23/MD-25 obtained, pilot data (CI/CPE) |
+| 7 | Pivotal Study | Pivotal CI/CPE complete, MD-26/MD-28 submitted |
 | 8 | Pre-commercialisation | MD-27/MD-29 obtained, ISO 13485 line up |
-| 9 | Commercialisation + PMS | Live in market with PMS |
+| 9 | Commercialisation | Live in market with PMS |
 
 For has-predicate: TRL 6 = clinical evaluation against predicate, TRL 7 = MD-3 (Class A/B) or MD-7 (Class C/D) application submitted, TRL 8 = mfg license granted.
 

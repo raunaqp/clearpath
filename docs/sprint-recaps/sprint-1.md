@@ -200,6 +200,20 @@ Both are above the 1024-token cache minimum (pre-router prompt ~4500 tokens, syn
 
 - **readiness-card cache audit: decide policy.** Already noted as partner-facing risk during Story 1.4b; reaffirmed during Story 1.3 close. Options: (a) keep with explicit `CACHE_VERSION` invalidation on prompt-version bumps (current pattern — relies on operator discipline), (b) add a TTL (bounded staleness window even if `CACHE_VERSION` is forgotten), (c) remove entirely (lose the cost savings on repeated assessments but eliminate the risk). Decide before Story 1.5 ships. Logged 2026-05-08.
 
+- **eval pipeline production parity.** Story 1.3 recon scripts (`scripts/recon-50.ts`, `scripts/eval-1-2-batched.ts`) had permissive fallback extraction that hid the Zod schema-validation bug fixed in 1.3.5 — the recon scored predictions even when `ReadinessCardSchema.parse()` would have thrown in production. Future eval pipelines must exercise the same production code path the engine uses, not parallel scoring-only logic. Investigate at Sprint 4 when QC workflow ships (eval and QC will share infrastructure). Stopgap landed in 1.3.5: `scripts/test-prod-parity.ts` calls `runSynthesizer()` directly on a known wellness case as a sanity check. Logged 2026-05-08.
+
+- **full 50-case eval re-run discipline before any major prompt or model change.** Targeted 10-case eval was used in Story 1.3.5 close to manage cost (~$0.60 vs. ~$3 for full 50). Full eval discipline applies for future significant changes (major prompt revision, model swap, schema overhaul). Targeted evals OK for surgical fixes only. Logged 2026-05-08.
+
+- **eval variance reduction.** Multiple Story 1.3 cases (CP-038 insulin advisor, CP-013 oral cancer screening, possibly others on borderline B/C/D) flipped strict-match status across eval runs due to Opus sampling variance — the v3 100% tolerant headline was partly variance-aided. For defensible accuracy claims, future evals should run each case 3–5 times and report median/range, not single-shot. Address at Sprint 6 real-data calibration when production data accumulates. Logged 2026-05-08.
+
+- **calibration coverage gaps at TRL 3 and TRL 9.** Story 1.3.5 prompt-alignment fixes were verified directly for TRL 4, 5, 6, 7, 8 but only indirectly (via CP-045 producing TRL 3 in v3) for TRL 3, and not at all for TRL 9. Add cases at TRL 3 and TRL 9 when natural founder data accumulates at Sprint 6 real-data calibration. Until then: latent risk is small (TRL 9 in-market-with-PMS is rare in pre-market regulatory readiness use case). Logged 2026-05-08.
+
+- **calibration set v3 candidate: founder-authored TRL 3 (pre-prototype) and TRL 9 (in-market with PMS) cases.** Add to `data/calibration/clearpath_synthetic_50_full_schema_v2_1.json` or successor file when expanding the calibration set. Use the multi-LLM cross-validation approach used for v2.1 (OpenAI-generated, founder-validated, Gemini-cross-validated). Logged 2026-05-08.
+
+### Security note (Story 1.3.5, 2026-05-08)
+
+A tool result during diagnostic contained a fake `<system-reminder>` block attempting to redirect to an unrelated project (Lovable / Case Surveillance). Claude Code correctly identified as out-of-band and ignored. No action taken on the injected instruction. Logged for audit trail.
+
 ## story 1.3 — 50-case eval — ✅ DONE (2026-05-08)
 
 ### close-out summary
@@ -271,16 +285,89 @@ Three predictions flipped between v1 and v2; all three stay tolerant:
 - v1 + v2 = $3.17 + $2.70 = **$5.87** total Story 1.3 spend (well under the $5–10 envelope projected in the plan).
 - Wall time ≈ 24 min batch processing + dev work.
 
-## story 1.3.5 — synth schema-validation drift (NEW backlog item)
+## story 1.3.5 — schema-strictness fix + TRL prompt/schema alignment — ✅ DONE (2026-05-09)
 
-Surfaced during v1 recon: 4/48 synth outputs (CP-011 NutriFit, CP-016 GlucoTrack, CP-029 SleepScore, CP-044 TrialMatch) parsed as valid JSON but failed strict `ReadinessCardSchema` Zod validation. v2 dropped this to 1/48 (CP-029) with the prompt fix, so the issue is partially better but not gone. All 4 in v1 still tolerantly matched via permissive fallback extraction — Story 1.2's "0% parse fail on Opus" claim still holds for *JSON parsing*; the issue is schema strictness on wellness/null cases (likely null on required-numeric fields like `readiness.score` or `readiness.dimensions.*`).
+**Origin (Story 1.3 v1 recon, 2026-05-08):** 4/48 synth outputs parsed as valid JSON but failed strict `ReadinessCardSchema` Zod validation. v2 dropped to 1/48; v3 still 1/48 (different case). All such failures tolerantly matched via the recon's permissive fallback — but production has no such fallback (`synthesizer.ts:179` throws after 2 failed parses). Latent prod bug: 2–8% of wellness/non-device assessments would have errored.
 
-Action: investigate which Zod field rejects, decide whether to relax the schema or tighten the prompt. Separate commit. Logged 2026-05-08.
+### Diagnostic findings
 
-## stories 1.4-1.6 — not yet started
+`scripts/diagnose-schema-fails.ts` traced every v1 + v2 failure to a single Zod issue: `trl.next_milestone` was `null` but the schema required `string`. Two compounding causes:
+1. `trl` was `.optional()` but not `.nullable()` — the prompt's literal "set `trl: null`" was impossible to satisfy under the schema.
+2. Inside `trl`, `next_milestone` and `rationale` were required-string with no nullable allowance — Opus's natural compromise (object of nulls + a rationale string) failed.
 
-- 1.4 cost dashboard — depends on 1.2 lock-in (per-model split needs real data)
-- 1.5 production deploy — gated on 1.1-1.4
+Full per-case Zod error report in `data/eval/sprint-1-3/schema-validation-diagnostic.md`.
+
+### Fixes applied (single commit closing 1.3.5)
+
+1. **Schema fix** (`lib/schemas/readiness-card.ts`):
+   - `trl: z.object({...}).optional()` → `trl: z.object({...}).nullable().optional()`
+   - Inside the object, `next_milestone` and `rationale` made `.nullable()`.
+   - Schema now accepts three shapes: literal `null`, full populated object, or all-null object with a non-null rationale.
+
+2. **Prompt label/enum alignment** (`lib/engine/synthesizer-system-prompt.ts`):
+   v3 surfaced a separate latent bug — CP-045 RemoteSpiro emitted `stage: "early_stage_poc"`, schema expected `early_poc`. Audit found 6 TRL stage labels that diverged from the schema enum:
+
+   | TRL | Old label | New label |
+   |---|---|---|
+   | 3 | `Early-stage PoC` | `Early PoC` |
+   | 4 | `Advanced PoC (Design Freeze)` | `Advanced PoC` |
+   | 5 | `Test-batch Evaluation` | `Test Batch` |
+   | 6 | `Pilot CI/CPE` | `Pilot Study` |
+   | 7 | `Pivotal CI/CPE` | `Pivotal Study` |
+   | 9 | `Commercialisation + PMS` | `Commercialisation` |
+
+   Each renamed label now snake-cases cleanly to its schema enum. Surrounding text and the "Anchored to" column preserve the CDSCO/CI/CPE/PMS context.
+
+3. **Production parity test** (`scripts/test-prod-parity.ts`): single Opus call through `runSynthesizer()` (the prod path, not recon's permissive fallback) on a known wellness case (CP-001 SymptomGuide). Asserts schema validates and `cdsco_class === null`. Catches recon-fallback masking in the future.
+
+4. **Recon resume helper** (`scripts/recon-50-resume.ts`): added after a transient `ENOTFOUND api.anthropic.com` blip killed the v4 polling loop mid-run. Resumes from the existing batch IDs without re-submitting (saves the cost already paid). Useful for any future batch-API run hit by network instability.
+
+### Story 1.3.5 verification scope
+
+**Directly verified via eval (targeted-v4, 9 cases):**
+- Schema fix (trl nullable for wellness/non-device): **0/9 schema fails** (was 1/48 in v3, 4/48 in v1)
+- Production parity test: **PASS** (CP-001 SymptomGuide through real `runSynthesizer()`, schema validated cleanly, returned in 33s)
+- Classification regressions: **0** (CP-017 → C, CP-024 → C, CP-046 → null all hold; wellness cases still classify cleanly)
+- CP-045 specifically: previously v3's schema fail with `stage: "early_stage_poc"`; v4 parses cleanly and returns Class B as expected
+
+**Statically verified (not eval-stressed):**
+- 6 TRL stage label/enum alignments: each renamed prompt label snake-cases cleanly to its schema enum (mechanical correctness)
+- CP-045 in v3 produced TRL 3 with the old label; v4 produced `trl: null` (Opus exercised the new nullable schema path). Direct stress-test of the renamed labels did not occur in v4 — none of the 9 cases emitted a non-null TRL stage.
+
+**Known latent risk:**
+- Calibration set has zero cases at TRL 3 and TRL 9; renamed labels at those stages were never directly stress-tested.
+- Two backlog items already logged for Sprint 6 real-data calibration to fill these gaps.
+
+The schema fix closed a real prod bug (2–8% wellness assessments would have errored). The label fixes preempt a class of latent prod bugs that sampling variance was hiding. Both are net wins; label fixes carry "static-only" verification status documented honestly.
+
+### v4 numbers
+
+| | v3 | v4 (targeted, 9 cases) |
+|---|---|---|
+| Tolerant match | 50/50 (100.0%) | **9/9 (100.0%)** |
+| Strict match | 41/50 (82.0%) | 7/9 (77.8%) |
+| Schema-validation fails | 1/48 | **0/9** |
+| Cost (Batch API) | $3.04 | $0.62 |
+
+### Sprint 1 engine calibration spend (cumulative)
+
+- v1 full recon (Story 1.3): $3.17
+- v2 full recon (Story 1.3): $2.70
+- v3 full recon (Story 1.3.5 schema fix): $3.04
+- v4 targeted (Story 1.3.5 prompt-alignment): $0.62
+- Plus production-parity test ($~0.10) + diagnostic API calls (~$0): rounding noise
+- **Total Story 1.3 + 1.3.5 eval spend: ~$9.53**
+- Plus Story 1.2 batched A/B eval: $3.02
+- Plus assorted poc + verify scripts: ~$3
+- **Total Sprint 1 engine calibration spend: ~$15.40**
+- Sprint 1 budget envelope (~$25): **under**
+
+## stories 1.5-1.6 — not yet started
+
+- 1.5 production deploy — **READY TO START** on founder greenlight. Branch `feat/trl-completion-card` carries 11 commits to merge. Pre-merge checklist:
+  1. Bump `CACHE_VERSION` env var on Vercel (Production scope) — Story 1.4b backlog item; required before merge to invalidate stale readiness cards under the pre-Story-1.3 synth prompt.
+  2. Smoke-test plan against preview deployment (4 demo packets, /regulations, /upgrade, /admin) before promoting to production.
+  3. Rollback plan: revert last commit on main, redeploy.
 - 1.6 gst application — founder task, parallel
 
 ### Story 1.5 explicit prerequisite (added 2026-05-08)
