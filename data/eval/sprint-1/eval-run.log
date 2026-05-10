@@ -1,0 +1,54 @@
+
+======================================================================
+LAYER 1: pre-router (Sonnet 4.6 baseline vs. Haiku 4.5 new) — 13 cases
+======================================================================
+  CP-016 GlucoTrack Lite              ... ✓ S=product/run_wizard H=product/run_wizard
+  CP-017 CardioAI Triage              ... ✓ S=product/run_wizard H=product/run_wizard
+  CP-018 DermaLens                    ... ✓ S=product/run_wizard H=product/run_wizard
+  CP-019 SurgiPlan XR                 ... ✓ S=product/run_wizard H=product/run_wizard
+  CP-020 BabyBeat Home                ... ✓ S=hardware_software/run_wizard H=hardware_software/run_wizard
+  CP-021 MentalWell Chat              ... ✓ S=product/run_wizard H=product/run_wizard
+  CP-022 StrokeFast                   ... ✓ S=product/run_wizard H=product/run_wizard
+  CP-023 ABHA SyncPro                 ... ✓ S=product/run_wizard H=product/run_wizard
+  CP-024 OncoPath Assist              ... ✓ S=product/run_wizard H=product/run_wizard
+  CP-025 PhysioMove                   ... ✓ S=product/run_wizard H=product/run_wizard
+  EDGE-1-regulator Karnataka SDA inspector      ... ✓ S=regulator/reject H=regulator/reject
+  EDGE-2-investor Medtech VC                   ... ✓ S=investor/reject H=investor/reject
+  EDGE-3-fintech Tier-2 credit scorer         ... ✓ S=out_of_scope/reject H=out_of_scope/reject
+
+  Layer 1 match: 13/13 (bar: ≥12/13)
+
+======================================================================
+LAYER 2: synthesizer (Opus 4.7 baseline vs. Sonnet 4.6 new) — 10 cases, NO caching
+======================================================================
+  CP-016 GlucoTrack Lite              ... ✗ O=null S=B
+  CP-017 CardioAI Triage              ... ✓ O=C S=C
+  CP-018 DermaLens                    ... ✓ O=C S=C
+  CP-019 SurgiPlan XR                 ... ✓ O=C S=C
+  CP-020 BabyBeat Home                ... ✗ O=B S=C
+  CP-021 MentalWell Chat              ... ✗ O=null S=null
+  CP-022 StrokeFast                   ... ✓ O=C S=C
+  CP-023 ABHA SyncPro                 ... ✗ O=null S=null
+  CP-024 OncoPath Assist              ... ✓ O=C S=C
+  CP-025 PhysioMove                   ... ✓ O=B S=B
+
+  Layer 2 cdsco_class match: 6/10 (bar: ≥9/10)
+
+======================================================================
+LAYER 3: draft-pack (Opus 4.7 baseline vs. Sonnet 4.6 new) — 5 cases, WITH caching
+======================================================================
+  CP-016 GlucoTrack Lite              ... O=B/sec=6 S=B/sec=6
+  CP-017 CardioAI Triage              ... O=C/sec=6 S=C/sec=6
+  CP-019 SurgiPlan XR                 ... O=C/sec=6 S=C/sec=6
+  CP-022 StrokeFast                   ... O=C/sec=6 S=C/sec=6
+  CP-024 OncoPath Assist              ... O=C/sec=6 S=C/sec=6
+
+======================================================================
+DONE. Grand total: $3.0206 (budget: $5.88)
+Outputs:
+  /Users/raunaqpradhan/my-weekender-project/clearpath/data/eval/sprint-1/layer-1-pre-router.json
+  /Users/raunaqpradhan/my-weekender-project/clearpath/data/eval/sprint-1/layer-2-synthesizer.json
+  /Users/raunaqpradhan/my-weekender-project/clearpath/data/eval/sprint-1/layer-3-draft-pack.json
+  /Users/raunaqpradhan/my-weekender-project/clearpath/data/eval/sprint-1/summary.md
+======================================================================
+

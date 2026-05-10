@@ -17,7 +17,8 @@ import {
 } from "@react-pdf/renderer";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { getServiceClient } from "@/lib/supabase";
-import { generateDraftPackContent } from "@/lib/engine/draft-pack";
+import { generateDraftPackContent, MODEL as DRAFT_PACK_MODEL } from "@/lib/engine/draft-pack";
+import { calculateCallCost } from "@/lib/engine/cost-calculator";
 import { DraftPackDocument } from "@/lib/pdf/draft-pack-template";
 import { renderDraftPackEmail } from "@/lib/email/draft-pack-delivery";
 import { ReadinessCardSchema } from "@/lib/schemas/readiness-card";
@@ -25,6 +26,9 @@ import {
   getRelevantForms,
   type RelevantForm,
 } from "@/lib/cdsco/relevant-forms";
+import { deriveTRL } from "@/lib/engine/trl";
+import { runCompletenessForCard } from "@/lib/completeness/category";
+import type { CheckerDocument } from "@/lib/completeness/types";
 
 const DRAFT_PACKS_BUCKET = "draft_packs";
 const SIGNED_URL_TTL_SECONDS = 90 * 24 * 60 * 60; // 90 days
@@ -57,7 +61,6 @@ type GenerateOkBase = {
   ok: true;
   orderId: string;
   pageCount: number;
-  opusCostUsd: number;
   appendedFormIds: string[];
 };
 
@@ -95,6 +98,13 @@ type AssessmentRow = {
   wizard_answers: Record<string, unknown> | null;
   readiness_card: unknown;
   share_token: string | null;
+  uploaded_docs:
+    | Array<{
+        filename: string;
+        sha256: string;
+        doc_type?: string | null;
+      }>
+    | null;
 };
 
 type ReadinessCardMeta = { product_name?: string; company_name?: string };
@@ -138,7 +148,7 @@ export async function generateDraftPack(
   const { data: assessment, error: assErr } = await supabase
     .from("assessments")
     .select(
-      "id, name, email, one_liner, url_fetched_content, wizard_answers, readiness_card, share_token"
+      "id, name, email, one_liner, url_fetched_content, wizard_answers, readiness_card, share_token, uploaded_docs"
     )
     .eq("id", order.assessment_id)
     .maybeSingle<AssessmentRow>();
@@ -162,10 +172,27 @@ export async function generateDraftPack(
     assessment.readiness_card !== null
       ? (assessment.readiness_card as { meta?: ReadinessCardMeta }).meta ?? {}
       : {};
+  // Robust productName resolution. Order:
+  //   1. card.meta.product_name from synthesizer (preferred)
+  //   2. card.meta.company_name fallback
+  //   3. First proper-noun phrase from one_liner (heuristic)
+  //   4. assessment.name as last resort (e.g. "Demo: Vyuhaa CerviAI")
+  //
+  // Avoids the "Unnamed product" hole when synthesizer returned empty
+  // strings for the meta fields (which it should not, but does sometimes
+  // when the URL scrape was sparse).
+  function extractFirstProperNoun(text: string): string | null {
+    // Look for a 2-3 word capitalized phrase at the start of the one-liner.
+    // E.g. "Vyuhaa CerviAI is..." → "Vyuhaa CerviAI"
+    const match = text.match(/^([A-Z][A-Za-z0-9-]+(?:\s+[A-Z][A-Za-z0-9-]+){0,2})\b/);
+    return match ? match[1].trim() : null;
+  }
   const productName =
     cardMeta.product_name?.trim() ||
     cardMeta.company_name?.trim() ||
-    assessment.one_liner.slice(0, 60);
+    extractFirstProperNoun(assessment.one_liner) ||
+    assessment.name?.replace(/^Demo:\s*/i, "").trim() ||
+    "Your product";
 
   const cardParsed = ReadinessCardSchema.safeParse(assessment.readiness_card);
   if (!cardParsed.success) {
@@ -176,22 +203,25 @@ export async function generateDraftPack(
   const validatedCard = cardParsed.success ? cardParsed.data : null;
   log(`  ✓ assessment ${assessment.id} · product="${productName}"`);
 
-  // 3. Opus
-  log(`[3] Call Opus for Draft Pack content`);
+  // 3. Draft-pack content generation
+  log(`[3] Call draft-pack engine for content`);
   let content;
-  let opusCostUsd: number;
   try {
-    const result = await generateDraftPackContent({
-      productName,
-      oneLiner: assessment.one_liner,
-      urlContent: assessment.url_fetched_content,
-      wizardAnswers: assessment.wizard_answers ?? {},
-      readinessCard: assessment.readiness_card,
-    });
+    const result = await generateDraftPackContent(
+      {
+        productName,
+        oneLiner: assessment.one_liner,
+        urlContent: assessment.url_fetched_content,
+        wizardAnswers: assessment.wizard_answers ?? {},
+        readinessCard: assessment.readiness_card,
+      },
+      { orderId: opts.orderId }
+    );
     content = result.content;
-    opusCostUsd = result.costUsd;
+    // Display-only cost recompute (engine already wrote authoritative row to engine_costs).
+    const costUsd = calculateCallCost(DRAFT_PACK_MODEL, result.usage);
     log(
-      `  ✓ content generated · cost ≈ $${opusCostUsd.toFixed(4)} · CDSCO class=${content.risk_classification.cdsco_class}`
+      `  ✓ content generated · cost ≈ $${costUsd.toFixed(4)} · CDSCO class=${content.risk_classification.cdsco_class}`
     );
   } catch (e) {
     return err(opts.orderId, "opus", e instanceof Error ? e.message : String(e));
@@ -206,6 +236,45 @@ export async function generateDraftPack(
   });
   let mainPdfBuffer: Buffer;
   try {
+    // Compute TRL + completeness from the validated card so the Draft Pack
+    // and the Risk Card always show consistent numbers.
+    //   - TRL: backfilled deterministically when missing (same logic as
+    //     app/c/[share_token]/page.tsx). Anchored to SERB / ANRF.
+    //   - Completeness: same render-time pattern. Pulls uploaded_docs from
+    //     the assessment row + uses readiness dimensions as signal supplement.
+    const trlForPack =
+      validatedCard?.trl && validatedCard.trl.level !== null
+        ? validatedCard.trl
+        : validatedCard
+          ? deriveTRL(validatedCard) ?? undefined
+          : undefined;
+    const checkerDocs: CheckerDocument[] = (assessment.uploaded_docs ?? []).map(
+      (d, idx) => ({
+        id: d.sha256 || `doc-${idx}`,
+        filename: d.filename,
+        doc_type: d.doc_type ?? null,
+      })
+    );
+    const completenessForPack = validatedCard
+      ? runCompletenessForCard(validatedCard, checkerDocs)
+      : null;
+
+    // Compute relevant forms once here so:
+    //   1) Section 09 in the PDF lists exactly the forms that match the
+    //      device profile (no hardcoded MD-7/MD-12/MD-14/MD-22 list)
+    //   2) The list and the appended-appendix pages stay consistent
+    //      (forms with available=true get appended; downloadable=false
+    //      get listed but not appended)
+    // Single getRelevantForms() call shared between the template and the
+    // append loop below.
+    const relevantFormsForPack = validatedCard
+      ? getRelevantForms(validatedCard).map((f) => ({
+          id: f.id,
+          description: f.description,
+          available: f.available,
+        }))
+      : [];
+
     // `DraftPackDocument` wraps a `<Document>`, but @react-pdf/renderer's
     // type for `renderToBuffer` insists on `ReactElement<DocumentProps>`
     // directly (rejecting a wrapping function-component). The runtime
@@ -221,6 +290,9 @@ export async function generateDraftPack(
       },
       content,
       regulations: validatedCard?.regulations,
+      trl: trlForPack,
+      completeness: completenessForPack,
+      relevantForms: relevantFormsForPack,
     });
     mainPdfBuffer = await renderToBuffer(
       element as unknown as React.ReactElement<DocumentProps>
@@ -255,7 +327,6 @@ export async function generateDraftPack(
       orderId: opts.orderId,
       pdfBuffer: merged.buffer,
       pageCount: merged.pageCount,
-      opusCostUsd,
       appendedFormIds: merged.appendedIds,
     };
   }
@@ -364,7 +435,6 @@ export async function generateDraftPack(
     orderId: opts.orderId,
     pdfUrl,
     pageCount: merged.pageCount,
-    opusCostUsd,
     appendedFormIds: merged.appendedIds,
     emailSent,
     emailRecipient: recipient,
@@ -484,7 +554,7 @@ async function appendForms(
       color: rgb(0.42, 0.42, 0.42),
     });
     sep.drawText(
-      "Fill this form using the drafted content from earlier sections — Intended Use (Section 02), Device Description (Section 03), Risk Classification (Section 04), and Clinical Context (Section 05). Cross-reference your wording so the form, the Device Master File, and any clinical evaluation say the same thing.",
+      "Fill this form using the drafted content from earlier sections — Intended Use (Section 03), Device Description (Section 04), Risk Classification (Section 05), and Clinical Context (Section 06). Cross-reference your wording so the form, the Device Master File, and any clinical evaluation say the same thing.",
       {
         x: 56,
         y: 460,
@@ -495,6 +565,61 @@ async function appendForms(
         lineHeight: 14,
       }
     );
+
+    // Tier 2 vs Concierge distinction — partners reading the appendix
+    // need to know what they're getting and what they're not. Tier 2
+    // (this Draft Pack at Rs 499) is the *narrative starter*; the form
+    // itself is an exercise the founder still owns. Concierge (Rs 50K)
+    // is where ClearPath actively fills the form for the founder
+    // alongside their team.
+    sep.drawRectangle({
+      x: 56,
+      y: 130,
+      width: 480,
+      height: 220,
+      color: rgb(0.98, 0.93, 0.90),
+      borderColor: rgb(0.88, 0.72, 0.64),
+      borderWidth: 0.5,
+    });
+    sep.drawText("WHAT'S INCLUDED IN THE Rs 499 DRAFT PACK", {
+      x: 70,
+      y: 325,
+      size: 8,
+      font: helveticaBold,
+      color: rgb(0.6, 0.24, 0.11),
+    });
+    sep.drawText(
+      "This appendix gives you the blank CDSCO form. Your Draft Pack content above gives you the *narrative* you'll need — intended use, device description, risk classification, clinical context — written in CDSCO-aligned language. The form itself you fill in using your company-specific data: legal entity, manufacturing site address, CIN, signatory, ISO 13485 certificate number, etc.",
+      {
+        x: 70,
+        y: 308,
+        size: 9,
+        font: helvetica,
+        color: rgb(0.1, 0.1, 0.1),
+        maxWidth: 455,
+        lineHeight: 12,
+      }
+    );
+    sep.drawText("NEED THE FORM ITSELF FILLED OUT?", {
+      x: 70,
+      y: 235,
+      size: 8,
+      font: helveticaBold,
+      color: rgb(0.6, 0.24, 0.11),
+    });
+    sep.drawText(
+      "Concierge (Rs 50K) is where our team fills these forms alongside you — populating each field with your company-specific data, cross-checking against the narrative in this Draft Pack, and reviewing for CDSCO consistency. Every filing is reviewed by a former CDSCO regulator, a practising clinician in your therapeutic area, and a scientific subject-matter expert before submission. Includes 12 months of revisions.",
+      {
+        x: 70,
+        y: 218,
+        size: 9,
+        font: helvetica,
+        color: rgb(0.1, 0.1, 0.1),
+        maxWidth: 455,
+        lineHeight: 12,
+      }
+    );
+
     sep.drawText(
       "ClearPath · Regulatory Draft Pack — appendix separator. Not legal advice.",
       {

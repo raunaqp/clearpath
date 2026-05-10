@@ -6,12 +6,17 @@ import {
 } from "@/lib/engine/draft-pack-prompts";
 import { softenCertainty } from "@/lib/engine/soften-certainty";
 import {
-  computeOpusCost,
+  calculateCallCost,
   trackApiCost,
-  type OpusUsage,
-} from "@/lib/engine/opus-cost";
+  type TokenUsage,
+  type ModelKey,
+} from "@/lib/engine/cost-calculator";
+import { recordEngineCost } from "@/lib/engine/cost-recorder";
 
-const MODEL = "claude-opus-4-7";
+// Exported so generator/CLI can compute display cost without duplicating
+// the model name. If you change MODEL, downstream display-cost calls
+// follow automatically.
+export const MODEL: ModelKey = "claude-sonnet-4-6";
 const MAX_TOKENS = 8000;
 const STRICT_SUFFIX =
   "\n\nReturn STRICT JSON ONLY. No preamble. No trailing text.";
@@ -26,8 +31,7 @@ export type DraftPackInput = {
 
 export type DraftPackResult = {
   content: DraftPackContent;
-  usage: OpusUsage;
-  costUsd: number;
+  usage: TokenUsage;
 };
 
 function stripFences(text: string): string {
@@ -97,7 +101,7 @@ function softenContent(c: DraftPackContent): DraftPackContent {
   };
 }
 
-function usageFrom(response: Anthropic.Message): OpusUsage {
+function usageFrom(response: Anthropic.Message): TokenUsage {
   return {
     input_tokens: response.usage.input_tokens,
     cache_read: response.usage.cache_read_input_tokens ?? 0,
@@ -107,7 +111,8 @@ function usageFrom(response: Anthropic.Message): OpusUsage {
 }
 
 export async function generateDraftPackContent(
-  input: DraftPackInput
+  input: DraftPackInput,
+  ctx: { orderId: string }
 ): Promise<DraftPackResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -127,7 +132,7 @@ export async function generateDraftPackContent(
     2
   );
 
-  let totalUsage: OpusUsage = {
+  let totalUsage: TokenUsage = {
     input_tokens: 0,
     cache_read: 0,
     cache_write: 0,
@@ -149,7 +154,12 @@ export async function generateDraftPackContent(
         {
           type: "text",
           text: systemText,
-          cache_control: { type: "ephemeral" },
+          // cache_control intentionally omitted: DRAFT_PACK_SYSTEM_PROMPT is
+          // ~856 tokens, below Sonnet 4.6's 1024-token cache minimum. The
+          // API silently ignored the directive (verified in 1.4b smoke test:
+          // engine_costs row showed cache_read=0 AND cache_write=0). Re-add
+          // when the prompt grows past 1024 tokens for legitimate content
+          // reasons. See sprint-1.md backlog.
         },
       ],
       messages: [{ role: "user", content: userMessage }],
@@ -162,7 +172,7 @@ export async function generateDraftPackContent(
       cache_write: totalUsage.cache_write + usage.cache_write,
       output_tokens: totalUsage.output_tokens + usage.output_tokens,
     };
-    totalCost += computeOpusCost(usage);
+    totalCost += calculateCallCost(MODEL, usage);
 
     const first = response.content[0];
     const rawText = first && first.type === "text" ? first.text : "";
@@ -182,7 +192,15 @@ export async function generateDraftPackContent(
         cache_hit: totalUsage.cache_read > 0,
       });
 
-      return { content: softened, usage: totalUsage, costUsd: totalCost };
+      await recordEngineCost({
+        call_layer: "draft_pack",
+        model: MODEL,
+        usage: totalUsage,
+        cost_usd: totalCost,
+        order_id_tier2: ctx.orderId,
+      });
+
+      return { content: softened, usage: totalUsage };
     } catch (err) {
       if (attempt === 2) {
         await trackApiCost({
@@ -191,6 +209,13 @@ export async function generateDraftPackContent(
           usage: totalUsage,
           cost_usd: totalCost,
           cache_hit: totalUsage.cache_read > 0,
+        });
+        await recordEngineCost({
+          call_layer: "draft_pack",
+          model: MODEL,
+          usage: totalUsage,
+          cost_usd: totalCost,
+          order_id_tier2: ctx.orderId,
         });
         throw new Error(
           `draft-pack: JSON/schema validation failed after retry: ${

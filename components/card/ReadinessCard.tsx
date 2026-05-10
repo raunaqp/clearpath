@@ -1,14 +1,18 @@
 import type { ReadinessCard as ReadinessCardType } from "@/lib/schemas/readiness-card";
-import { ABDMGapBlock } from "./ABDMGapBlock";
-import { BadgeRow } from "./BadgeRow";
-import { DPDPGapBlock } from "./DPDPGapBlock";
-import { ReadinessCircle } from "./ReadinessCircle";
+import type { CompletenessResult } from "@/lib/completeness/types";
+import Link from "next/link";
+import { ConciergeValueBlock } from "./ConciergeValueBlock";
+import { DocumentCompletenessBlock } from "./DocumentCompletenessBlock";
+import { RegulationCountBadge } from "./RegulationCountBadge";
 import { RegulationSnapshot } from "./RegulationSnapshot";
+import { RiskBlock } from "./RiskBlock";
 import { RiskTintedSurface } from "./RiskTintedSurface";
 import { ShareRow } from "./ShareRow";
 import { Tier23ButtonRow } from "./Tier23ButtonRow";
-import { TimelineBlock } from "./TimelineBlock";
+import { TimeSavedBlock } from "./TimeSavedBlock";
+import { TimelineCompactBlock } from "./TimelineCompactBlock";
 import { TopGapsList } from "./TopGapsList";
+import { TRLBlock } from "./TRLBlock";
 import { VerdictBlock } from "./VerdictBlock";
 import { WellnessCarveOutBlock } from "./WellnessCarveOutBlock";
 import { WhyRegulatedBlock } from "./WhyRegulatedBlock";
@@ -27,13 +31,19 @@ export function ReadinessCard({
   assessmentId,
   shareUrl,
   shareToken,
-  abdmAlreadyCaptured,
-  dpdpAlreadyCaptured,
-  onAbdmSubmit,
-  onDpdpSubmit,
-  showAbdmBlock,
-  showDpdpBlock,
+  // ABDM/DPDP props retained on the type signature so the container
+  // caller doesn't break. The intent-capture blocks have been removed
+  // from the rendered output (regulations still appear in the snapshot
+  // above), but a future re-introduction would re-enable these.
+  abdmAlreadyCaptured: _abdmAlreadyCaptured,
+  dpdpAlreadyCaptured: _dpdpAlreadyCaptured,
+  onAbdmSubmit: _onAbdmSubmit,
+  onDpdpSubmit: _onDpdpSubmit,
+  showAbdmBlock: _showAbdmBlock,
+  showDpdpBlock: _showDpdpBlock,
   isWellness,
+  completeness,
+  hideDownload,
 }: {
   card: ReadinessCardType;
   assessmentId: string;
@@ -46,18 +56,33 @@ export function ReadinessCard({
   showAbdmBlock: boolean;
   showDpdpBlock: boolean;
   isWellness: boolean;
+  completeness?: CompletenessResult | null;
+  /** Static demo cards (e.g. /demo/trl-cards) have no real share token,
+   * so the PDF generation API would 404. Pass true to hide the download
+   * button while keeping the share link copy affordance. */
+  hideDownload?: boolean;
 }) {
   const productName = card.meta.product_name || card.meta.company_name;
   const shortId = assessmentId.slice(0, 6);
   const generatedDate = formatToday();
+  const showCompletenessBlock = !isWellness && completeness !== null && completeness !== undefined;
+  const showTrlBlock = card.trl && card.trl.level !== null;
 
   return (
     <RiskTintedSurface riskLevel={card.risk.level}>
       <div className="bg-white rounded-xl border border-[#D9D5C8] px-5 sm:px-6 md:px-8 py-6 sm:py-8">
-        {/* 1. Header (eyebrow + product + device type) */}
-        <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-3">
-          REGULATORY RISK PROFILE
-        </p>
+        {/* 1. Header — eyebrow + product + device type on left,
+            regulation count chip top-right (single source of truth for
+            "how many regs apply"). On mobile the chip drops below
+            the eyebrow to avoid cramping the product name. */}
+        <div className="flex items-start justify-between gap-4 mb-3">
+          <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517]">
+            REGULATORY RISK PROFILE
+          </p>
+          <div className="shrink-0">
+            <RegulationCountBadge regulations={card.regulations} />
+          </div>
+        </div>
         <h1 className="font-serif text-[clamp(24px,3vw,36px)] leading-tight text-[#0E1411] mb-1">
           {productName}
         </h1>
@@ -65,33 +90,82 @@ export function ReadinessCard({
           {card.classification.device_type}
         </p>
 
-        {/* 2. Score + Badge Row */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-6 mb-8">
-          <ReadinessCircle
-            score={card.readiness.score}
-            band={card.readiness.band}
-          />
-          <div className="flex-1 min-w-0">
-            <BadgeRow
+        {/* 2. 2x2 grid of sibling metrics:
+              Row 1: Risk · TRL
+              Row 2: Documents · Timeline
+
+            Three independent scores + a timeline. Never composited —
+            partners see independent axes. Readiness 0/10 score has been
+            retired from the visible card (data still lives in
+            card.readiness for TRL derivation + draft-pack consumers).
+
+            For non-medical-device or wellness cards: TRL and Documents
+            don't apply, so the grid degrades gracefully to just Risk +
+            Timeline (or a single Risk block if Timeline is N/A too).
+        */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8 auto-rows-fr">
+          <div className="h-full">
+            <RiskBlock
               riskLevel={card.risk.level}
-              mdStatus={card.classification.medical_device_status}
+              riskRationale={card.risk.rationale}
               cdscoClass={card.classification.cdsco_class}
               classQualifier={card.classification.class_qualifier}
-              timelineDisplay={card.timeline.display}
+              isMedicalDevice={
+                card.classification.medical_device_status === "is_medical_device" ||
+                card.classification.medical_device_status === "hybrid"
+              }
             />
+          </div>
+          {showTrlBlock && card.trl && (
+            <div className="h-full">
+              <TRLBlock trl={card.trl} />
+            </div>
+          )}
+          {showCompletenessBlock && (
+            <div className="h-full">
+              <DocumentCompletenessBlock
+                result={completeness ?? null}
+                cdscoClass={card.classification.cdsco_class}
+              />
+            </div>
+          )}
+          <div className="h-full">
+            <TimelineCompactBlock timeline={card.timeline} />
           </div>
         </div>
 
-        {/* 3-5. Verdict + Why regulated + Top gaps */}
-        <div className="space-y-7">
+        {/* 3. Verdict + Why regulated */}
+        <div className="space-y-7 mb-7">
           <VerdictBlock verdict={card.verdict} />
           <WhyRegulatedBlock whyRegulated={card.why_regulated} />
+        </div>
+
+        {/* 4. Regulation snapshot — moved ABOVE gaps so the founder sees
+            scope first, then the actionable gaps to fix. */}
+        <div className="mb-7">
+          <RegulationSnapshot regulations={card.regulations} />
+        </div>
+
+        {/* 5. Top gaps — actionable next steps */}
+        <div className="mb-7">
           <TopGapsList gaps={card.top_gaps} />
         </div>
 
-        {/* 6. Tier 2/3 row (combined, equal hierarchy) — wellness path
-            shows the carve-out block instead, since Tier 2 doesn't apply */}
-        <div className="mt-7">
+        {/* 6. Time-saved block (Tier 2 value prop) — only when there are
+            missing CDSCO docs. Hooks the Documents count to a concrete
+            value prop for Tier 2. */}
+        {!isWellness && (
+          <TimeSavedBlock result={completeness ?? null} />
+        )}
+
+        {/* 7. Concierge value block (Tier 3 value prop) — sibling to
+            time-saved. Reframes ₹50K concierge as faster than a
+            traditional consultant, not just 'expert review'. */}
+        {!isWellness && <ConciergeValueBlock />}
+
+        {/* 8. Pick your path — Tier 2/3 CTAs.
+            Wellness: shows carve-out block instead since paid tiers don't apply. */}
+        <div className="mb-7">
           {isWellness ? (
             <WellnessCarveOutBlock regulations={card.regulations} />
           ) : (
@@ -99,34 +173,24 @@ export function ReadinessCard({
           )}
         </div>
 
-        {/* 7. DPDP intent block (moved up — was after ABDM) */}
-        {showDpdpBlock && (
-          <DPDPGapBlock
-            assessmentId={assessmentId}
-            alreadyCaptured={dpdpAlreadyCaptured}
-            onSubmit={onDpdpSubmit}
-          />
-        )}
-
-        {/* 8. ABDM intent block (moved down — was mid-card) */}
-        {showAbdmBlock && (
-          <ABDMGapBlock
-            assessmentId={assessmentId}
-            alreadyCaptured={abdmAlreadyCaptured}
-            onSubmit={onAbdmSubmit}
-          />
-        )}
-
-        {/* 9. Regulation snapshot + 10. Timeline (reference depth at bottom) */}
-        <div className="mt-7 space-y-7">
-          <RegulationSnapshot regulations={card.regulations} />
-          <TimelineBlock
-            low={card.timeline.estimate_months_low}
-            high={card.timeline.estimate_months_high}
-            display={card.timeline.display}
-            anchor={card.timeline.anchor}
-          />
+        {/* 9. More about these regulations — moved BELOW the CTAs so it
+            doesn't compete with them. Opens in a new tab so partners
+            reading the card during a demo don't lose context. */}
+        <div className="mb-2 text-center">
+          <a
+            href="/regulations"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center text-xs text-[#6B766F] hover:text-[#0F6E56] underline underline-offset-4"
+          >
+            More about these 9 regulations + FAQ →
+          </a>
         </div>
+
+        {/* Edit-inputs link removed from card body. Now lives above the
+            card in the page chrome (app/c/[share_token]/page.tsx) so it
+            doesn't compete with Tier 2/3 CTAs. DPDP / ABDM intent capture
+            blocks also removed; regulations still appear in the snapshot. */}
       </div>
 
       {/* 11. ShareRow (Download PDF + secondary copy link) */}
@@ -135,6 +199,7 @@ export function ReadinessCard({
           shareUrl={shareUrl}
           shareToken={shareToken}
           productName={productName}
+          hideDownload={hideDownload}
         />
       </div>
 

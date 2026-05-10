@@ -1,0 +1,77 @@
+[resume] tag=targeted-v4 cases=9
+[resume] polling pre-router batch msgbatch_019UFN4D7kfmWAaENQtWdjQ3…
+[resume] polling synth batch msgbatch_01JLTkUVT4WSz9WhSBNQDFA3…
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] status=in_progress succ=0 proc=9 err=0
+[batch:synth] poll retry after error: Connection error.
+[batch:synth] poll retry after error: Connection error.
+[batch:synth] poll retry after error: Connection error.
+[batch:synth] poll retry after error: Connection error.
+[batch:synth] poll retry after error: Connection error.
+[batch:synth] status=ended succ=9 proc=0 err=0
+
+========================================================================
+RESUMED RECON DONE
+Tolerant: 9/9 (100.0%) bar≥90% PASS
+Strict:   7/9 (77.8%)
+Synth parse fail: 0/9
+Cost: $0.6171
+Outputs: /Users/raunaqpradhan/my-weekender-project/clearpath/data/eval/sprint-1-3/recon-run-targeted-v4.json
+========================================================================
+

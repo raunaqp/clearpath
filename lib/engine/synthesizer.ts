@@ -6,12 +6,14 @@ import {
 import { SYNTHESIZER_SYSTEM_PROMPT } from "@/lib/engine/synthesizer-system-prompt";
 import { softenReadinessCard } from "@/lib/engine/soften-certainty";
 import {
-  computeOpusCost,
+  calculateCallCost,
   trackApiCost,
-  type OpusUsage,
-} from "@/lib/engine/opus-cost";
+  type TokenUsage,
+  type ModelKey,
+} from "@/lib/engine/cost-calculator";
+import { recordEngineCost } from "@/lib/engine/cost-recorder";
 
-const MODEL = "claude-opus-4-7";
+const MODEL: ModelKey = "claude-opus-4-7";
 const MAX_TOKENS = 4000;
 const STRICT_SUFFIX =
   "\n\nReturn STRICT JSON ONLY. No preamble. No trailing text.";
@@ -30,8 +32,7 @@ export type SynthesizerInput = {
 export type SynthesizerResult = {
   card: ReadinessCard;
   rawModelResponse: string;
-  usage: OpusUsage;
-  costUsd: number;
+  usage: TokenUsage;
 };
 
 function buildUserMessage(input: SynthesizerInput): string {
@@ -72,7 +73,7 @@ function parseAndValidate(rawText: string): ReadinessCard {
   return ReadinessCardSchema.parse(parsed);
 }
 
-function usageFrom(response: Anthropic.Message): OpusUsage {
+function usageFrom(response: Anthropic.Message): TokenUsage {
   return {
     input_tokens: response.usage.input_tokens,
     cache_read: response.usage.cache_read_input_tokens ?? 0,
@@ -93,7 +94,7 @@ export async function runSynthesizer(
   const userText = buildUserMessage(input);
 
   // Accumulators across both attempts so we report total cost honestly.
-  let totalUsage: OpusUsage = {
+  let totalUsage: TokenUsage = {
     input_tokens: 0,
     cache_read: 0,
     cache_write: 0,
@@ -131,7 +132,7 @@ export async function runSynthesizer(
       cache_write: totalUsage.cache_write + usage.cache_write,
       output_tokens: totalUsage.output_tokens + usage.output_tokens,
     };
-    totalCost += computeOpusCost(usage);
+    totalCost += calculateCallCost(MODEL, usage);
 
     try {
       const card = parseAndValidate(rawText);
@@ -145,11 +146,18 @@ export async function runSynthesizer(
         cache_hit: totalUsage.cache_read > 0,
       });
 
+      await recordEngineCost({
+        call_layer: "synthesizer",
+        model: MODEL,
+        usage: totalUsage,
+        cost_usd: totalCost,
+        assessment_id: input.assessmentId,
+      });
+
       return {
         card: softened,
         rawModelResponse: rawText,
         usage: totalUsage,
-        costUsd: totalCost,
       };
     } catch (err) {
       if (attempt === 2) {
@@ -160,6 +168,13 @@ export async function runSynthesizer(
           usage: totalUsage,
           cost_usd: totalCost,
           cache_hit: totalUsage.cache_read > 0,
+        });
+        await recordEngineCost({
+          call_layer: "synthesizer",
+          model: MODEL,
+          usage: totalUsage,
+          cost_usd: totalCost,
+          assessment_id: input.assessmentId,
         });
         throw new Error(
           `synthesizer: JSON/schema validation failed after retry: ${

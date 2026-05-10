@@ -42,6 +42,11 @@ type AssessmentMeta = {
     severity?: "high" | "medium" | "low" | "none";
   } | null;
   conflict_acknowledged?: boolean;
+  // Wizard completion metadata (also written by /api/wizard/complete)
+  wizard_completed_at?: string;
+  wizard_skipped_questions?: number[];
+  wizard_auto_completed?: boolean;
+  [key: string]: unknown;
 };
 
 type AssessmentRow = {
@@ -56,7 +61,7 @@ type AssessmentRow = {
   meta: AssessmentMeta | null;
 };
 
-function firstUnansweredStep(answers: WizardAnswers | null): number {
+function firstUnansweredStep(answers: WizardAnswers | null): number | null {
   const a = answers ?? {};
   const total = totalSteps();
   for (let i = 1; i <= total; i++) {
@@ -65,7 +70,10 @@ function firstUnansweredStep(answers: WizardAnswers | null): number {
     if (v === undefined || v === null) return i;
     if (Array.isArray(v) && v.length === 0) return i;
   }
-  return 1;
+  // All questions answered (e.g. demo-packet prefill). Caller should
+  // mark wizard complete and proceed to synthesis instead of redirecting
+  // back to question 1.
+  return null;
 }
 
 export default async function AssessPage({
@@ -110,6 +118,10 @@ export default async function AssessPage({
   // routing_complete / wizard → jump into the wizard.
   // If an unacknowledged high/medium conflict exists, divert to
   // the dedicated /wizard/[id]/conflict screen first.
+  // Demo packets prefill all 7 answers at intake; the wizard still
+  // renders (showing prefilled answers) so partners can see the depth
+  // of the questionnaire during demos. The wizard offers a "skip to
+  // card" affordance when all answers are present.
   if (
     assessment.status === "routing_complete" ||
     assessment.status === "wizard" ||
@@ -127,7 +139,17 @@ export default async function AssessPage({
     }
 
     const step = firstUnansweredStep(assessment.wizard_answers);
-    redirect(`/wizard/${id}/q/${step}`);
+
+    if (step !== null) {
+      // Wizard not yet complete — redirect to next unanswered step
+      redirect(`/wizard/${id}/q/${step}`);
+    }
+
+    // All answers present (e.g. demo-packet prefill). Show the wizard
+    // from question 1 so partners see the depth of the questionnaire.
+    // The wizard's WizardClient renders the prefilled answer for each
+    // step and exposes a "skip to card" link in the header.
+    redirect(`/wizard/${id}/q/1`);
   }
 
   // synthesizer_error — show panel + retry button. Don't auto-retry on
@@ -241,11 +263,14 @@ async function runPreRouterFlow(
       }
     }
 
-    const result = await runPreRouter({
-      oneLiner: assessment.one_liner,
-      urlContent,
-      pdfs,
-    });
+    const result = await runPreRouter(
+      {
+        oneLiner: assessment.one_liner,
+        urlContent,
+        pdfs,
+      },
+      { assessmentId: assessment.id }
+    );
 
     for (const s of result.pdf_summaries) {
       try {
@@ -270,11 +295,14 @@ async function runPreRouterFlow(
         status: newStatus,
         meta: {
           pre_router: {
+            // cost_usd no longer written here — cost lives in engine_costs
+            // table (Story 1.4b). Other 5 fields stay; they're assessment-
+            // record context, not cost data. Existing nested cost_usd
+            // values from prior assessments stay (no backfill — Option Y).
             rationale: result.rationale,
             conflict_detected: result.conflict_detected,
             conflict_note: result.conflict_note,
             rejection_reason: result.rejection_reason,
-            cost_usd: result.cost_usd,
             ran_at: new Date().toISOString(),
           },
           conflict_detected: result.conflict_detected,

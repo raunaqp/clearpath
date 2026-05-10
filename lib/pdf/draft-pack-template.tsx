@@ -8,6 +8,8 @@ import {
 import React from "react";
 import type { DraftPackContent } from "@/lib/engine/draft-pack-prompts";
 import type { ReadinessCard } from "@/lib/schemas/readiness-card";
+import type { CompletenessResult } from "@/lib/completeness/types";
+import { getTRLDefinition } from "@/lib/engine/trl";
 import {
   applicableRegulations,
   type ApplicableRegulation,
@@ -110,6 +112,12 @@ const styles = StyleSheet.create({
     fontSize: 10.5,
     color: TEXT_DARK,
     marginBottom: 8,
+  },
+  bold: {
+    fontFamily: "Helvetica-Bold",
+  },
+  italic: {
+    fontStyle: "italic",
   },
   placeholder: {
     fontSize: 10,
@@ -223,6 +231,73 @@ const styles = StyleSheet.create({
     borderTopWidth: 0.5,
     borderTopColor: RULE,
   },
+  // Maturity & Completeness section (NEW — Section 10)
+  maturityRow: {
+    flexDirection: "row",
+    gap: 16,
+    marginTop: 12,
+    marginBottom: 16,
+  },
+  maturityCard: {
+    flex: 1,
+    borderWidth: 0.5,
+    borderColor: RULE,
+    backgroundColor: "#FFFFFF",
+    padding: 12,
+  },
+  maturityKicker: {
+    fontSize: 8.5,
+    color: TEXT_MUTED,
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  maturityValue: {
+    fontFamily: "Times-Bold",
+    fontSize: 22,
+    color: TEXT_DARK,
+    marginBottom: 6,
+  },
+  maturityValueUnit: {
+    fontFamily: "Helvetica",
+    fontSize: 11,
+    color: TEXT_MUTED,
+  },
+  maturitySub: {
+    fontSize: 9.5,
+    color: TEXT_DARK,
+    marginBottom: 4,
+  },
+  maturityNote: {
+    fontSize: 8.5,
+    color: TEXT_MUTED,
+    fontStyle: "italic",
+    marginTop: 4,
+  },
+  maturityProgressTrack: {
+    height: 3,
+    backgroundColor: "#E8E4D6",
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  maturityProgressFill: {
+    height: 3,
+    backgroundColor: TEAL_DEEP,
+  },
+  missingDocItem: {
+    flexDirection: "row",
+    marginTop: 3,
+    marginBottom: 1,
+  },
+  missingDocBullet: {
+    width: 12,
+    fontSize: 9.5,
+    color: TEXT_MUTED,
+  },
+  missingDocText: {
+    flex: 1,
+    fontSize: 9.5,
+    color: TEXT_DARK,
+  },
 });
 
 export type DraftPackData = {
@@ -309,10 +384,27 @@ export const DraftPackDocument = ({
   data,
   content,
   regulations,
+  trl,
+  completeness,
+  relevantForms,
 }: {
   data: DraftPackData;
   content?: DraftPackContent;
   regulations?: ReadinessCard["regulations"];
+  /** TRL block from the Risk Card. Renders the Section 10 Maturity panel. */
+  trl?: ReadinessCard["trl"];
+  /** Completeness result from the Risk Card. Renders the documents panel. */
+  completeness?: CompletenessResult | null;
+  /** Forms relevant to this device profile (per lib/cdsco/relevant-forms.ts).
+   * Drives the dynamic Section 09 listing — split between forms appended
+   * to this PDF (available + url) and forms the founder downloads from
+   * cdsco.gov.in. Fixes the inconsistency where MD-14 was listed as
+   * 'included' when in fact it was skipped during append (no mirror PDF). */
+  relevantForms?: Array<{
+    id: string;
+    description: string;
+    available: boolean;
+  }>;
 }) => (
   <Document
     title={`ClearPath Draft Pack — ${data.product_name}`}
@@ -393,9 +485,186 @@ export const DraftPackDocument = ({
       <Footer productName={data.product_name} />
     </Page>
 
+    {/* 2. Maturity & Document Completeness — placed right after the
+         executive summary so the founder sees their position before
+         diving into device descriptions and clinical context. Carries
+         over the same TRL + completeness numbers from the Risk Card,
+         pure data, no LLM call. */}
+    {(trl || completeness) ? (
+      <Page size="A4" style={styles.page}>
+        <SectionHeader
+          kicker="SECTION 02"
+          title="Maturity &amp; Document Completeness"
+        />
+        <Text style={styles.body}>
+          The numbers below are carried over from your Risk Card so the
+          Draft Pack and the Card never disagree. TRL is anchored to the
+          SERB / ANRF MAHA MedTech Mission framework — the same vocabulary
+          BIRAC, MAHA MedTech evaluators, and IKP Eden use when assessing
+          medtech funding applications.
+        </Text>
+        <Text style={styles.body}>
+          The two panels below answer different questions. <Text style={styles.bold}>Technology Readiness Level</Text> tells you how mature the
+          product itself is — has the device moved from idea, to prototype, to clinical evidence, to active CDSCO filing.{" "}
+          <Text style={styles.bold}>Document Completeness</Text> tells you how much of the CDSCO submission packet you have in place — typically a
+          Class C/D submission needs 10 categories of documents (DMF, ISO 13485 cert, IEC 62304 evidence, RMF, CER, EP checklist, IFU, test
+          reports, ACP for AI/ML, and the application form itself). The two move together but not lockstep — a TRL 6 product can have
+          5/10 documents in place if the team has been writing as they build.
+        </Text>
+        <Text style={styles.body}>
+          Both numbers are estimates based on what you uploaded plus what your wizard answers signal. <Text style={styles.bold}>Tier 2 (this Draft Pack)
+          gives you the narrative drafts</Text> for sections 03–10 below. <Text style={styles.bold}>Tier 3 Concierge verifies each uploaded document</Text>{" "}
+          against actual CDSCO requirements and flags substantive gaps your team needs to close before filing.
+        </Text>
+        <Text style={styles.body}>
+          <Text style={styles.bold}>How to read the Documents number.</Text>{" "}
+          <Text style={styles.italic}>Uploaded</Text> means you actually shared
+          the file with us during intake — we&apos;ve recorded it but haven&apos;t
+          yet read it carefully. <Text style={styles.italic}>Claimed (not yet
+          verified)</Text> means your wizard answers signalled the document
+          exists but you didn&apos;t share it with us. Both count toward the
+          completeness score below, because both are credible signals — but
+          they&apos;re not the same. The CDSCO reviewer sees neither until
+          the dossier lands. Tier 3 Concierge reads each uploaded document
+          side-by-side with the CDSCO requirement it&apos;s meant to satisfy
+          and flags content gaps the founder needs to close.
+        </Text>
+
+        <View style={styles.maturityRow}>
+          {trl && trl.level !== null ? (
+            <View style={styles.maturityCard} wrap={false}>
+              <Text style={styles.maturityKicker}>
+                TECHNOLOGY READINESS LEVEL
+              </Text>
+              <Text style={styles.maturityValue}>
+                TRL {trl.level}
+                <Text style={styles.maturityValueUnit}> / 9</Text>
+              </Text>
+              {(() => {
+                const def = getTRLDefinition(
+                  trl.level,
+                  trl.track ?? "investigational"
+                );
+                const pct = trl.completion_pct ?? 0;
+                return (
+                  <>
+                    <Text style={styles.maturitySub}>
+                      {def.label}
+                    </Text>
+                    <Text style={styles.maturitySub}>
+                      {trl.track === "has_predicate"
+                        ? "Predicate-equivalence track"
+                        : "Investigational track"}
+                      {" · "}
+                      {pct}% to commercialisation
+                    </Text>
+                    <View style={styles.maturityProgressTrack}>
+                      <View
+                        style={[
+                          styles.maturityProgressFill,
+                          { width: `${Math.max(pct, 2)}%` },
+                        ]}
+                      />
+                    </View>
+                    {def.anchor_form ? (
+                      <Text style={styles.maturityNote}>
+                        Anchor form: {def.anchor_form}
+                      </Text>
+                    ) : null}
+                    <Text style={styles.maturityNote}>
+                      Next: {trl.next_milestone}
+                    </Text>
+                  </>
+                );
+              })()}
+            </View>
+          ) : null}
+
+          {completeness ? (
+            <View style={styles.maturityCard} wrap={false}>
+              <Text style={styles.maturityKicker}>
+                CDSCO DOCUMENT COMPLETENESS
+              </Text>
+              {(() => {
+                const total = completeness.per_requirement.length;
+                const satisfied = completeness.per_requirement.filter(
+                  (r) => r.satisfied
+                ).length;
+                const uploaded = completeness.per_requirement.filter(
+                  (r) =>
+                    r.satisfied &&
+                    r.satisfied_by_document_ids.some(
+                      (id) => !id.startsWith("signal:")
+                    )
+                ).length;
+                const claimed = satisfied - uploaded;
+                const pct = completeness.overall_pct;
+                return (
+                  <>
+                    <Text style={styles.maturityValue}>
+                      {satisfied}
+                      <Text style={styles.maturityValueUnit}>
+                        {" "}
+                        / {total} in place
+                      </Text>
+                    </Text>
+                    <Text style={styles.maturitySub}>
+                      {pct}% of required documents
+                    </Text>
+                    <View style={styles.maturityProgressTrack}>
+                      <View
+                        style={[
+                          styles.maturityProgressFill,
+                          { width: `${Math.max(pct, 2)}%` },
+                        ]}
+                      />
+                    </View>
+                    <Text style={styles.maturityNote}>
+                      {uploaded > 0
+                        ? `${uploaded} uploaded`
+                        : "0 uploaded"}
+                      {claimed > 0
+                        ? ` · ${claimed} claimed (not yet verified)`
+                        : ""}
+                    </Text>
+                    <Text style={styles.maturityNote}>
+                      Estimated from your uploads + readiness signals. Tier 2
+                      verifies content of each document against CDSCO
+                      requirements.
+                    </Text>
+                  </>
+                );
+              })()}
+            </View>
+          ) : null}
+        </View>
+
+        {completeness && completeness.missing.length > 0 ? (
+          <View wrap={false}>
+            <Text style={styles.h2}>
+              Documents not yet in place ({completeness.missing.length})
+            </Text>
+            {completeness.missing.map((r) => (
+              <View key={r.id} style={styles.missingDocItem}>
+                <Text style={styles.missingDocBullet}>·</Text>
+                <Text style={styles.missingDocText}>{r.name}</Text>
+              </View>
+            ))}
+            <Text style={[styles.maturityNote, { marginTop: 8 }]}>
+              Each document above will be drafted in the matching
+              section of this Draft Pack, or appended as a CDSCO blank
+              form ready for completion.
+            </Text>
+          </View>
+        ) : null}
+
+        <Footer productName={data.product_name} />
+      </Page>
+    ) : null}
+
     {/* 3. Intended Use Statement */}
     <Page size="A4" style={styles.page}>
-      <SectionHeader kicker="SECTION 02" title="Intended Use Statement" />
+      <SectionHeader kicker="SECTION 03" title="Intended Use Statement" />
       {content?.intended_use ? (
         <>
           <Text style={styles.h2}>Indication</Text>
@@ -445,7 +714,7 @@ export const DraftPackDocument = ({
 
     {/* 4. Device Description (page 1) */}
     <Page size="A4" style={styles.page}>
-      <SectionHeader kicker="SECTION 03" title="Device Description" />
+      <SectionHeader kicker="SECTION 04" title="Device Description" />
       {content?.device_description ? (
         <>
           <Text style={styles.h2}>Components &amp; Architecture</Text>
@@ -517,7 +786,7 @@ export const DraftPackDocument = ({
     {/* 5. Risk Classification Justification */}
     <Page size="A4" style={styles.page}>
       <SectionHeader
-        kicker="SECTION 04"
+        kicker="SECTION 05"
         title="Risk Classification Justification"
       />
       {content?.risk_classification ? (
@@ -588,7 +857,7 @@ export const DraftPackDocument = ({
 
     {/* 6. Clinical Context */}
     <Page size="A4" style={styles.page}>
-      <SectionHeader kicker="SECTION 05" title="Clinical Context" />
+      <SectionHeader kicker="SECTION 06" title="Clinical Context" />
       {content?.clinical_context ? (
         <>
           <Text style={styles.h2}>Clinical Need</Text>
@@ -632,7 +901,7 @@ export const DraftPackDocument = ({
     {/* 7. Essential Principles checklist (static) */}
     <Page size="A4" style={styles.page}>
       <SectionHeader
-        kicker="SECTION 06"
+        kicker="SECTION 07"
         title="Essential Principles Checklist"
       />
       <Text style={styles.body}>
@@ -693,7 +962,7 @@ export const DraftPackDocument = ({
     {/* 8. Algorithm Change Protocol */}
     <Page size="A4" style={styles.page}>
       <SectionHeader
-        kicker="SECTION 07"
+        kicker="SECTION 08"
         title="Algorithm Change Protocol"
       />
       {content?.algorithm_change_protocol?.applicable ? (
@@ -748,7 +1017,7 @@ export const DraftPackDocument = ({
 
     {/* 9. Glossary + References (static) */}
     <Page size="A4" style={styles.page}>
-      <SectionHeader kicker="SECTION 08" title="Glossary &amp; References" />
+      <SectionHeader kicker="SECTION 09" title="Glossary &amp; References" />
       <Text style={styles.h2}>Glossary</Text>
       <Bullet>
         <Text>
@@ -808,7 +1077,7 @@ export const DraftPackDocument = ({
     {/* 10. Applicable Regulations & Forms */}
     <Page size="A4" style={styles.page}>
       <SectionHeader
-        kicker="SECTION 09"
+        kicker="SECTION 10"
         title="Applicable Regulations &amp; Forms"
       />
       <Text style={styles.body}>
@@ -828,20 +1097,48 @@ export const DraftPackDocument = ({
       )}
 
       <View style={styles.formsFooter} wrap={false}>
-        <Text style={styles.h2}>Forms included in this Draft Pack</Text>
-        <Bullet>MD-7 — Manufacturing license, Class C/D</Bullet>
-        <Bullet>MD-12 — Test license (clinical investigation)</Bullet>
-        <Bullet>MD-14 — Import license</Bullet>
-        <Bullet>MD-22 — Clinical Investigation approval</Bullet>
-        <Text style={styles.h2}>Forms to download from cdsco.gov.in</Text>
-        <Bullet>MD-5 — Manufacturing license, Class A/B (state authority)</Bullet>
-        <Bullet>MD-9 — Manufacturing license, Class C/D (alt route)</Bullet>
-        <Bullet>MD-20 — Export No Objection Certificate</Bullet>
-        <Bullet>MD-23 — Clinical Performance Evaluation for IVDs</Bullet>
-        <Text style={[styles.regLabel, { marginTop: 8 }]}>
-          Forms appended to this PDF as appendices are listed in the
-          appendix separator pages that follow.
-        </Text>
+        {(() => {
+          const forms = relevantForms ?? [];
+          const appended = forms.filter((f) => f.available);
+          const downloadable = forms.filter((f) => !f.available);
+          return (
+            <>
+              {appended.length > 0 && (
+                <>
+                  <Text style={styles.h2}>
+                    Forms appended to this Draft Pack
+                  </Text>
+                  {appended.map((f) => (
+                    <Bullet key={f.id}>
+                      {f.id} — {f.description}
+                    </Bullet>
+                  ))}
+                </>
+              )}
+              {downloadable.length > 0 && (
+                <>
+                  <Text style={styles.h2}>
+                    Forms to download from cdsco.gov.in
+                  </Text>
+                  {downloadable.map((f) => (
+                    <Bullet key={f.id}>
+                      {f.id} — {f.description}
+                    </Bullet>
+                  ))}
+                </>
+              )}
+              {forms.length === 0 && (
+                <Placeholder>
+                  No CDSCO forms identified for this device profile.
+                </Placeholder>
+              )}
+              <Text style={[styles.regLabel, { marginTop: 8 }]}>
+                Appended forms appear as appendix pages later in this
+                document.
+              </Text>
+            </>
+          );
+        })()}
       </View>
 
       <Footer productName={data.product_name} />

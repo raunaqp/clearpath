@@ -1,0 +1,52 @@
+
+[recon-50] calibration: /Users/raunaqpradhan/my-weekender-project/clearpath/data/calibration/clearpath_synthetic_50_full_schema_v2_1.json
+[recon-50] loaded 50 cases
+
+[batch:pre-router] submitting 50 requests...
+[batch:pre-router] id=msgbatch_01V5m2h1bvneYyVdzUPYstFZ status=in_progress
+[batch:pre-router] +31s  status=in_progress  succ=0 proc=50 err=0 exp=0 cancel=0
+[batch:pre-router] +61s  status=in_progress  succ=0 proc=50 err=0 exp=0 cancel=0
+[batch:pre-router] +92s  status=in_progress  succ=0 proc=50 err=0 exp=0 cancel=0
+[batch:pre-router] +122s  status=in_progress  succ=0 proc=50 err=0 exp=0 cancel=0
+[batch:pre-router] +153s  status=in_progress  succ=0 proc=50 err=0 exp=0 cancel=0
+[batch:pre-router] +183s  status=in_progress  succ=0 proc=50 err=0 exp=0 cancel=0
+[batch:pre-router] +214s  status=in_progress  succ=0 proc=50 err=0 exp=0 cancel=0
+[batch:pre-router] +244s  status=in_progress  succ=0 proc=50 err=0 exp=0 cancel=0
+[batch:pre-router] +274s  status=in_progress  succ=0 proc=50 err=0 exp=0 cancel=0
+[batch:pre-router] +306s  status=in_progress  succ=0 proc=50 err=0 exp=0 cancel=0
+[batch:pre-router] +337s  status=in_progress  succ=0 proc=50 err=0 exp=0 cancel=0
+[batch:pre-router] +367s  status=in_progress  succ=0 proc=50 err=0 exp=0 cancel=0
+[batch:pre-router] +398s  status=in_progress  succ=0 proc=50 err=0 exp=0 cancel=0
+[batch:pre-router] +428s  status=in_progress  succ=0 proc=50 err=0 exp=0 cancel=0
+[batch:pre-router] +459s  status=in_progress  succ=0 proc=50 err=0 exp=0 cancel=0
+[batch:pre-router] +490s  status=in_progress  succ=0 proc=50 err=0 exp=0 cancel=0
+[batch:pre-router] +520s  status=ended  succ=50 proc=0 err=0 exp=0 cancel=0
+[batch:pre-router] done in 520s
+
+[recon-50] synth candidates: 48/50 (rest were pre-router rejected/errored)
+
+[batch:synth] submitting 48 requests...
+[batch:synth] id=msgbatch_01YL6BGDyha9PRxGMu7Jg1St status=in_progress
+[batch:synth] +31s  status=in_progress  succ=0 proc=48 err=0 exp=0 cancel=0
+[batch:synth] +61s  status=in_progress  succ=0 proc=48 err=0 exp=0 cancel=0
+[batch:synth] +92s  status=in_progress  succ=0 proc=48 err=0 exp=0 cancel=0
+[batch:synth] +122s  status=in_progress  succ=0 proc=48 err=0 exp=0 cancel=0
+[batch:synth] +153s  status=in_progress  succ=0 proc=48 err=0 exp=0 cancel=0
+[batch:synth] +183s  status=in_progress  succ=0 proc=48 err=0 exp=0 cancel=0
+[batch:synth] +214s  status=ended  succ=48 proc=0 err=0 exp=0 cancel=0
+[batch:synth] done in 214s
+
+========================================================================
+RECON DONE in 743s
+========================================================================
+Tolerant match: 50/50 (100.0%)  bar ≥90%: PASS
+Strict   match: 41/50 (82.0%)  internal only
+Disagreements:  0
+Pre-router err: 0  parse-fail: 0
+Synth parse fail: 1/48
+Cost (Batch API): pre-router $0.0435 + synth $3.0010 = $3.0445
+Outputs:
+  /Users/raunaqpradhan/my-weekender-project/clearpath/data/eval/sprint-1-3/recon-run-v3.json
+  /Users/raunaqpradhan/my-weekender-project/clearpath/data/eval/sprint-1-3/disagreements-v3.md
+========================================================================
+

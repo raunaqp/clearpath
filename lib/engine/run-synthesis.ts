@@ -260,6 +260,18 @@ export async function runSynthesisForAssessment(
     synthesizer_error: null,
   };
 
+  // Note: completeness is computed at render time in app/c/[share_token]/page.tsx
+  // rather than at synthesis time. This way it always reflects the latest
+  // checklist (no stale cards if checklist evolves) and the synthesis path
+  // stays focused on Opus output. Cost: ~5ms per render — negligible.
+
+  // Denormalise TRL into convenience columns for admin queries / indexes.
+  // Source of truth remains readiness_card JSONB.
+  const cardWithTRL = cardToSave as { trl?: { level?: number | null; track?: string | null; completion_pct?: number | null } };
+  const trlLevel = cardWithTRL?.trl?.level ?? null;
+  const trlTrack = cardWithTRL?.trl?.track ?? null;
+  const trlPct = cardWithTRL?.trl?.completion_pct ?? null;
+
   const { error: saveErr } = await supabase
     .from("assessments")
     .update({
@@ -269,6 +281,9 @@ export async function runSynthesisForAssessment(
       cache_version: ver,
       status: "completed",
       meta: finalMeta,
+      trl_level: trlLevel,
+      trl_track: trlTrack,
+      trl_completion_pct: trlPct,
       updated_at: finishedAtIso,
     })
     .eq("id", id);

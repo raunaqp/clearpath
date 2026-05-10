@@ -17,12 +17,15 @@ if (fs.existsSync(envPath)) {
 import { runPreRouter } from "../lib/engine/pre-router";
 
 async function main() {
-  const result = await runPreRouter({
-    oneLiner: "Women's health data platform",
-    urlContent:
-      "AI-powered cervical cancer screening from colposcopy images. A diagnostic decision-support tool for gynaecologists. FDA-class equivalent device under evaluation.",
-    pdfs: [],
-  });
+  const result = await runPreRouter(
+    {
+      oneLiner: "Women's health data platform",
+      urlContent:
+        "AI-powered cervical cancer screening from colposcopy images. A diagnostic decision-support tool for gynaecologists. FDA-class equivalent device under evaluation.",
+      pdfs: [],
+    },
+    { assessmentId: "debug-conflict-fixture" }
+  );
   console.log("\n=== STRUCTURED RESULT ===\n");
   console.log(
     JSON.stringify(

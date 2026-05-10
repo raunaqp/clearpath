@@ -63,6 +63,44 @@ export const RiskLevelEnum = z.enum([
 
 export const SeverityEnum = z.enum(["high", "medium", "low"]);
 
+/**
+ * TRL (Technology Readiness Level) — anchored to SERB/ANRF MAHA MedTech Mission
+ * framework (medical-device-specific, CDSCO-form-anchored).
+ *
+ * Source: https://serb.gov.in/assets/pdf/TRL_and_health_priority.pdf
+ *
+ * Two tracks:
+ *  - investigational (no predicate) — full 9 levels
+ *  - has_predicate — collapses TRL 6-7 (substantial-equivalence path)
+ *
+ * `null` when medical_device_status = not_medical_device / wellness_carve_out.
+ */
+export const TRLLevelSchema = z.union([
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+  z.literal(5),
+  z.literal(6),
+  z.literal(7),
+  z.literal(8),
+  z.literal(9),
+]);
+
+export const TRLTrackEnum = z.enum(["investigational", "has_predicate"]);
+
+export const TRLStageSchema = z.enum([
+  "ideation",
+  "proof_of_principle",
+  "early_poc",
+  "advanced_poc",
+  "test_batch",
+  "pilot_study",
+  "pivotal_study",
+  "pre_commercialisation",
+  "commercialisation",
+]);
+
 const RegulationEntrySchema = z.object({
   verdict: VerdictEnum,
   rationale: z.string(),
@@ -129,6 +167,35 @@ export const ReadinessCardSchema = z.object({
     level: RiskLevelEnum,
     rationale: z.string(),
   }),
+
+  /**
+   * TRL — optional/additive. When present, surfaces a CDSCO-form-anchored
+   * progress reading next to readiness. Computed deterministically from
+   * detected_signals + classification when not provided by Opus.
+   *
+   * Three accepted shapes (Story 1.3.5):
+   *   a) `trl: null`                                — idiomatic for non-devices
+   *   b) `trl: { ...all-null-fields, rationale: "TRL N/A …" }` — Opus's
+   *      natural emission for wellness cases when asked to "set trl to null"
+   *   c) `trl: { level, stage, track, completion_pct, next_milestone, rationale }`
+   *      — fully populated for medical devices.
+   *
+   * Loosened from required-string `next_milestone` / `rationale` to nullable
+   * after Story 1.3 recon found Opus produces shape (b) for ~2–8% of
+   * wellness/non-device assessments. See `docs/sprint-recaps/sprint-1.md`
+   * Story 1.3.5 close-out and `data/eval/sprint-1-3/schema-validation-diagnostic.md`.
+   */
+  trl: z
+    .object({
+      level: TRLLevelSchema.nullable(),
+      stage: TRLStageSchema.nullable(),
+      track: TRLTrackEnum.nullable(),
+      completion_pct: z.number().int().min(0).max(100).nullable(),
+      next_milestone: z.string().nullable(),
+      rationale: z.string().nullable(),
+    })
+    .nullable()
+    .optional(),
 
   timeline: z.object({
     estimate_months_low: z.number().int().min(0),

@@ -1,6 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { PRE_ROUTER_SYSTEM_PROMPT } from "./system-prompts";
-import { computeSonnetCost, trackApiCost, type TokenUsage } from "./cost";
+import {
+  calculateCallCost,
+  trackApiCost,
+  type TokenUsage,
+  type ModelKey,
+} from "./cost-calculator";
+import { recordEngineCost } from "./cost-recorder";
 
 export type PreRouterPdf =
   | { type: "cached"; sha256: string; summary: string }
@@ -81,7 +87,6 @@ export type PreRouterResult = {
     cache_write: number;
     output_tokens: number;
   };
-  cost_usd: number;
   raw_model_response: string;
 };
 
@@ -93,7 +98,7 @@ const EMPTY_SIGNALS: DetectedSignals = {
   facility_details: null,
 };
 
-const MODEL = "claude-sonnet-4-6";
+const MODEL: ModelKey = "claude-haiku-4-5-20251001";
 
 type ParsedModelJson = {
   product_type?: unknown;
@@ -334,7 +339,8 @@ function asDetectedSignals(v: unknown): DetectedSignals {
 }
 
 export async function runPreRouter(
-  input: PreRouterInput
+  input: PreRouterInput,
+  ctx: { assessmentId: string }
 ): Promise<PreRouterResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -389,6 +395,7 @@ ${freshPdfs.length === 0 ? "No fresh PDFs attached." : `Fresh PDFs (${freshPdfs.
   const response = await client.messages.create({
     model: MODEL,
     max_tokens: 2000,
+    temperature: 0,
     system: [
       {
         type: "text",
@@ -420,7 +427,7 @@ ${freshPdfs.length === 0 ? "No fresh PDFs attached." : `Fresh PDFs (${freshPdfs.
     output_tokens: response.usage.output_tokens,
   };
 
-  const cost_usd = computeSonnetCost(usage);
+  const cost_usd = calculateCallCost(MODEL, usage);
   const cache_hit = usage.cache_read > 0;
 
   await trackApiCost({
@@ -429,6 +436,14 @@ ${freshPdfs.length === 0 ? "No fresh PDFs attached." : `Fresh PDFs (${freshPdfs.
     usage,
     cost_usd,
     cache_hit,
+  });
+
+  await recordEngineCost({
+    call_layer: "pre_router",
+    model: MODEL,
+    usage,
+    cost_usd,
+    assessment_id: ctx.assessmentId,
   });
 
   const conflict_detected = asBool(parsed.conflict_detected);
@@ -447,7 +462,6 @@ ${freshPdfs.length === 0 ? "No fresh PDFs attached." : `Fresh PDFs (${freshPdfs.
     detected_signals: asDetectedSignals(parsed.detected_signals),
     pdf_summaries: asPdfSummaries(parsed.pdf_summaries),
     usage,
-    cost_usd,
     raw_model_response: rawText,
   };
 }

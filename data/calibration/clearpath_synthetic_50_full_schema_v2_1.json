@@ -1,0 +1,2020 @@
+{
+  "dataset_name": "clearpath_synthetic_medtech_samd_cases",
+  "version": "2.1-regulatory-sanity-check-2026",
+  "created_at": "2026-05-08",
+  "total_cases": 50,
+  "schema_fields": [
+    "case_id",
+    "product_name",
+    "one_liner",
+    "product_type",
+    "trl",
+    "trl_label",
+    "intended_use",
+    "claims",
+    "cdsco_risk",
+    "regulatory_pathway",
+    "applicable_frameworks",
+    "readiness_score",
+    "risk_score",
+    "missing_documents",
+    "training_label",
+    "expected_cdsco_class",
+    "or_acceptable",
+    "rationale",
+    "labeled_by",
+    "labeled_at"
+  ],
+  "cases": [
+    {
+      "case_id": "CP-001",
+      "product_name": "SymptomGuide",
+      "one_liner": "Consumer symptom education app that explains common symptoms and suggests when to consult a doctor.",
+      "product_type": "Consumer health education app",
+      "trl": 6,
+      "trl_label": "Prototype demonstrated with users",
+      "intended_use": "Provide general health education and care-seeking guidance without diagnosis or treatment advice.",
+      "claims": [
+        "Symptom education",
+        "Care-seeking guidance",
+        "Patient awareness"
+      ],
+      "cdsco_risk": "Low",
+      "regulatory_pathway": "Likely non-device if limited to education and no diagnosis or treatment recommendations are made",
+      "applicable_frameworks": [
+        "DPDP",
+        "Medical disclaimer",
+        "Claims governance"
+      ],
+      "readiness_score": 76,
+      "risk_score": 24,
+      "missing_documents": [
+        "Claim boundary statement",
+        "Medical disclaimer",
+        "Privacy policy",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "symptom_education_non_device",
+      "expected_cdsco_class": null,
+      "or_acceptable": [
+        "A"
+      ],
+      "rationale": "General symptom education without diagnosis or treatment recommendation is likely non-device. Class A may apply if positioned as low-risk health information software.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-002",
+      "product_name": "VitalsWatch Remote",
+      "one_liner": "Remote patient monitoring dashboard that displays vitals from connected home devices.",
+      "product_type": "Remote patient monitoring software",
+      "trl": 7,
+      "trl_label": "Prototype demonstrated in operational setting",
+      "intended_use": "Allow clinicians to view patient vitals trends and receive threshold-based alerts.",
+      "claims": [
+        "Remote vitals monitoring",
+        "Threshold alerts",
+        "Care team dashboard"
+      ],
+      "cdsco_risk": "Low to Moderate",
+      "regulatory_pathway": "Likely Class B if used for patient monitoring; lower risk if passive display only",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "DPDP",
+        "Clinical monitoring governance",
+        "Cybersecurity"
+      ],
+      "readiness_score": 68,
+      "risk_score": 52,
+      "missing_documents": [
+        "Device integration validation",
+        "Alert threshold documentation",
+        "Privacy policy",
+        "Clinical workflow SOP",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "remote_vitals_monitoring_class_b",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [],
+      "rationale": "Real-time vitals display with threshold-based alerts for clinician review is active patient monitoring, so Class B is the safer label. Class A would only fit passive fitness-style display without clinical alerts.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-003",
+      "product_name": "RetinaScreen AI",
+      "one_liner": "AI system that screens retinal fundus images for diabetic retinopathy risk.",
+      "product_type": "AI ophthalmology SaMD",
+      "trl": 5,
+      "trl_label": "Validated on retrospective datasets",
+      "intended_use": "Assist screening programs by flagging patients who need ophthalmologist referral.",
+      "claims": [
+        "Diabetic retinopathy screening",
+        "Retinal image analysis",
+        "Referral prioritization"
+      ],
+      "cdsco_risk": "Moderate to High",
+      "regulatory_pathway": "Likely regulated SaMD requiring clinical validation",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Clinical validation",
+        "QMS",
+        "Dataset governance",
+        "DPDP"
+      ],
+      "readiness_score": 49,
+      "risk_score": 78,
+      "missing_documents": [
+        "Clinical validation report",
+        "Ground truth methodology",
+        "Bias assessment",
+        "Risk management file",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "ai_retinopathy_screening_samd",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "B"
+      ],
+      "rationale": "AI diabetic retinopathy screening influences diagnosis/referral for a serious condition. Class B may apply only if strictly preliminary triage with mandatory specialist review.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-004",
+      "product_name": "PneumoCXR AI",
+      "one_liner": "AI model that detects pneumonia patterns from chest X-rays.",
+      "product_type": "Radiology AI SaMD",
+      "trl": 5,
+      "trl_label": "Validated in controlled environment",
+      "intended_use": "Assist clinicians and radiologists in identifying possible pneumonia from chest radiographs.",
+      "claims": [
+        "Pneumonia detection",
+        "Chest X-ray abnormality detection",
+        "Clinical triage"
+      ],
+      "cdsco_risk": "Moderate to High",
+      "regulatory_pathway": "Likely regulated SaMD; risk increases if used for emergency or autonomous diagnosis",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Clinical validation",
+        "QMS",
+        "Risk management",
+        "Model monitoring"
+      ],
+      "readiness_score": 46,
+      "risk_score": 82,
+      "missing_documents": [
+        "Prospective validation plan",
+        "Clinical evaluation report",
+        "False negative risk assessment",
+        "Model monitoring plan",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment"
+      ],
+      "training_label": "ai_chest_xray_pneumonia_samd",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "D"
+      ],
+      "rationale": "AI chest X-ray pneumonia detection can drive clinical diagnosis and treatment for serious disease. Class D may apply if used for emergency or autonomous diagnosis.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-005",
+      "product_name": "HospOps Suite",
+      "one_liner": "Hospital billing, inventory, and administrative workflow management platform.",
+      "product_type": "Hospital administration software",
+      "trl": 8,
+      "trl_label": "System qualified in operational environment",
+      "intended_use": "Digitize non-clinical hospital operations such as billing, stock, and administrative approvals.",
+      "claims": [
+        "Billing workflow",
+        "Inventory management",
+        "Administrative reporting"
+      ],
+      "cdsco_risk": "Low",
+      "regulatory_pathway": "Not a medical device because it does not diagnose, treat, or monitor patients",
+      "applicable_frameworks": [
+        "DPDP",
+        "Information security",
+        "Hospital IT governance"
+      ],
+      "readiness_score": 88,
+      "risk_score": 18,
+      "missing_documents": [
+        "Data processing agreement",
+        "Security assessment",
+        "Audit log policy",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "hospital_admin_non_device",
+      "expected_cdsco_class": null,
+      "or_acceptable": [],
+      "rationale": "Hospital billing, inventory, and administrative workflow software is not intended for medical diagnosis, treatment, or monitoring. It should remain outside CDSCO device classification.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-006",
+      "product_name": "MediAdhere",
+      "one_liner": "Medication adherence app that reminds patients to take prescribed medicines and alerts caregivers.",
+      "product_type": "Medication adherence software",
+      "trl": 7,
+      "trl_label": "Pilot deployed with users",
+      "intended_use": "Improve adherence to prescribed medication without changing dosage or treatment.",
+      "claims": [
+        "Medication reminders",
+        "Adherence tracking",
+        "Caregiver alerts"
+      ],
+      "cdsco_risk": "Low to Moderate",
+      "regulatory_pathway": "Usually low-risk patient management software; regulated risk rises if dosage/treatment is changed",
+      "applicable_frameworks": [
+        "DPDP",
+        "Consent management",
+        "Patient engagement governance"
+      ],
+      "readiness_score": 74,
+      "risk_score": 42,
+      "missing_documents": [
+        "Consent flow",
+        "Medication disclaimer",
+        "Data retention policy",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "medication_adherence_low_moderate",
+      "expected_cdsco_class": null,
+      "or_acceptable": [
+        "A"
+      ],
+      "rationale": "Reminder-only medication adherence app without active dose recommendation is wellness/non-device. Class A may apply if positioned as low-risk health information software with any borderline clinical positioning.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08",
+      "label_corrected_at": "2026-05-08",
+      "label_correction_reason": "Bucket B from Story 1.3 recon. Original label was too aggressive for reminder-only adherence."
+    },
+    {
+      "case_id": "CP-007",
+      "product_name": "ArrhythmiaAlert",
+      "one_liner": "AI system that analyzes ECG signals and flags possible arrhythmias.",
+      "product_type": "AI cardiology SaMD",
+      "trl": 5,
+      "trl_label": "Validated in controlled clinical setting",
+      "intended_use": "Assist clinicians in detecting possible arrhythmias from ECG data.",
+      "claims": [
+        "Arrhythmia detection",
+        "ECG analysis",
+        "Clinical triage"
+      ],
+      "cdsco_risk": "Moderate to High",
+      "regulatory_pathway": "Likely regulated SaMD because output supports diagnosis of cardiovascular conditions",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Clinical validation",
+        "Risk management",
+        "QMS",
+        "DPDP"
+      ],
+      "readiness_score": 51,
+      "risk_score": 76,
+      "missing_documents": [
+        "Clinical validation report",
+        "Signal quality validation",
+        "Human oversight policy",
+        "Risk management file",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "ai_ecg_arrhythmia_samd",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "B"
+      ],
+      "rationale": "AI ECG arrhythmia detection supports diagnosis of potentially serious cardiovascular conditions. Class B may apply if it only flags recordings for clinician review without diagnostic claims.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-008",
+      "product_name": "AutoInsulin Loop",
+      "one_liner": "Closed-loop software that recommends or controls insulin delivery based on CGM readings.",
+      "product_type": "Therapeutic decision software",
+      "trl": 5,
+      "trl_label": "Validated in controlled environment",
+      "intended_use": "Recommend or automate insulin dosing adjustments for diabetic patients.",
+      "claims": [
+        "Autonomous insulin dosing",
+        "CGM-based therapy adjustment",
+        "Diabetes treatment support"
+      ],
+      "cdsco_risk": "Moderate to High",
+      "regulatory_pathway": "Likely Class C SaMD for standalone dosing recommendation; may inherit Class D risk if integrated with an autonomous insulin pump",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Clinical trial evidence",
+        "QMS",
+        "Risk management",
+        "Cybersecurity"
+      ],
+      "readiness_score": 34,
+      "risk_score": 96,
+      "missing_documents": [
+        "Clinical trial protocol",
+        "Hazard analysis",
+        "Dose algorithm validation",
+        "Fail-safe controls",
+        "Post-market surveillance plan",
+        "Algorithm Change Protocol",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment"
+      ],
+      "training_label": "autonomous_insulin_high_risk_samd",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "D"
+      ],
+      "rationale": "Standalone insulin dose recommendation is high-risk treatment decision software and should be treated at least as Class C with Class D-level safety controls. Class D may apply if integrated with or controlling a high-risk insulin pump/autonomous closed loop.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-009",
+      "product_name": "RehabCoach",
+      "one_liner": "Digital physiotherapy app that guides prescribed exercises and tracks adherence.",
+      "product_type": "Digital rehabilitation software",
+      "trl": 7,
+      "trl_label": "Prototype demonstrated in operational setting",
+      "intended_use": "Support patients in completing physiotherapy exercises prescribed by clinicians.",
+      "claims": [
+        "Exercise guidance",
+        "Rehab adherence",
+        "Range-of-motion support"
+      ],
+      "cdsco_risk": "Low to Moderate",
+      "regulatory_pathway": "May be Class B if used for rehabilitation management; lower if education-only",
+      "applicable_frameworks": [
+        "CDSCO MDR if therapeutic claims are made",
+        "DPDP",
+        "Usability validation"
+      ],
+      "readiness_score": 67,
+      "risk_score": 48,
+      "missing_documents": [
+        "Claim boundary statement",
+        "Usability study",
+        "Exercise accuracy validation",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "digital_physiotherapy_borderline_samd",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [
+        "A"
+      ],
+      "rationale": "Digital physiotherapy guidance supports rehabilitation management. Class A may apply where it only provides exercise education and adherence tracking.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-010",
+      "product_name": "SepsisWatch",
+      "one_liner": "Hospital AI that predicts sepsis risk using vitals, labs, and EHR data.",
+      "product_type": "Predictive clinical AI",
+      "trl": 5,
+      "trl_label": "Retrospective validation completed",
+      "intended_use": "Alert clinicians about patients at elevated risk of sepsis.",
+      "claims": [
+        "Sepsis prediction",
+        "Clinical deterioration alerting",
+        "Hospital triage"
+      ],
+      "cdsco_risk": "High",
+      "regulatory_pathway": "Likely high-risk SaMD because it can drive urgent intervention",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Clinical validation",
+        "Risk management",
+        "Model monitoring",
+        "QMS"
+      ],
+      "readiness_score": 42,
+      "risk_score": 92,
+      "missing_documents": [
+        "Prospective validation",
+        "Clinical safety case",
+        "Alert fatigue assessment",
+        "Model drift plan",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment"
+      ],
+      "training_label": "sepsis_prediction_high_risk_samd",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "D"
+      ],
+      "rationale": "Sepsis prediction influences urgent clinical management for a critical condition. Class D may apply if alerts directly trigger emergency intervention without clinician confirmation.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-011",
+      "product_name": "NutriFit Coach",
+      "one_liner": "Consumer nutrition and fitness coaching app with calorie tracking and activity plans.",
+      "product_type": "Consumer wellness app",
+      "trl": 8,
+      "trl_label": "Product ready for market",
+      "intended_use": "Help users track diet, activity, and wellness goals.",
+      "claims": [
+        "Nutrition tracking",
+        "Fitness coaching",
+        "Wellness habit formation"
+      ],
+      "cdsco_risk": "Low",
+      "regulatory_pathway": "Likely wellness-only and outside CDSCO device scope unless disease-specific claims are introduced",
+      "applicable_frameworks": [
+        "DPDP",
+        "Consumer claims governance"
+      ],
+      "readiness_score": 82,
+      "risk_score": 22,
+      "missing_documents": [
+        "Privacy policy",
+        "Wellness disclaimer",
+        "Data deletion workflow"
+      ],
+      "training_label": "consumer_wellness_non_device",
+      "expected_cdsco_class": null,
+      "or_acceptable": [
+        "A"
+      ],
+      "rationale": "Consumer nutrition and fitness coaching is likely wellness-only. Class A may apply if explicit health-condition monitoring claims are introduced.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-012",
+      "product_name": "SpiroHome",
+      "one_liner": "Portable spirometry app that captures lung function readings for remote review.",
+      "product_type": "Remote diagnostic monitoring device",
+      "trl": 7,
+      "trl_label": "Prototype demonstrated in operational setting",
+      "intended_use": "Measure and monitor lung function for patients with respiratory conditions.",
+      "claims": [
+        "Spirometry measurement",
+        "Respiratory monitoring",
+        "COPD/asthma follow-up"
+      ],
+      "cdsco_risk": "Moderate",
+      "regulatory_pathway": "Likely regulated medical device/software linked to diagnostic monitoring",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Clinical accuracy validation",
+        "Device calibration",
+        "QMS",
+        "DPDP"
+      ],
+      "readiness_score": 63,
+      "risk_score": 69,
+      "missing_documents": [
+        "Calibration validation",
+        "Clinical performance report",
+        "Instructions for use",
+        "Risk management file",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "remote_spirometry_class_b",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [
+        "C"
+      ],
+      "rationale": "Remote spirometry supports clinical monitoring of respiratory disease. Class C may apply if diagnostic or treatment escalation claims are made.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-013",
+      "product_name": "OralCancer ScreenAI",
+      "one_liner": "Mobile imaging AI that flags suspicious oral lesions for referral.",
+      "product_type": "AI screening SaMD",
+      "trl": 5,
+      "trl_label": "Validated in controlled clinical setting",
+      "intended_use": "Support frontline workers in identifying possible oral cancer lesions needing specialist referral.",
+      "claims": [
+        "Oral cancer screening",
+        "Lesion risk flagging",
+        "Referral support"
+      ],
+      "cdsco_risk": "Moderate to High",
+      "regulatory_pathway": "Likely regulated SaMD requiring clinical evidence",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Clinical validation",
+        "Dataset governance",
+        "DPDP",
+        "Risk management"
+      ],
+      "readiness_score": 50,
+      "risk_score": 84,
+      "missing_documents": [
+        "Prospective validation",
+        "Ground truth protocol",
+        "Referral workflow",
+        "Bias assessment",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "oral_cancer_screening_ai_samd",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "B"
+      ],
+      "rationale": "AI oral cancer screening supports detection/referral for a serious condition. Class B may apply only for very limited triage with clear clinician confirmation.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-014",
+      "product_name": "ABDM ConsentBridge",
+      "one_liner": "ABDM consent manager that enables consent-based health record exchange.",
+      "product_type": "Health IT infrastructure",
+      "trl": 8,
+      "trl_label": "System qualified in operational environment",
+      "intended_use": "Enable consent-based exchange of digital health records using ABDM rails.",
+      "claims": [
+        "Consent management",
+        "Health record exchange",
+        "ABDM integration"
+      ],
+      "cdsco_risk": "Low",
+      "regulatory_pathway": "Not a medical device if limited to consent and data exchange",
+      "applicable_frameworks": [
+        "ABDM",
+        "DPDP",
+        "NDHM sandbox guidelines",
+        "Information security"
+      ],
+      "readiness_score": 85,
+      "risk_score": 28,
+      "missing_documents": [
+        "Consent artefact documentation",
+        "Security audit",
+        "Data processor agreement",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "abdm_health_it_non_device",
+      "expected_cdsco_class": null,
+      "or_acceptable": [],
+      "rationale": "ABDM consent manager or health record exchange software is health IT infrastructure, not a medical device. No CDSCO device class should be assigned.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-015",
+      "product_name": "WoundTrack",
+      "one_liner": "Smartphone app that tracks wound healing progress and sends updates to clinicians.",
+      "product_type": "AI/Imaging clinical monitoring software",
+      "trl": 6,
+      "trl_label": "Prototype demonstrated with users",
+      "intended_use": "Track wound size and healing status for clinician review.",
+      "claims": [
+        "Wound monitoring",
+        "Healing progress tracking",
+        "Clinical follow-up support"
+      ],
+      "cdsco_risk": "Moderate",
+      "regulatory_pathway": "Likely Class B clinical monitoring software; Class C if it diagnoses infection or recommends treatment",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Clinical validation",
+        "DPDP",
+        "Risk management"
+      ],
+      "readiness_score": 58,
+      "risk_score": 66,
+      "missing_documents": [
+        "Image accuracy validation",
+        "Clinical monitoring protocol",
+        "Human review process",
+        "Risk management file",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "wound_monitoring_class_b",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [
+        "C"
+      ],
+      "rationale": "Wound monitoring software supports clinical monitoring and follow-up. Class C may apply if it diagnoses infection or recommends treatment changes.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-016",
+      "product_name": "GlucoTrack Lite",
+      "one_liner": "Mobile app that logs glucose readings and gives lifestyle nudges for diabetics.",
+      "product_type": "Digital health app",
+      "trl": 6,
+      "trl_label": "Prototype demonstrated with users",
+      "intended_use": "Support self-management of diabetes through reminders and trend insights.",
+      "claims": [
+        "Lifestyle support",
+        "Glucose trend visualization",
+        "Medication reminders"
+      ],
+      "cdsco_risk": "Low",
+      "regulatory_pathway": "Likely Class A if positioned as diabetes monitoring; non-device only if wellness-only logging",
+      "applicable_frameworks": [
+        "DPDP",
+        "ABDM if health record exchange is enabled"
+      ],
+      "readiness_score": 72,
+      "risk_score": 24,
+      "missing_documents": [
+        "Privacy policy",
+        "Clinical claim boundary note",
+        "User consent flow",
+        "Claim limitation statement",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "wellness_app_with_low_regulatory_risk",
+      "expected_cdsco_class": "A",
+      "or_acceptable": [
+        null
+      ],
+      "rationale": "Glucose trend visualization for diabetes self-management is low-risk chronic disease monitoring software. It may be non-device only if claims are restricted to wellness logging without diabetes management language.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-017",
+      "product_name": "CardioAI Triage",
+      "one_liner": "AI model that reads ECG images and flags possible myocardial infarction.",
+      "product_type": "AI SaMD",
+      "trl": 5,
+      "trl_label": "Validated in controlled environment",
+      "intended_use": "Assist clinicians in identifying high-risk ECGs for urgent review.",
+      "claims": [
+        "MI detection",
+        "ECG abnormality flagging",
+        "Clinical triage support"
+      ],
+      "cdsco_risk": "High",
+      "regulatory_pathway": "Medical device software, likely CDSCO regulated",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "SaMD principles",
+        "DPDP",
+        "Clinical evaluation"
+      ],
+      "readiness_score": 48,
+      "risk_score": 86,
+      "missing_documents": [
+        "Clinical validation report",
+        "Risk management file",
+        "Model performance report",
+        "Cybersecurity note",
+        "Post-market surveillance plan",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "high_risk_ai_diagnostic_samd",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "D"
+      ],
+      "rationale": "ECG myocardial infarction triage drives clinical management for a serious or critical condition. Class D may apply if used for emergency diagnosis without adequate clinician review.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-018",
+      "product_name": "DermaLens",
+      "one_liner": "Smartphone-based skin lesion classifier for suspicious mole detection.",
+      "product_type": "AI diagnostic support",
+      "trl": 4,
+      "trl_label": "Lab validation completed",
+      "intended_use": "Flag suspicious skin lesions and recommend dermatologist consultation.",
+      "claims": [
+        "Skin cancer risk flagging",
+        "Image-based lesion analysis"
+      ],
+      "cdsco_risk": "Moderate to High",
+      "regulatory_pathway": "Likely SaMD requiring clinical validation",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "DPDP",
+        "Clinical evidence",
+        "AI model transparency"
+      ],
+      "readiness_score": 41,
+      "risk_score": 78,
+      "missing_documents": [
+        "Dataset diversity statement",
+        "Clinical validation plan",
+        "Intended use statement",
+        "Bias evaluation",
+        "Risk controls",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "image_ai_clinical_decision_support",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [],
+      "rationale": "Skin cancer risk flagging influences diagnosis and referral for a serious condition. This fits Class C SaMD.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-019",
+      "product_name": "SurgiPlan XR",
+      "one_liner": "XR-based surgical planning tool for orthopedic implant placement.",
+      "product_type": "Surgical planning software",
+      "trl": 7,
+      "trl_label": "Prototype demonstrated in operational setting",
+      "intended_use": "Assist surgeons with pre-operative visualization and planning.",
+      "claims": [
+        "Surgical planning",
+        "Implant alignment support",
+        "3D anatomical visualization"
+      ],
+      "cdsco_risk": "Moderate",
+      "regulatory_pathway": "Likely medical device software depending on clinical claims",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Software lifecycle documentation",
+        "Risk management"
+      ],
+      "readiness_score": 63,
+      "risk_score": 66,
+      "missing_documents": [
+        "Usability validation",
+        "Software verification report",
+        "Clinical performance evidence",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment"
+      ],
+      "training_label": "surgical_planning_software",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [
+        "C"
+      ],
+      "rationale": "Surgical planning software influences clinical management but remains clinician-supervised. Class C may apply if it directly determines implant placement or surgical action.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-020",
+      "product_name": "BabyBeat Home",
+      "one_liner": "Home fetal heartbeat listening device connected to a mobile app.",
+      "product_type": "Connected medical device",
+      "trl": 6,
+      "trl_label": "Prototype demonstrated with users",
+      "intended_use": "Allow pregnant women to listen to fetal heartbeat at home.",
+      "claims": [
+        "Fetal heartbeat detection",
+        "Pregnancy monitoring support"
+      ],
+      "cdsco_risk": "Moderate",
+      "regulatory_pathway": "Likely CDSCO regulated medical device",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Electrical safety",
+        "Usability",
+        "DPDP"
+      ],
+      "readiness_score": 52,
+      "risk_score": 68,
+      "missing_documents": [
+        "Device safety testing",
+        "Labelling",
+        "Instructions for use",
+        "Clinical safety note",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "connected_home_monitoring_device",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [
+        "C"
+      ],
+      "rationale": "Home fetal heartbeat monitoring can influence pregnancy care-seeking. Class C may apply if diagnostic fetal distress claims are made.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-021",
+      "product_name": "MentalWell Chat",
+      "one_liner": "AI chatbot for stress journaling and mental wellness support.",
+      "product_type": "Mental wellness AI chatbot",
+      "trl": 7,
+      "trl_label": "Pilot deployed with users",
+      "intended_use": "Offer guided journaling and non-clinical emotional support.",
+      "claims": [
+        "Stress support",
+        "Mood journaling",
+        "Wellness coaching"
+      ],
+      "cdsco_risk": "Low to Moderate",
+      "regulatory_pathway": "Wellness product if no diagnosis, therapy, or crisis management claims",
+      "applicable_frameworks": [
+        "DPDP",
+        "Safety escalation protocol",
+        "Consent management"
+      ],
+      "readiness_score": 69,
+      "risk_score": 44,
+      "missing_documents": [
+        "Crisis escalation policy",
+        "AI safety guardrails",
+        "Data retention policy",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "mental_wellness_non_diagnostic_ai",
+      "expected_cdsco_class": null,
+      "or_acceptable": [
+        "A"
+      ],
+      "rationale": "Non-clinical mental wellness journaling is likely outside medical device scope. If it claims mental health screening or clinical management, Class A may be the lower-bound class.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-022",
+      "product_name": "StrokeFast",
+      "one_liner": "AI model that analyzes CT brain scans to detect possible stroke.",
+      "product_type": "Radiology AI SaMD",
+      "trl": 5,
+      "trl_label": "Validated on retrospective datasets",
+      "intended_use": "Assist radiologists in prioritizing suspected stroke cases.",
+      "claims": [
+        "Stroke detection",
+        "CT scan triage",
+        "Radiology workflow prioritization"
+      ],
+      "cdsco_risk": "High",
+      "regulatory_pathway": "Likely regulated SaMD with high clinical risk",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Clinical validation",
+        "QMS",
+        "Risk management",
+        "Cybersecurity"
+      ],
+      "readiness_score": 45,
+      "risk_score": 91,
+      "missing_documents": [
+        "Prospective validation",
+        "Clinical evaluation report",
+        "QMS evidence",
+        "Model monitoring plan",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment"
+      ],
+      "training_label": "high_risk_radiology_ai",
+      "expected_cdsco_class": "D",
+      "or_acceptable": [
+        "C"
+      ],
+      "rationale": "Stroke CT triage relates to a critical condition and can drive urgent clinical management. Class C may apply if strictly prioritization-only with radiologist confirmation.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-023",
+      "product_name": "ABHA SyncPro",
+      "one_liner": "Tool that helps clinics create ABHA-linked digital health records.",
+      "product_type": "Health records software",
+      "trl": 8,
+      "trl_label": "System complete and qualified",
+      "intended_use": "Digitize and exchange patient records using ABDM rails.",
+      "claims": [
+        "ABDM integration",
+        "Health record exchange",
+        "Consent-based sharing"
+      ],
+      "cdsco_risk": "Low",
+      "regulatory_pathway": "Not a medical device unless clinical decision claims are added",
+      "applicable_frameworks": [
+        "ABDM",
+        "DPDP",
+        "NDHM sandbox guidelines"
+      ],
+      "readiness_score": 81,
+      "risk_score": 32,
+      "missing_documents": [
+        "Consent artefact documentation",
+        "Data processor agreement",
+        "Security audit",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "health_it_non_device_abdm",
+      "expected_cdsco_class": null,
+      "or_acceptable": [],
+      "rationale": "ABDM record creation and exchange is health IT infrastructure. It does not diagnose, treat, or monitor a disease.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-024",
+      "product_name": "OncoPath Assist",
+      "one_liner": "AI tool that suggests likely cancer grading from pathology slide images.",
+      "product_type": "AI pathology SaMD",
+      "trl": 4,
+      "trl_label": "Technology validated in lab",
+      "intended_use": "Assist pathologists in reviewing biopsy slides.",
+      "claims": [
+        "Cancer grading support",
+        "Pathology image analysis"
+      ],
+      "cdsco_risk": "High",
+      "regulatory_pathway": "Likely regulated high-risk SaMD",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Clinical validation",
+        "Dataset governance",
+        "QMS"
+      ],
+      "readiness_score": 38,
+      "risk_score": 88,
+      "missing_documents": [
+        "Clinical validation protocol",
+        "Ground truth methodology",
+        "Bias assessment",
+        "Human oversight plan",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment"
+      ],
+      "training_label": "ai_pathology_high_risk",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "D"
+      ],
+      "rationale": "Cancer grading support influences diagnosis and clinical management for a serious disease. Class D may apply if output is used as primary diagnosis.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-025",
+      "product_name": "PhysioMove",
+      "one_liner": "Computer vision app that tracks physiotherapy exercise adherence.",
+      "product_type": "Rehabilitation software",
+      "trl": 6,
+      "trl_label": "Prototype demonstrated in relevant environment",
+      "intended_use": "Help patients perform prescribed rehab exercises correctly.",
+      "claims": [
+        "Exercise adherence",
+        "Range of motion tracking",
+        "Rehab support"
+      ],
+      "cdsco_risk": "Low to Moderate",
+      "regulatory_pathway": "May be medical device software if used for clinical rehabilitation decisions",
+      "applicable_frameworks": [
+        "DPDP",
+        "CDSCO MDR if therapeutic claims are made"
+      ],
+      "readiness_score": 66,
+      "risk_score": 51,
+      "missing_documents": [
+        "Claim boundary document",
+        "Usability study",
+        "Motion accuracy validation",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "rehab_support_borderline_samd",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [
+        "A"
+      ],
+      "rationale": "Physiotherapy tracking supports rehabilitation management but is not generally life-critical. Class A may apply if only adherence or wellness feedback is claimed.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-026",
+      "product_name": "ICU Deterioration AI",
+      "one_liner": "Predictive model that alerts ICU teams about patient deterioration risk.",
+      "product_type": "Clinical decision support AI",
+      "trl": 5,
+      "trl_label": "Validated in simulated clinical environment",
+      "intended_use": "Predict deterioration risk using vitals and lab parameters.",
+      "claims": [
+        "Deterioration prediction",
+        "Clinical alerting",
+        "ICU risk scoring"
+      ],
+      "cdsco_risk": "High",
+      "regulatory_pathway": "Likely high-risk clinical decision support SaMD",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Clinical validation",
+        "Risk management",
+        "Hospital integration governance"
+      ],
+      "readiness_score": 46,
+      "risk_score": 89,
+      "missing_documents": [
+        "Prospective study",
+        "Alert fatigue assessment",
+        "Clinical safety case",
+        "Model drift monitoring",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment"
+      ],
+      "training_label": "predictive_clinical_ai_high_risk",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "D"
+      ],
+      "rationale": "ICU deterioration prediction drives clinical management in a critical care environment. Class D may apply if the alert directly triggers emergency intervention.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-027",
+      "product_name": "MediClaims Bot",
+      "one_liner": "AI assistant that helps hospitals prepare insurance pre-authorization documents.",
+      "product_type": "Administrative AI",
+      "trl": 8,
+      "trl_label": "System qualified in operational environment",
+      "intended_use": "Reduce administrative burden in claims documentation.",
+      "claims": [
+        "Claims document automation",
+        "Administrative summarization"
+      ],
+      "cdsco_risk": "Low",
+      "regulatory_pathway": "Not a medical device if no clinical decision-making is involved",
+      "applicable_frameworks": [
+        "DPDP",
+        "Information security",
+        "Hospital data processing agreements"
+      ],
+      "readiness_score": 84,
+      "risk_score": 26,
+      "missing_documents": [
+        "Data processing agreement",
+        "Audit logs",
+        "PHI redaction policy",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "administrative_health_ai_non_device",
+      "expected_cdsco_class": null,
+      "or_acceptable": [],
+      "rationale": "Insurance pre-authorization documentation is administrative and does not influence clinical diagnosis or treatment. It should not be classified as a medical device.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-028",
+      "product_name": "DoseRight",
+      "one_liner": "Software that calculates pediatric drug dosage based on age, weight, and diagnosis.",
+      "product_type": "Clinical calculation software",
+      "trl": 7,
+      "trl_label": "Operational prototype piloted",
+      "intended_use": "Support clinicians with dosage calculations.",
+      "claims": [
+        "Drug dose calculation",
+        "Medication safety support"
+      ],
+      "cdsco_risk": "Moderate to High",
+      "regulatory_pathway": "Likely regulated clinical decision support software",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Clinical safety validation",
+        "QMS"
+      ],
+      "readiness_score": 59,
+      "risk_score": 74,
+      "missing_documents": [
+        "Calculation verification",
+        "Clinical safety validation",
+        "Contraindication logic",
+        "Version control evidence",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment"
+      ],
+      "training_label": "medication_dosing_samd",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "B"
+      ],
+      "rationale": "Pediatric drug dose calculation affects medication safety and clinical treatment. Class B may apply only for transparent calculator-style support with full clinician verification.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-029",
+      "product_name": "SleepScore Ring",
+      "one_liner": "Wearable ring that tracks sleep quality, HRV, and recovery.",
+      "product_type": "Consumer wearable",
+      "trl": 8,
+      "trl_label": "Product ready for market",
+      "intended_use": "Track wellness and recovery patterns.",
+      "claims": [
+        "Sleep tracking",
+        "Recovery score",
+        "HRV trends"
+      ],
+      "cdsco_risk": "Low",
+      "regulatory_pathway": "Likely wellness device if no diagnosis or treatment claims",
+      "applicable_frameworks": [
+        "DPDP",
+        "Consumer safety",
+        "Claims governance"
+      ],
+      "readiness_score": 78,
+      "risk_score": 30,
+      "missing_documents": [
+        "Claim limitation statement",
+        "Privacy policy",
+        "Sensor accuracy note",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "consumer_wearable_wellness",
+      "expected_cdsco_class": null,
+      "or_acceptable": [
+        "A"
+      ],
+      "rationale": "Consumer sleep, HRV, and recovery tracking is wellness-only if no diagnosis or treatment claims are made. Class A may apply if medical monitoring claims are introduced.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-030",
+      "product_name": "TB CXR Assist",
+      "one_liner": "AI tool that screens chest X-rays for signs of pulmonary tuberculosis.",
+      "product_type": "Radiology AI SaMD",
+      "trl": 6,
+      "trl_label": "Prototype validated in relevant environment",
+      "intended_use": "Assist TB screening programs by flagging suspicious X-rays.",
+      "claims": [
+        "TB screening",
+        "Chest X-ray abnormality detection"
+      ],
+      "cdsco_risk": "Moderate to High",
+      "regulatory_pathway": "Likely regulated SaMD",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Clinical validation",
+        "Public health deployment governance"
+      ],
+      "readiness_score": 57,
+      "risk_score": 77,
+      "missing_documents": [
+        "Clinical validation report",
+        "Population subgroup analysis",
+        "False negative risk assessment",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment"
+      ],
+      "training_label": "public_health_radiology_ai",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "B"
+      ],
+      "rationale": "TB chest X-ray screening supports detection of a serious infectious disease. Class B may apply if used only for workflow prioritization and not diagnostic output.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-031",
+      "product_name": "FeverMap",
+      "one_liner": "Dashboard that predicts dengue outbreak risk using weather and case data.",
+      "product_type": "Public health analytics",
+      "trl": 7,
+      "trl_label": "Demonstrated in operational environment",
+      "intended_use": "Support public health teams with early warning and hotspot prioritization.",
+      "claims": [
+        "Outbreak forecasting",
+        "Hotspot identification",
+        "Public health planning"
+      ],
+      "cdsco_risk": "Low to Moderate",
+      "regulatory_pathway": "Likely not a patient-facing medical device; public health decision-support governance needed",
+      "applicable_frameworks": [
+        "DPDP if personal data used",
+        "Public health data governance",
+        "Model transparency"
+      ],
+      "readiness_score": 74,
+      "risk_score": 49,
+      "missing_documents": [
+        "Model card",
+        "Data sharing MoU",
+        "Action protocol",
+        "Evaluation report"
+      ],
+      "training_label": "public_health_forecasting_non_patient_samd",
+      "expected_cdsco_class": null,
+      "or_acceptable": [],
+      "rationale": "Dengue hotspot forecasting is population-level public health planning, not patient-specific diagnosis, treatment, or monitoring. It should remain outside CDSCO medical device classification.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-032",
+      "product_name": "NurseCopilot",
+      "one_liner": "LLM assistant for nurses to summarize patient notes and suggest care checklist items.",
+      "product_type": "Clinical workflow AI",
+      "trl": 6,
+      "trl_label": "Prototype tested with users",
+      "intended_use": "Assist nurses in documentation and care coordination.",
+      "claims": [
+        "Note summarization",
+        "Care checklist generation",
+        "Workflow support"
+      ],
+      "cdsco_risk": "Moderate",
+      "regulatory_pathway": "Depends on whether checklist suggestions influence clinical care",
+      "applicable_frameworks": [
+        "DPDP",
+        "Clinical safety governance",
+        "Human-in-the-loop controls"
+      ],
+      "readiness_score": 62,
+      "risk_score": 61,
+      "missing_documents": [
+        "Prompt safety evaluation",
+        "Hallucination risk controls",
+        "Human review protocol",
+        "Hallucination Mitigation Log",
+        "LLM clinical safety validation report",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "llm_clinical_workflow_borderline",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [
+        "A"
+      ],
+      "rationale": "Nursing checklist generation can influence clinical workflow and patient management. Class A may apply if documentation-only with mandatory human review.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-033",
+      "product_name": "OralScan AI",
+      "one_liner": "Mobile imaging tool that flags possible oral cancer lesions.",
+      "product_type": "AI screening SaMD",
+      "trl": 5,
+      "trl_label": "Validated in controlled clinical setting",
+      "intended_use": "Support frontline screening for suspicious oral lesions.",
+      "claims": [
+        "Oral cancer screening",
+        "Lesion risk flagging"
+      ],
+      "cdsco_risk": "High",
+      "regulatory_pathway": "Likely regulated AI SaMD requiring clinical evidence",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Clinical validation",
+        "Dataset governance",
+        "DPDP"
+      ],
+      "readiness_score": 50,
+      "risk_score": 84,
+      "missing_documents": [
+        "Prospective validation",
+        "Ground truth protocol",
+        "Referral workflow",
+        "Bias assessment",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "cancer_screening_ai_samd",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [],
+      "rationale": "Oral cancer lesion flagging supports screening and referral for a serious condition. This fits Class C SaMD.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-034",
+      "product_name": "Hospital Queue Optimizer",
+      "one_liner": "AI tool that predicts OPD crowding and suggests appointment slots.",
+      "product_type": "Hospital operations software",
+      "trl": 8,
+      "trl_label": "System qualified in operational setting",
+      "intended_use": "Improve patient flow and reduce waiting times.",
+      "claims": [
+        "Queue optimization",
+        "Appointment load balancing"
+      ],
+      "cdsco_risk": "Low",
+      "regulatory_pathway": "Not a medical device",
+      "applicable_frameworks": [
+        "DPDP",
+        "Hospital IT security"
+      ],
+      "readiness_score": 86,
+      "risk_score": 22,
+      "missing_documents": [
+        "Data retention policy",
+        "Security assessment",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "hospital_operations_non_device",
+      "expected_cdsco_class": null,
+      "or_acceptable": [],
+      "rationale": "OPD queue optimization is hospital operations software and does not diagnose, treat, or monitor patients. It should remain outside CDSCO medical device scope.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-035",
+      "product_name": "BP Patch",
+      "one_liner": "Wearable patch that continuously estimates blood pressure.",
+      "product_type": "Connected monitoring device",
+      "trl": 6,
+      "trl_label": "Prototype demonstrated in relevant environment",
+      "intended_use": "Continuously monitor blood pressure trends.",
+      "claims": [
+        "Continuous BP monitoring",
+        "Hypertension management support"
+      ],
+      "cdsco_risk": "Moderate to High",
+      "regulatory_pathway": "Likely regulated medical device",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Electrical safety",
+        "Clinical accuracy validation",
+        "QMS"
+      ],
+      "readiness_score": 55,
+      "risk_score": 73,
+      "missing_documents": [
+        "Bench testing",
+        "Clinical accuracy study",
+        "Device calibration protocol",
+        "Labelling",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment"
+      ],
+      "training_label": "connected_vital_monitoring_device",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "B"
+      ],
+      "rationale": "Continuous blood pressure estimation supports monitoring and management of hypertension. Class B may apply if only trend display is claimed without clinical decision support.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-036",
+      "product_name": "PregRisk AI",
+      "one_liner": "AI tool that predicts high-risk pregnancy from ANC records.",
+      "product_type": "Clinical risk prediction AI",
+      "trl": 6,
+      "trl_label": "Validated in relevant environment",
+      "intended_use": "Help health workers identify pregnant women needing closer follow-up.",
+      "claims": [
+        "High-risk pregnancy prediction",
+        "ANC prioritization"
+      ],
+      "cdsco_risk": "Moderate to High",
+      "regulatory_pathway": "Likely clinical decision support SaMD if used for care prioritization",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "DPDP",
+        "Clinical validation",
+        "Public health governance"
+      ],
+      "readiness_score": 58,
+      "risk_score": 76,
+      "missing_documents": [
+        "Clinical evaluation",
+        "False negative risk analysis",
+        "Field validation",
+        "Model card",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "maternal_health_risk_prediction_ai",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "B"
+      ],
+      "rationale": "High-risk pregnancy prediction influences care prioritization for maternal health. Class B may apply if used only for non-diagnostic referral support.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-037",
+      "product_name": "LabReport Explainer",
+      "one_liner": "Consumer app that explains lab reports in simple language.",
+      "product_type": "Consumer health AI",
+      "trl": 7,
+      "trl_label": "Pilot deployed with users",
+      "intended_use": "Help users understand lab values and ask better questions to doctors.",
+      "claims": [
+        "Lab report explanation",
+        "Patient education"
+      ],
+      "cdsco_risk": "Low",
+      "regulatory_pathway": "Likely Class A if interpreting lab values; non-device only if generic education without health-status interpretation",
+      "applicable_frameworks": [
+        "DPDP",
+        "AI safety",
+        "Medical disclaimer"
+      ],
+      "readiness_score": 71,
+      "risk_score": 46,
+      "missing_documents": [
+        "Claim boundary statement",
+        "Hallucination testing",
+        "Escalation guidance",
+        "Interpretation boundary statement",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "patient_education_ai_borderline",
+      "expected_cdsco_class": "A",
+      "or_acceptable": [
+        null
+      ],
+      "rationale": "Lab report explanation that interprets clinical values into health status crosses from pure education into low-risk interpretive medical software. It may be non-device only if it strictly avoids interpretation and provides generic educational content.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-038",
+      "product_name": "Insulin Advisor",
+      "one_liner": "App that recommends insulin dose changes based on CGM and meal logs.",
+      "product_type": "Therapeutic decision software",
+      "trl": 5,
+      "trl_label": "Validated in controlled setting",
+      "intended_use": "Recommend insulin adjustments for diabetic patients.",
+      "claims": [
+        "Insulin dose recommendation",
+        "Diabetes treatment support"
+      ],
+      "cdsco_risk": "High",
+      "regulatory_pathway": "High-risk regulated SaMD",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Clinical trial evidence",
+        "Risk management",
+        "QMS"
+      ],
+      "readiness_score": 37,
+      "risk_score": 94,
+      "missing_documents": [
+        "Clinical trial protocol",
+        "Hazard analysis",
+        "Dose algorithm validation",
+        "Physician oversight plan",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment"
+      ],
+      "training_label": "therapeutic_ai_high_risk",
+      "expected_cdsco_class": "D",
+      "or_acceptable": [],
+      "rationale": "Insulin dose recommendation directly drives therapy for a potentially life-threatening condition. This should be treated as Class D SaMD.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-039",
+      "product_name": "ClinicBot Reception",
+      "one_liner": "WhatsApp bot that books appointments and collects patient intake details.",
+      "product_type": "Patient engagement software",
+      "trl": 8,
+      "trl_label": "Operational deployment ready",
+      "intended_use": "Automate appointment booking and intake forms.",
+      "claims": [
+        "Appointment booking",
+        "Patient intake automation"
+      ],
+      "cdsco_risk": "Low",
+      "regulatory_pathway": "Not a medical device",
+      "applicable_frameworks": [
+        "DPDP",
+        "Consent management",
+        "Information security"
+      ],
+      "readiness_score": 83,
+      "risk_score": 28,
+      "missing_documents": [
+        "Consent flow",
+        "Privacy notice",
+        "Data retention policy",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "patient_admin_non_device",
+      "expected_cdsco_class": null,
+      "or_acceptable": [],
+      "rationale": "Appointment booking and intake automation is administrative. It is not intended for medical diagnosis, treatment, or monitoring.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-040",
+      "product_name": "Smart Nebulizer",
+      "one_liner": "Connected nebulizer that tracks medication sessions and adherence.",
+      "product_type": "Connected drug delivery device",
+      "trl": 7,
+      "trl_label": "Prototype demonstrated in operational environment",
+      "intended_use": "Support respiratory patients and care teams by tracking nebulization sessions and adherence, without automatically adjusting therapy.",
+      "claims": [
+        "Medication adherence tracking",
+        "Nebulization session logging",
+        "Respiratory care support"
+      ],
+      "cdsco_risk": "Moderate",
+      "regulatory_pathway": "Likely regulated device if linked to treatment delivery",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Device safety",
+        "DPDP",
+        "QMS"
+      ],
+      "readiness_score": 61,
+      "risk_score": 64,
+      "missing_documents": [
+        "Device testing",
+        "Connectivity safety",
+        "Instructions for use",
+        "Risk file",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "connected_treatment_device",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [
+        "C"
+      ],
+      "rationale": "A smart nebulizer app that tracks treatment adherence is Class B patient/treatment support. Class C applies if the software adjusts nebulization sessions, controls therapy, or changes treatment instructions.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-041",
+      "product_name": "DentalAlign Planner",
+      "one_liner": "Software that generates orthodontic aligner plans from dental scans.",
+      "product_type": "Treatment planning software",
+      "trl": 7,
+      "trl_label": "Operational prototype piloted",
+      "intended_use": "Assist orthodontists in planning aligner treatment.",
+      "claims": [
+        "Treatment planning",
+        "Dental alignment simulation"
+      ],
+      "cdsco_risk": "Moderate to High",
+      "regulatory_pathway": "Likely medical device software",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Clinical performance",
+        "Software validation"
+      ],
+      "readiness_score": 60,
+      "risk_score": 72,
+      "missing_documents": [
+        "Treatment accuracy validation",
+        "Human oversight policy",
+        "Software lifecycle documentation",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment"
+      ],
+      "training_label": "treatment_planning_samd",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "B"
+      ],
+      "rationale": "Orthodontic aligner treatment planning influences therapeutic intervention. Class B may apply only if it is simulation-only and not used to finalize treatment plans.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-042",
+      "product_name": "ElderFall Alert",
+      "one_liner": "Wearable fall detection device for elderly users.",
+      "product_type": "Remote monitoring device",
+      "trl": 8,
+      "trl_label": "System qualified in operational environment",
+      "intended_use": "Detect falls and alert caregivers.",
+      "claims": [
+        "Fall detection",
+        "Caregiver alerts"
+      ],
+      "cdsco_risk": "Low",
+      "regulatory_pathway": "Likely Class A safety monitoring device/software if no diagnostic or neurological claims are made",
+      "applicable_frameworks": [
+        "DPDP",
+        "Device safety",
+        "Emergency response governance"
+      ],
+      "readiness_score": 76,
+      "risk_score": 48,
+      "missing_documents": [
+        "False alarm testing",
+        "Emergency escalation protocol",
+        "Battery safety testing",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "remote_safety_monitoring_device",
+      "expected_cdsco_class": "A",
+      "or_acceptable": [
+        "B"
+      ],
+      "rationale": "Fall detection and fall-prevention alarms are low-risk safety monitoring when they do not make neurological or diagnostic claims. Class B may apply only if positioned as clinical patient monitoring for a disease condition.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-043",
+      "product_name": "Antibiotic Steward",
+      "one_liner": "Clinical tool that recommends antibiotic choices based on symptoms and local resistance data.",
+      "product_type": "Clinical decision support",
+      "trl": 5,
+      "trl_label": "Validated in controlled environment",
+      "intended_use": "Support clinicians in selecting antibiotics.",
+      "claims": [
+        "Antibiotic recommendation",
+        "AMR-aware prescribing support"
+      ],
+      "cdsco_risk": "High",
+      "regulatory_pathway": "Likely regulated clinical decision support SaMD",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Clinical validation",
+        "AMR guideline governance",
+        "QMS"
+      ],
+      "readiness_score": 43,
+      "risk_score": 87,
+      "missing_documents": [
+        "Clinical validation",
+        "Guideline source mapping",
+        "Override policy",
+        "Risk management file",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment"
+      ],
+      "training_label": "prescribing_decision_support_high_risk",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "D"
+      ],
+      "rationale": "Antibiotic recommendation affects prescribing and treatment for potentially serious infections. Class D may apply where incorrect output could cause critical harm or antimicrobial failure.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-044",
+      "product_name": "TrialMatch India",
+      "one_liner": "Platform that matches patients to clinical trials using diagnosis and location.",
+      "product_type": "Patient matching platform",
+      "trl": 7,
+      "trl_label": "Pilot deployed with users",
+      "intended_use": "Help patients discover potentially relevant clinical trials.",
+      "claims": [
+        "Clinical trial matching",
+        "Patient eligibility pre-screen"
+      ],
+      "cdsco_risk": "Low to Moderate",
+      "regulatory_pathway": "Usually not medical device if informational and not treatment recommending",
+      "applicable_frameworks": [
+        "DPDP",
+        "Clinical research ethics",
+        "Consent management"
+      ],
+      "readiness_score": 73,
+      "risk_score": 42,
+      "missing_documents": [
+        "Eligibility disclaimer",
+        "Consent workflow",
+        "Data sharing policy",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "clinical_trial_matching_non_device",
+      "expected_cdsco_class": null,
+      "or_acceptable": [
+        "A"
+      ],
+      "rationale": "Clinical trial matching is informational if it does not recommend treatment. Class A may apply if eligibility pre-screening is positioned as medical decision support.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-045",
+      "product_name": "RemoteSpiro",
+      "one_liner": "Portable spirometer with app-based COPD monitoring.",
+      "product_type": "Diagnostic monitoring device",
+      "trl": 7,
+      "trl_label": "Prototype demonstrated in operational setting",
+      "intended_use": "Measure lung function remotely and support COPD monitoring.",
+      "claims": [
+        "Spirometry measurement",
+        "COPD monitoring"
+      ],
+      "cdsco_risk": "Moderate",
+      "regulatory_pathway": "Likely CDSCO regulated medical device",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Device calibration",
+        "Clinical accuracy",
+        "QMS"
+      ],
+      "readiness_score": 64,
+      "risk_score": 69,
+      "missing_documents": [
+        "Calibration validation",
+        "Clinical performance report",
+        "Instructions for use",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment"
+      ],
+      "training_label": "remote_diagnostic_monitoring_device",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [
+        "C"
+      ],
+      "rationale": "Remote spirometry measures and monitors lung function. Class C may apply if diagnostic or treatment escalation claims are made.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-046",
+      "product_name": "MedVoice Scribe",
+      "one_liner": "AI medical scribe that converts doctor-patient conversations into structured notes.",
+      "product_type": "Clinical documentation AI",
+      "trl": 8,
+      "trl_label": "Operational deployment ready",
+      "intended_use": "Reduce clinician documentation burden.",
+      "claims": [
+        "Clinical note generation",
+        "Documentation automation"
+      ],
+      "cdsco_risk": "Low to Moderate",
+      "regulatory_pathway": "Not a medical device if documentation-only; risk increases if diagnosis suggestions are added",
+      "applicable_frameworks": [
+        "DPDP",
+        "Consent",
+        "Information security",
+        "AI auditability"
+      ],
+      "readiness_score": 79,
+      "risk_score": 39,
+      "missing_documents": [
+        "Consent for recording",
+        "PHI handling policy",
+        "Clinical review workflow",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "clinical_documentation_ai_non_device",
+      "expected_cdsco_class": null,
+      "or_acceptable": [
+        "A"
+      ],
+      "rationale": "AI medical scribing is documentation support if no clinical recommendations are generated. Class A may apply if summaries influence low-risk clinical management.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-047",
+      "product_name": "WoundHeal Vision",
+      "one_liner": "AI app that tracks wound healing progress from smartphone photos.",
+      "product_type": "AI monitoring SaMD",
+      "trl": 6,
+      "trl_label": "Prototype demonstrated with users",
+      "intended_use": "Track wound size and healing progression for clinician review.",
+      "claims": [
+        "Wound healing assessment",
+        "Image-based progression tracking"
+      ],
+      "cdsco_risk": "Moderate",
+      "regulatory_pathway": "Likely SaMD if used for clinical monitoring",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Clinical validation",
+        "DPDP"
+      ],
+      "readiness_score": 56,
+      "risk_score": 67,
+      "missing_documents": [
+        "Image accuracy validation",
+        "Clinical monitoring protocol",
+        "Human review process",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "clinical_monitoring_image_ai",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [
+        "C"
+      ],
+      "rationale": "Wound healing image tracking supports clinical monitoring. Class C may apply if it diagnoses infection, necrosis, or recommends treatment changes.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-048",
+      "product_name": "Fertility Window App",
+      "one_liner": "App that predicts fertility window using cycle history and symptoms.",
+      "product_type": "Consumer reproductive health app",
+      "trl": 7,
+      "trl_label": "Pilot deployed with users",
+      "intended_use": "Help users track cycle and estimate fertile window.",
+      "claims": [
+        "Cycle tracking",
+        "Fertility window prediction"
+      ],
+      "cdsco_risk": "Low to Moderate",
+      "regulatory_pathway": "May be wellness unless contraceptive or infertility treatment claims are made",
+      "applicable_frameworks": [
+        "DPDP",
+        "Sensitive personal data handling",
+        "Claim limitation"
+      ],
+      "readiness_score": 70,
+      "risk_score": 45,
+      "missing_documents": [
+        "Prediction limitation note",
+        "Privacy policy",
+        "Data deletion workflow"
+      ],
+      "training_label": "reproductive_health_wellness_borderline",
+      "expected_cdsco_class": null,
+      "or_acceptable": [
+        "A",
+        "B"
+      ],
+      "rationale": "Cycle and fertility tracking is usually wellness if not contraceptive or infertility treatment software. Class B may apply if used for contraception or fertility treatment decisions.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-049",
+      "product_name": "Sepsis Sentinel",
+      "one_liner": "Hospital AI system that predicts sepsis risk from EHR and lab data.",
+      "product_type": "Predictive clinical AI",
+      "trl": 5,
+      "trl_label": "Retrospective validation completed",
+      "intended_use": "Alert clinicians about patients at risk of sepsis.",
+      "claims": [
+        "Sepsis prediction",
+        "Clinical deterioration alerting"
+      ],
+      "cdsco_risk": "High",
+      "regulatory_pathway": "Likely high-risk SaMD",
+      "applicable_frameworks": [
+        "CDSCO MDR",
+        "Clinical validation",
+        "Risk management",
+        "Model monitoring"
+      ],
+      "readiness_score": 42,
+      "risk_score": 92,
+      "missing_documents": [
+        "Prospective validation",
+        "Clinical safety case",
+        "Alert fatigue assessment",
+        "Model drift plan",
+        "Software Bill of Materials (SBOM)",
+        "Cybersecurity risk assessment"
+      ],
+      "training_label": "high_risk_predictive_hospital_ai",
+      "expected_cdsco_class": "D",
+      "or_acceptable": [
+        "C"
+      ],
+      "rationale": "Sepsis prediction relates to a critical condition and can drive urgent intervention. Class C may apply only with strict clinician confirmation and prioritization-only claims.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    },
+    {
+      "case_id": "CP-050",
+      "product_name": "PharmaAdherence Coach",
+      "one_liner": "App that reminds patients to take medicines and rewards adherence.",
+      "product_type": "Medication adherence software",
+      "trl": 8,
+      "trl_label": "System qualified in operational environment",
+      "intended_use": "Improve medication adherence through reminders and incentives.",
+      "claims": [
+        "Medication reminders",
+        "Adherence tracking",
+        "Patient engagement"
+      ],
+      "cdsco_risk": "Low",
+      "regulatory_pathway": "Usually not medical device unless dosing or treatment decisions are included",
+      "applicable_frameworks": [
+        "DPDP",
+        "Consent",
+        "Pharma marketing compliance if sponsored"
+      ],
+      "readiness_score": 82,
+      "risk_score": 31,
+      "missing_documents": [
+        "Consent flow",
+        "Sponsor disclosure",
+        "Data sharing policy",
+        "DPDP consent notice",
+        "Data Protection Impact Assessment (DPIA)",
+        "Consent Manager Integration Plan"
+      ],
+      "training_label": "medication_adherence_non_device",
+      "expected_cdsco_class": null,
+      "or_acceptable": [
+        "A"
+      ],
+      "rationale": "Medication reminders and rewards are adherence support, not treatment decision software. Class A may apply if positioned as low-risk patient management software.",
+      "labeled_by": "raunaq",
+      "labeled_at": "2026-05-08"
+    }
+  ],
+  "updated_at": "2026-05-08",
+  "change_summary": [
+    "Updated CP-002 to Class B because threshold-based clinician alerts are active monitoring.",
+    "Updated CP-042 to Class A with Class B acceptable only for disease monitoring/neurological claims.",
+    "Updated CP-008 to Class C with Class D acceptable when integrated with autonomous/high-risk pump control.",
+    "Updated CP-037 and CP-016 to Class A due to interpretive lab/glucose monitoring claims.",
+    "Kept CP-031 non-device/null with population-level public health rationale.",
+    "Added SBOM and cybersecurity risk assessment to Class B/C/D cases.",
+    "Added DPIA/consent-manager readiness docs to sensitive health-data and AI cases where DPDP applies.",
+    "Added LLM hallucination mitigation documentation to CP-032."
+  ]
+}

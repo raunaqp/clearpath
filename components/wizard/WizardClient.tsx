@@ -21,6 +21,10 @@ type Props = {
   productType: string | null;
   conflictEncountered: boolean;
   pdfCount: number; // for Q2 follow-up source label
+  /** True when all 7 answers are prefilled (e.g. demo packets).
+   * Surfaces a "Skip to card →" affordance so partners can jump
+   * straight to synthesis after one click of narration. */
+  allAnswersPrefilled?: boolean;
 };
 
 type CheckResponse = {
@@ -37,6 +41,7 @@ export default function WizardClient({
   productType,
   conflictEncountered,
   pdfCount,
+  allAnswersPrefilled = false,
 }: Props) {
   const router = useRouter();
   const total = totalSteps();
@@ -187,6 +192,25 @@ export default function WizardClient({
     },
     [completeWizardAttempt, showToast]
   );
+
+  /**
+   * Skip-to-card affordance — only shown when allAnswersPrefilled (e.g.
+   * demo packets). Marks the wizard complete with skipped=[] (because
+   * all 7 are answered) and routes to /assess/[id] to drive synthesis.
+   * Saves partners ~60 seconds of click-throughs during a demo.
+   */
+  const [skipping, setSkipping] = useState(false);
+  const handleSkipToCard = useCallback(async () => {
+    if (skipping) return;
+    setSkipping(true);
+    try {
+      await completeWizardAttempt([], wizardStartedAt.current);
+      router.push(`/assess/${assessmentId}`);
+    } catch {
+      setSkipping(false);
+      showToast("Couldn't skip ahead. Try clicking Next instead.");
+    }
+  }, [skipping, completeWizardAttempt, router, assessmentId, showToast]);
 
   const advanceTo = useCallback(
     (nextStep: number) => {
@@ -421,6 +445,26 @@ export default function WizardClient({
 
   return (
     <div className="max-w-xl mx-auto w-full">
+      {allAnswersPrefilled && (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-[#0F6E56]/30 bg-[#E1F5EE]/50 px-3 py-2">
+          <p className="text-xs text-[#0E1411] leading-snug">
+            <span className="font-medium">Demo mode</span>
+            <span className="text-[#6B766F]">
+              {" "}
+              · all 7 answers prefilled. Click Next to walk partners
+              through, or skip straight to the card.
+            </span>
+          </p>
+          <button
+            type="button"
+            onClick={handleSkipToCard}
+            disabled={skipping}
+            className="shrink-0 inline-flex items-center justify-center rounded-full bg-[#0F6E56] hover:bg-[#0d5c48] disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-medium px-3 py-1.5 transition-colors"
+          >
+            {skipping ? "Skipping…" : "Skip to card →"}
+          </button>
+        </div>
+      )}
       <WizardHeader
         productDisplayName={productDisplayName}
         currentStep={currentStep}

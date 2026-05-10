@@ -1,0 +1,442 @@
+{
+  "summary": {
+    "run_at": "2026-05-08T08:51:11.906Z",
+    "resumed_from": {
+      "pre_router_batch_id": "msgbatch_019UFN4D7kfmWAaENQtWdjQ3",
+      "synth_batch_id": "msgbatch_01JLTkUVT4WSz9WhSBNQDFA3"
+    },
+    "calibration_file": "data/calibration/clearpath_synthetic_50_full_schema_v2_1.json",
+    "total_cases": 9,
+    "tolerant_match": {
+      "hits": 9,
+      "pct": 1
+    },
+    "strict_match": {
+      "hits": 7,
+      "pct": 0.7777777777777778
+    },
+    "pre_router_errors": 0,
+    "pre_router_parse_fails": 0,
+    "synth_attempted": 9,
+    "synth_parse_fails": 0,
+    "cost_usd": {
+      "pre_router": 0.0072999,
+      "synth": 0.6098,
+      "grand_total": 0.6170999
+    },
+    "usage": {
+      "pre_router": {
+        "input_tokens": 439,
+        "output_tokens": 2020,
+        "cache_read": 40608,
+        "cache_write": 0
+      },
+      "synth": {
+        "input_tokens": 3225,
+        "output_tokens": 20158,
+        "cache_read": 0,
+        "cache_write": 111924
+      }
+    },
+    "bar_tolerant": 0.9,
+    "passes_bar": true
+  },
+  "rows": [
+    {
+      "case_id": "CP-001",
+      "product_name": "SymptomGuide",
+      "one_liner": "Consumer symptom education app that explains common symptoms and suggests when to consult a doctor.",
+      "expected_cdsco_class": null,
+      "or_acceptable": [
+        "A"
+      ],
+      "label_rationale": "General symptom education without diagnosis or treatment recommendation is likely non-device. Class A may apply if positioned as low-risk health information software.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0007866,
+        "usage": {
+          "input_tokens": 52,
+          "output_tokens": 214,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": null,
+        "rationale_string": null,
+        "trl_level": null,
+        "trl_stage": null,
+        "trl_track": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.065295,
+        "usage": {
+          "input_tokens": 363,
+          "output_tokens": 2042,
+          "cache_read": 0,
+          "cache_write": 12436
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-016",
+      "product_name": "GlucoTrack Lite",
+      "one_liner": "Mobile app that logs glucose readings and gives lifestyle nudges for diabetics.",
+      "expected_cdsco_class": "A",
+      "or_acceptable": [
+        null
+      ],
+      "label_rationale": "Glucose trend visualization for diabetes self-management is low-risk chronic disease monitoring software. It may be non-device only if claims are restricted to wellness logging without diabetes management language.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008651,
+        "usage": {
+          "input_tokens": 49,
+          "output_tokens": 246,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": null,
+        "rationale_string": null,
+        "trl_level": null,
+        "trl_stage": null,
+        "trl_track": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.066295,
+        "usage": {
+          "input_tokens": 363,
+          "output_tokens": 2122,
+          "cache_read": 0,
+          "cache_write": 12436
+        }
+      },
+      "match_strict": false,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-017",
+      "product_name": "CardioAI Triage",
+      "one_liner": "AI model that reads ECG images and flags possible myocardial infarction.",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "D"
+      ],
+      "label_rationale": "ECG myocardial infarction triage drives clinical management for a serious or critical condition. Class D may apply if used for emergency diagnosis without adequate clinician review.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0007941000000000001,
+        "usage": {
+          "input_tokens": 52,
+          "output_tokens": 217,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "C",
+        "rationale_string": null,
+        "trl_level": null,
+        "trl_stage": null,
+        "trl_track": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.06744,
+        "usage": {
+          "input_tokens": 356,
+          "output_tokens": 2215,
+          "cache_read": 0,
+          "cache_write": 12436
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-019",
+      "product_name": "SurgiPlan XR",
+      "one_liner": "XR-based surgical planning tool for orthopedic implant placement.",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [
+        "C"
+      ],
+      "label_rationale": "Surgical planning software influences clinical management but remains clinician-supervised. Class C may apply if it directly determines implant placement or surgical action.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008306,
+        "usage": {
+          "input_tokens": 50,
+          "output_tokens": 232,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "C",
+        "rationale_string": null,
+        "trl_level": null,
+        "trl_stage": null,
+        "trl_track": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.0676675,
+        "usage": {
+          "input_tokens": 357,
+          "output_tokens": 2233,
+          "cache_read": 0,
+          "cache_write": 12436
+        }
+      },
+      "match_strict": false,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-020",
+      "product_name": "BabyBeat Home",
+      "one_liner": "Home fetal heartbeat listening device connected to a mobile app.",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [
+        "C"
+      ],
+      "label_rationale": "Home fetal heartbeat monitoring can influence pregnancy care-seeking. Class C may apply if diagnostic fetal distress claims are made.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "hardware_software",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008191,
+        "usage": {
+          "input_tokens": 47,
+          "output_tokens": 228,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "B",
+        "rationale_string": null,
+        "trl_level": null,
+        "trl_stage": null,
+        "trl_track": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.067665,
+        "usage": {
+          "input_tokens": 361,
+          "output_tokens": 2232,
+          "cache_read": 0,
+          "cache_write": 12436
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-021",
+      "product_name": "MentalWell Chat",
+      "one_liner": "AI chatbot for stress journaling and mental wellness support.",
+      "expected_cdsco_class": null,
+      "or_acceptable": [
+        "A"
+      ],
+      "label_rationale": "Non-clinical mental wellness journaling is likely outside medical device scope. If it claims mental health screening or clinical management, Class A may be the lower-bound class.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008261000000000001,
+        "usage": {
+          "input_tokens": 46,
+          "output_tokens": 231,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": null,
+        "rationale_string": null,
+        "trl_level": null,
+        "trl_stage": null,
+        "trl_track": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.067795,
+        "usage": {
+          "input_tokens": 353,
+          "output_tokens": 2244,
+          "cache_read": 0,
+          "cache_write": 12436
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-024",
+      "product_name": "OncoPath Assist",
+      "one_liner": "AI tool that suggests likely cancer grading from pathology slide images.",
+      "expected_cdsco_class": "C",
+      "or_acceptable": [
+        "D"
+      ],
+      "label_rationale": "Cancer grading support influences diagnosis and clinical management for a serious disease. Class D may apply if output is used as primary diagnosis.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0007621,
+        "usage": {
+          "input_tokens": 48,
+          "output_tokens": 205,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "C",
+        "rationale_string": null,
+        "trl_level": null,
+        "trl_stage": null,
+        "trl_track": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.0670025,
+        "usage": {
+          "input_tokens": 356,
+          "output_tokens": 2180,
+          "cache_read": 0,
+          "cache_write": 12436
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-045",
+      "product_name": "RemoteSpiro",
+      "one_liner": "Portable spirometer with app-based COPD monitoring.",
+      "expected_cdsco_class": "B",
+      "or_acceptable": [
+        "C"
+      ],
+      "label_rationale": "Remote spirometry measures and monitors lung function. Class C may apply if diagnostic or treatment escalation claims are made.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "hardware_software",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008091,
+        "usage": {
+          "input_tokens": 47,
+          "output_tokens": 224,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": "B",
+        "rationale_string": null,
+        "trl_level": null,
+        "trl_stage": null,
+        "trl_track": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.0669825,
+        "usage": {
+          "input_tokens": 358,
+          "output_tokens": 2178,
+          "cache_read": 0,
+          "cache_write": 12436
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    },
+    {
+      "case_id": "CP-046",
+      "product_name": "MedVoice Scribe",
+      "one_liner": "AI medical scribe that converts doctor-patient conversations into structured notes.",
+      "expected_cdsco_class": null,
+      "or_acceptable": [
+        "A"
+      ],
+      "label_rationale": "AI medical scribing is documentation support if no clinical recommendations are generated. Class A may apply if summaries influence low-risk clinical management.",
+      "pre_router": {
+        "ok": true,
+        "parse_ok": true,
+        "product_type": "product",
+        "next_action": "run_wizard",
+        "elapsed_ms": null,
+        "cost_usd": 0.0008071,
+        "usage": {
+          "input_tokens": 48,
+          "output_tokens": 223,
+          "cache_read": 4512,
+          "cache_write": 0
+        }
+      },
+      "synth": {
+        "ok": true,
+        "parse_ok": true,
+        "predicted_cdsco_class": null,
+        "rationale_string": null,
+        "trl_level": null,
+        "trl_stage": null,
+        "trl_track": null,
+        "elapsed_ms": null,
+        "cost_usd": 0.0736575,
+        "usage": {
+          "input_tokens": 358,
+          "output_tokens": 2712,
+          "cache_read": 0,
+          "cache_write": 12436
+        }
+      },
+      "match_strict": true,
+      "match_tolerant": true,
+      "disagreement_bucket": "AGREE"
+    }
+  ]
+}

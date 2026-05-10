@@ -1,0 +1,834 @@
+[
+  {
+    "case_id": "CP-016",
+    "product_name": "GlucoTrack Lite",
+    "one_liner": "Mobile app that logs glucose readings and gives lifestyle nudges for diabetics.",
+    "sonnet": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "cost_usd": 0.02061075,
+      "elapsed_ms": 4867,
+      "usage": {
+        "input_tokens": 49,
+        "output_tokens": 236,
+        "cache_read": 0,
+        "cache_write": 4513
+      }
+    },
+    "haiku": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "cost_usd": 0.006834,
+      "elapsed_ms": 3654,
+      "usage": {
+        "input_tokens": 49,
+        "output_tokens": 229,
+        "cache_read": 0,
+        "cache_write": 4512
+      }
+    },
+    "match": true,
+    "_haiku_full": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "rejection_reason": null,
+      "rationale": "A mobile app that logs glucose readings and delivers lifestyle interventions for diabetics is a single healthcare offering aimed at patients with a chronic condition. It is a wellness/habit-coaching app with a health-data component. The 7-Q wizard will determine whether it qualifies for the wellness exemption under Indian regulations or whether the clinical claims (e.g., 'manages diabetes', 'prevents complications') trigger SaMD classification.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "no",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    },
+    "_sonnet_full": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "rejection_reason": null,
+      "rationale": "A mobile app that logs glucose readings and delivers lifestyle nudges for diabetics is a single healthcare offering targeting patients with a chronic condition. It touches CDSCO MDR (potential SaMD depending on claims), DPDP (handles sensitive health/glucose data), and possibly ICMR AI Guidelines if nudges are algorithm-driven. The wizard will determine whether the wellness exemption applies or whether condition-specific glucose logging and clinical nudges tip it into regulated SaMD territory.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "no",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    }
+  },
+  {
+    "case_id": "CP-017",
+    "product_name": "CardioAI Triage",
+    "one_liner": "AI model that reads ECG images and flags possible myocardial infarction.",
+    "sonnet": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "cost_usd": 0.0047199,
+      "elapsed_ms": 3890,
+      "usage": {
+        "input_tokens": 52,
+        "output_tokens": 214,
+        "cache_read": 4513,
+        "cache_write": 0
+      }
+    },
+    "haiku": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "cost_usd": 0.0016082,
+      "elapsed_ms": 2532,
+      "usage": {
+        "input_tokens": 52,
+        "output_tokens": 221,
+        "cache_read": 4512,
+        "cache_write": 0
+      }
+    },
+    "match": true,
+    "_haiku_full": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "rejection_reason": null,
+      "rationale": "Single healthcare offering with a clear clinical intent: AI-powered diagnostic decision support for acute cardiac pathology (myocardial infarction detection from ECG images). This is a Software as a Medical Device (SaMD) under CDSCO MDR, likely Class C or D depending on intended use (triage vs. definitive diagnosis). Routes to the wizard for regulatory scoping.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "no",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    },
+    "_sonnet_full": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "rejection_reason": null,
+      "rationale": "This is a single AI-based diagnostic tool that analyses ECG images to detect possible myocardial infarction — a clear Software as a Medical Device (SaMD) with a specific clinical claim (cardiac event detection). It is a single offering with no multi-feature decomposition needed. Routes to the wizard for CDSCO MDR classification and regulatory readiness scoping.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "no",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    }
+  },
+  {
+    "case_id": "CP-018",
+    "product_name": "DermaLens",
+    "one_liner": "Smartphone-based skin lesion classifier for suspicious mole detection.",
+    "sonnet": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "cost_usd": 0.0047379,
+      "elapsed_ms": 5149,
+      "usage": {
+        "input_tokens": 48,
+        "output_tokens": 216,
+        "cache_read": 4513,
+        "cache_write": 0
+      }
+    },
+    "haiku": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "cost_usd": 0.0015842,
+      "elapsed_ms": 2449,
+      "usage": {
+        "input_tokens": 48,
+        "output_tokens": 217,
+        "cache_read": 4512,
+        "cache_write": 0
+      }
+    },
+    "match": true,
+    "_haiku_full": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "rejection_reason": null,
+      "rationale": "Smartphone-based skin lesion classifier is a single healthcare offering with a clear diagnostic intent (suspicious mole detection). This is a Software as a Medical Device (SaMD) — likely Class B or C under CDSCO MDR — aimed at patients or clinicians for screening/diagnosis of melanoma or other skin cancers. Single clinical feature, no platform complexity.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "no",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    },
+    "_sonnet_full": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "rejection_reason": null,
+      "rationale": "A smartphone-based skin lesion classifier for suspicious mole detection is a single clinical offering with a clear diagnostic intent — identifying potentially malignant skin lesions. This is a Software as a Medical Device (SaMD) candidate under CDSCO MDR and the Oct 2025 CDSCO SaMD draft guidance. It routes to the wizard for full regulatory scoping.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "no",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    }
+  },
+  {
+    "case_id": "CP-019",
+    "product_name": "SurgiPlan XR",
+    "one_liner": "XR-based surgical planning tool for orthopedic implant placement.",
+    "sonnet": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "cost_usd": 0.0048939,
+      "elapsed_ms": 4512,
+      "usage": {
+        "input_tokens": 50,
+        "output_tokens": 226,
+        "cache_read": 4513,
+        "cache_write": 0
+      }
+    },
+    "haiku": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "cost_usd": 0.0016962000000000001,
+      "elapsed_ms": 2767,
+      "usage": {
+        "input_tokens": 50,
+        "output_tokens": 239,
+        "cache_read": 4512,
+        "cache_write": 0
+      }
+    },
+    "match": true,
+    "_haiku_full": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "rejection_reason": null,
+      "rationale": "XR-based surgical planning tool for orthopedic implant placement is a single healthcare offering with a clear clinical intent — pre-operative surgical guidance for orthopedic procedures. This is a software-based medical device (SaMD) or software as a medical device component, likely Class B or C under CDSCO MDR depending on the specific claims and algorithm validation. It is aimed at surgeons/clinicians and falls squarely within Indian healthcare regulation scope.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "unclear",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    },
+    "_sonnet_full": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "rejection_reason": null,
+      "rationale": "This is a single healthcare offering — an XR-based surgical planning tool for orthopedic implant placement. It has a clear clinical intent (pre-operative planning and implant positioning for orthopedic surgery) aimed at surgeons/clinicians, making it a Software as a Medical Device (SaMD) candidate under CDSCO MDR. No multi-feature decomposition is needed; a single wizard run is appropriate.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "unclear",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    }
+  },
+  {
+    "case_id": "CP-020",
+    "product_name": "BabyBeat Home",
+    "one_liner": "Home fetal heartbeat listening device connected to a mobile app.",
+    "sonnet": {
+      "product_type": "hardware_software",
+      "next_action": "run_wizard",
+      "cost_usd": 0.0047049,
+      "elapsed_ms": 4373,
+      "usage": {
+        "input_tokens": 47,
+        "output_tokens": 214,
+        "cache_read": 4513,
+        "cache_write": 0
+      }
+    },
+    "haiku": {
+      "product_type": "hardware_software",
+      "next_action": "run_wizard",
+      "cost_usd": 0.0016182,
+      "elapsed_ms": 2551,
+      "usage": {
+        "input_tokens": 47,
+        "output_tokens": 224,
+        "cache_read": 4512,
+        "cache_write": 0
+      }
+    },
+    "match": true,
+    "_haiku_full": {
+      "product_type": "hardware_software",
+      "next_action": "run_wizard",
+      "rejection_reason": null,
+      "rationale": "A fetal heartbeat listening device (hardware) paired with a mobile app (software) is a hardware_software product. The device itself is a medical device intended for fetal monitoring — a clinical use case. The app is the companion software. Device class and regulatory pathway will be determined by the wizard based on intended use (home monitoring vs. clinical diagnosis), but the product clearly couples physical hardware with software.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "unclear",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    },
+    "_sonnet_full": {
+      "product_type": "hardware_software",
+      "next_action": "run_wizard",
+      "rejection_reason": null,
+      "rationale": "This is a physical fetal Doppler or acoustic device paired with a companion mobile app — a classic hardware_software combination. The device monitors fetal heart rate (a clinical parameter in obstetric care), making it a medical device under CDSCO MDR 2017, with the companion app likely inheriting the same classification. Single offering, no decomposition needed.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "unclear",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    }
+  },
+  {
+    "case_id": "CP-021",
+    "product_name": "MentalWell Chat",
+    "one_liner": "AI chatbot for stress journaling and mental wellness support.",
+    "sonnet": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "cost_usd": 0.0052269,
+      "elapsed_ms": 5143,
+      "usage": {
+        "input_tokens": 46,
+        "output_tokens": 249,
+        "cache_read": 4513,
+        "cache_write": 0
+      }
+    },
+    "haiku": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "cost_usd": 0.0016522000000000002,
+      "elapsed_ms": 2912,
+      "usage": {
+        "input_tokens": 46,
+        "output_tokens": 231,
+        "cache_read": 4512,
+        "cache_write": 0
+      }
+    },
+    "match": true,
+    "_haiku_full": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "rejection_reason": null,
+      "rationale": "AI chatbot for stress journaling and mental wellness support is a single healthcare offering aimed at end-users for wellness and mental health support. It falls within the healthtech scope as a wellness/habit app with potential mental-health coaching features. The 7-Q wizard will determine whether it qualifies for the wellness exemption or has crossed into regulated territory (e.g., by offering condition-specific mental-health treatment or clinical decision support).",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "no",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    },
+    "_sonnet_full": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "rejection_reason": null,
+      "rationale": "A stress journaling and mental wellness AI chatbot is a healthcare-adjacent wellness/digital-mental-health product. It touches ICMR AI Guidelines (AI used in a health context), DPDP (handles sensitive mental health data), and potentially MCI Telemedicine guidelines depending on how it delivers support. It is not out_of_scope. The wizard will determine whether it qualifies for the wellness exemption or has tipped into regulated SaMD territory (e.g., by screening for or managing a mental health condition).",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "no",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    }
+  },
+  {
+    "case_id": "CP-022",
+    "product_name": "StrokeFast",
+    "one_liner": "AI model that analyzes CT brain scans to detect possible stroke.",
+    "sonnet": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "cost_usd": 0.0046779,
+      "elapsed_ms": 4192,
+      "usage": {
+        "input_tokens": 48,
+        "output_tokens": 212,
+        "cache_read": 4513,
+        "cache_write": 0
+      }
+    },
+    "haiku": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "cost_usd": 0.0015342,
+      "elapsed_ms": 2521,
+      "usage": {
+        "input_tokens": 48,
+        "output_tokens": 207,
+        "cache_read": 4512,
+        "cache_write": 0
+      }
+    },
+    "match": true,
+    "_haiku_full": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "rejection_reason": null,
+      "rationale": "Single healthcare offering with a clear diagnostic intent: an AI model for stroke detection from CT brain imaging. This is a Software as a Medical Device (SaMD) under CDSCO MDR, likely Class C or D depending on intended use (triage vs. definitive diagnosis). Routes to the wizard for regulatory scoping.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "no",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    },
+    "_sonnet_full": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "rejection_reason": null,
+      "rationale": "This is a single AI-powered diagnostic tool that analyzes CT brain scans to detect stroke — a clear Software as a Medical Device (SaMD) with a clinical diagnostic intent. It targets radiologists or clinicians and falls squarely within CDSCO MDR scope. No multi-feature decomposition needed; the wizard will determine the risk class and regulatory path.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "no",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    }
+  },
+  {
+    "case_id": "CP-023",
+    "product_name": "ABHA SyncPro",
+    "one_liner": "Tool that helps clinics create ABHA-linked digital health records.",
+    "sonnet": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "cost_usd": 0.004950899999999999,
+      "elapsed_ms": 5235,
+      "usage": {
+        "input_tokens": 49,
+        "output_tokens": 230,
+        "cache_read": 4513,
+        "cache_write": 0
+      }
+    },
+    "haiku": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "cost_usd": 0.0017552,
+      "elapsed_ms": 2874,
+      "usage": {
+        "input_tokens": 49,
+        "output_tokens": 251,
+        "cache_read": 4512,
+        "cache_write": 0
+      }
+    },
+    "match": true,
+    "_haiku_full": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "rejection_reason": null,
+      "rationale": "The submission describes a software tool that enables clinics to create and manage ABHA-linked digital health records. While ABHA (Ayushman Bharat Health Account) is a government infrastructure, the product itself is a clinic-facing SaMD (software as a medical device) that processes and stores patient health data. This is a regulated healthtech product under DPDP (patient data handling) and ABDM interoperability rules, not a regulator or government mission. It requires wizard routing to scope regulatory obligations.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "unclear",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    },
+    "_sonnet_full": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "rejection_reason": null,
+      "rationale": "This is a single healthcare software offering that helps clinics create ABHA-linked digital health records. It directly touches ABDM (the ABHA ID and health records infrastructure), DPDP (handling patient health data), and likely CDSCO MDR depending on whether it includes any clinical decision features. It is a real healthtech product aimed at clinicians/clinic administrators — not a regulator, investor, or out-of-scope submission.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "no",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    }
+  },
+  {
+    "case_id": "CP-024",
+    "product_name": "OncoPath Assist",
+    "one_liner": "AI tool that suggests likely cancer grading from pathology slide images.",
+    "sonnet": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "cost_usd": 0.004962899999999999,
+      "elapsed_ms": 4783,
+      "usage": {
+        "input_tokens": 48,
+        "output_tokens": 231,
+        "cache_read": 4513,
+        "cache_write": 0
+      }
+    },
+    "haiku": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "cost_usd": 0.0015292,
+      "elapsed_ms": 2276,
+      "usage": {
+        "input_tokens": 48,
+        "output_tokens": 206,
+        "cache_read": 4512,
+        "cache_write": 0
+      }
+    },
+    "match": true,
+    "_haiku_full": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "rejection_reason": null,
+      "rationale": "Single healthcare offering with a clear diagnostic intent: AI-powered cancer grading from pathology slides. This is a Software as a Medical Device (SaMD) under CDSCO MDR, likely Class B or C depending on intended use (decision support vs. autonomous diagnosis). Routes to the wizard for regulatory scoping.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "no",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    },
+    "_sonnet_full": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "rejection_reason": null,
+      "rationale": "This is a single clinical AI offering that analyses pathology slide images to suggest cancer grading — a clear diagnostic decision-support tool and likely SaMD under CDSCO MDR / the Oct 2025 draft. It targets a specific clinical task (cancer grading from histopathology) for a defined user group (pathologists, oncologists). No multi-feature decomposition is needed; the wizard will determine CDSCO class and regulatory pathway.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "no",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    }
+  },
+  {
+    "case_id": "CP-025",
+    "product_name": "PhysioMove",
+    "one_liner": "Computer vision app that tracks physiotherapy exercise adherence.",
+    "sonnet": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "cost_usd": 0.0047139,
+      "elapsed_ms": 4635,
+      "usage": {
+        "input_tokens": 45,
+        "output_tokens": 215,
+        "cache_read": 4513,
+        "cache_write": 0
+      }
+    },
+    "haiku": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "cost_usd": 0.0016012,
+      "elapsed_ms": 2689,
+      "usage": {
+        "input_tokens": 45,
+        "output_tokens": 221,
+        "cache_read": 4512,
+        "cache_write": 0
+      }
+    },
+    "match": true,
+    "_haiku_full": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "rejection_reason": null,
+      "rationale": "A computer vision app that tracks physiotherapy exercise adherence is a single healthcare offering aimed at patients and clinicians. It monitors compliance with prescribed exercises — a wellness/rehabilitation support function. This is a healthcare product (likely SaMD under CDSCO MDR if it makes clinical claims about exercise correctness or injury prevention) and routes through the wizard to determine regulatory classification and exemption eligibility.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "no",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    },
+    "_sonnet_full": {
+      "product_type": "product",
+      "next_action": "run_wizard",
+      "rejection_reason": null,
+      "rationale": "A computer vision app that tracks physiotherapy exercise adherence is a single healthcare software offering aimed at patients and/or clinicians. It has a clear clinical intent (monitoring rehabilitation exercise compliance) and touches CDSCO MDR (likely SaMD) and potentially ICMR AI Guidelines. No multi-feature decomposition is needed; the wizard will determine the regulatory class and applicable frameworks.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "no",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    }
+  },
+  {
+    "case_id": "EDGE-1-regulator",
+    "product_name": "Karnataka SDA inspector",
+    "one_liner": "Inspecting CDSCO compliance documents for the Karnataka State Drug Authority",
+    "sonnet": {
+      "product_type": "regulator",
+      "next_action": "reject",
+      "cost_usd": 0.004740899999999999,
+      "elapsed_ms": 4590,
+      "usage": {
+        "input_tokens": 49,
+        "output_tokens": 216,
+        "cache_read": 4513,
+        "cache_write": 0
+      }
+    },
+    "haiku": {
+      "product_type": "regulator",
+      "next_action": "reject",
+      "cost_usd": 0.0015652,
+      "elapsed_ms": 2268,
+      "usage": {
+        "input_tokens": 49,
+        "output_tokens": 213,
+        "cache_read": 4512,
+        "cache_write": 0
+      }
+    },
+    "match": true,
+    "_haiku_full": {
+      "product_type": "regulator",
+      "next_action": "reject",
+      "rejection_reason": "ClearPath scopes Indian healthcare products and startups; government regulatory bodies and compliance inspection services are outside our coverage.",
+      "rationale": "The submission describes a compliance inspection or audit service for the Karnataka State Drug Authority — a government regulator. This is a regulatory function, not a healthcare product subject to CDSCO oversight. ClearPath cannot advise regulators or their service providers.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "unclear",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    },
+    "_sonnet_full": {
+      "product_type": "regulator",
+      "next_action": "reject",
+      "rejection_reason": "ClearPath scopes Indian healthcare products seeking regulatory readiness; government drug authority compliance inspection bodies are outside our coverage.",
+      "rationale": "The submission describes an activity conducted by or for the Karnataka State Drug Authority — a state-level regulatory enforcement body operating under the Drugs & Cosmetics Act. This is a government regulatory authority, not a healthcare product or manufacturer. ClearPath cannot scope regulators or their compliance inspection functions.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "unclear",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    }
+  },
+  {
+    "case_id": "EDGE-2-investor",
+    "product_name": "Medtech VC",
+    "one_liner": "Looking to invest in Series A medtech startups working on AI diagnostics in India",
+    "sonnet": {
+      "product_type": "investor",
+      "next_action": "reject",
+      "cost_usd": 0.0044618999999999995,
+      "elapsed_ms": 4454,
+      "usage": {
+        "input_tokens": 51,
+        "output_tokens": 197,
+        "cache_read": 4513,
+        "cache_write": 0
+      }
+    },
+    "haiku": {
+      "product_type": "investor",
+      "next_action": "reject",
+      "cost_usd": 0.0014972,
+      "elapsed_ms": 2344,
+      "usage": {
+        "input_tokens": 51,
+        "output_tokens": 199,
+        "cache_read": 4512,
+        "cache_write": 0
+      }
+    },
+    "match": true,
+    "_haiku_full": {
+      "product_type": "investor",
+      "next_action": "reject",
+      "rejection_reason": "ClearPath scopes Indian healthcare products and manufacturers; investment funds and VC arms are outside our coverage.",
+      "rationale": "The submission describes an investment fund focused on Series A medtech startups. This is a VC/investor entity, not a healthcare product or manufacturer. ClearPath does not classify or route investors.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "no",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    },
+    "_sonnet_full": {
+      "product_type": "investor",
+      "next_action": "reject",
+      "rejection_reason": "ClearPath scopes Indian healthcare products seeking regulatory readiness; investment mandates and funding inquiries are outside our coverage.",
+      "rationale": "The submission explicitly describes an intent to invest in medtech startups, not a healthcare product seeking regulatory guidance. This is an investor profile — no product, device, or software is being submitted for classification.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "unclear",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    }
+  },
+  {
+    "case_id": "EDGE-3-fintech",
+    "product_name": "Tier-2 credit scorer",
+    "one_liner": "AI-powered credit scoring app for Tier 2 city loan applicants in India",
+    "sonnet": {
+      "product_type": "out_of_scope",
+      "next_action": "reject",
+      "cost_usd": 0.0055299,
+      "elapsed_ms": 6666,
+      "usage": {
+        "input_tokens": 52,
+        "output_tokens": 268,
+        "cache_read": 4513,
+        "cache_write": 0
+      }
+    },
+    "haiku": {
+      "product_type": "out_of_scope",
+      "next_action": "reject",
+      "cost_usd": 0.0018532,
+      "elapsed_ms": 3203,
+      "usage": {
+        "input_tokens": 52,
+        "output_tokens": 270,
+        "cache_read": 4512,
+        "cache_write": 0
+      }
+    },
+    "match": true,
+    "_haiku_full": {
+      "product_type": "out_of_scope",
+      "next_action": "reject",
+      "rejection_reason": "ClearPath scopes Indian healthcare products; credit scoring and lending are outside our coverage.",
+      "rationale": "The submission describes an AI-powered credit scoring app for loan applicants. This is a fintech / lending product with no connection to healthcare, clinical care, patient data, health insurance, or any of the 9 Indian health regulations (CDSCO MDR, D&C Act, DPDP in healthcare context, ICMR AI Guidelines, ABDM, NABH, MCI Telemedicine, IRDAI, NABL). It falls squarely into out_of_scope.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "unclear",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    },
+    "_sonnet_full": {
+      "product_type": "out_of_scope",
+      "next_action": "reject",
+      "rejection_reason": "ClearPath scopes Indian healthcare products; this AI credit scoring application has no healthcare, clinical, patient, or health-data connection and falls outside our coverage.",
+      "rationale": "The submission describes a fintech credit scoring application for loan applicants. There is no connection to any of the 9 Indian health regulations (CDSCO MDR, D&C Act, DPDP in a health context, ICMR AI Guidelines, ABDM, NABH, MCI Telemedicine, IRDAI health insurance, or NABL). This is pure fintech/lending-tech with zero health or clinical touch.",
+      "conflict_detected": false,
+      "conflict_note": null,
+      "conflict_details": null,
+      "detected_signals": {
+        "certifications": [],
+        "partnerships": [],
+        "prior_regulatory_work": [],
+        "has_physical_facility": "unclear",
+        "facility_details": null
+      },
+      "pdf_summaries": []
+    }
+  }
+]

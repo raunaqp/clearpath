@@ -1,9 +1,11 @@
 import type { ReadinessCard } from "@/lib/schemas/readiness-card";
+import { RegulationCountBadge } from "./RegulationCountBadge";
 
 type RiskLevel = ReadinessCard["risk"]["level"];
 type MdStatus = ReadinessCard["classification"]["medical_device_status"];
 type CdscoClass = ReadinessCard["classification"]["cdsco_class"];
 type ClassQualifier = ReadinessCard["classification"]["class_qualifier"];
+type Regulations = ReadinessCard["regulations"];
 
 const RISK_LABEL: Record<RiskLevel, string> = {
   high: "High",
@@ -36,12 +38,14 @@ export function BadgeRow({
   cdscoClass,
   classQualifier,
   timelineDisplay,
+  regulations,
 }: {
   riskLevel: RiskLevel;
   mdStatus: MdStatus;
   cdscoClass: CdscoClass;
   classQualifier: ClassQualifier;
   timelineDisplay: string;
+  regulations: Regulations;
 }) {
   const classText = (() => {
     const base = cdscoClass ?? "TBD";
@@ -61,11 +65,12 @@ export function BadgeRow({
       <span className={badgeBase(RISK_STYLE[riskLevel])}>
         Risk: {RISK_LABEL[riskLevel]}
       </span>
-      <span className={badgeBase(neutralPill)}>MD?: {mdLabel}</span>
+      <span className={badgeBase(neutralPill)}>Device?: {mdLabel}</span>
       <span className={badgeBase(neutralPill)}>Class: {classText}</span>
       <span className={badgeBase(neutralPill)}>
         Timeline: {timelineDisplay}
       </span>
+      <RegulationCountBadge regulations={regulations} />
     </div>
   );
 }

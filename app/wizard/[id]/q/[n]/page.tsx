@@ -64,6 +64,20 @@ export default async function WizardStepPage({
   const initialAnswers: WizardAnswers = data.wizard_answers ?? {};
   const initialSkipped = meta.wizard_skipped_questions ?? [];
 
+  // All-answers-prefilled detection — true when every q1..q7 is non-null
+  // (and arrays are non-empty). Demo packets prefill all 7 at intake;
+  // real users won't hit this until they've answered everything. When
+  // true, the wizard exposes a "Skip to card →" affordance.
+  const allAnswersPrefilled = (() => {
+    const a = initialAnswers as Record<string, unknown>;
+    for (let i = 1; i <= total; i++) {
+      const v = a[`q${i}`];
+      if (v === undefined || v === null) return false;
+      if (Array.isArray(v) && v.length === 0) return false;
+    }
+    return true;
+  })();
+
   // Two-pane on xl+ (1280px+): left = question card, right = context pane.
   // Below xl: single column with horizontal stepper. The 1024-1279 band
   // sits in the single-column path because at 1024 the right pane only
@@ -82,6 +96,7 @@ export default async function WizardStepPage({
               productType={data.product_type}
               conflictEncountered={meta.conflict_detected === true}
               pdfCount={pdfCount}
+              allAnswersPrefilled={allAnswersPrefilled}
             />
           </div>
         </div>
