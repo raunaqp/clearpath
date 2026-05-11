@@ -45,7 +45,7 @@ function buildUserMessage(sources: SourceData): string {
 
   return [
     "Generate Section 7 (Labelling) for a CDSCO MD-7/MD-3 Draft Pack.",
-    "Phrasing variety: open with 'In line with MDR 2017 Fifth Schedule labelling requirements'. Avoid earlier openers.",
+    "Opening framing: lead with what the user-facing labelling actually covers (label + IFU) and who reads it (clinician vs lay user, anchored to Q3 + B2). The Fifth Schedule citation belongs in a footnote-style reference, not the opening clause.",
     "",
     "## Applicant data",
     `Intake one-liner: ${sources.intake.one_liner}`,
@@ -63,9 +63,9 @@ function buildUserMessage(sources: SourceData): string {
     "## Output (STRICT JSON)",
     "```",
     "{",
-    `  "ifu_summary": "200-400 words. Full Instructions-for-Use template covering: indications; intended users; intended environment; pre-use checks/setup; directions for use; warnings & precautions; storage; cleaning/disinfection (or software update procedure for SaMD); disposal/decommission; manufacturer contact placeholder. Reading level: ${wa.b2_use_environment === "home" ? "general-public lay-user (8th-grade equivalent)" : "qualified clinician"}. Use [TBD] for specifics not in source data.",`,
-    '  "intended_use_label": "≤ 60 words. Single-paragraph label-card statement of intended use suitable for the device label.",',
-    '  "contraindications_label": "≤ 80 words. Single-paragraph contraindications statement suitable for label/IFU."',
+    `  "ifu_summary": "200-350 words. Working IFU draft covering: indications; intended users; intended environment; pre-use checks; directions for use; warnings & precautions; storage; cleaning/disinfection (or software update for SaMD); disposal/decommission; manufacturer contact. Reading level: ${wa.b2_use_environment === "home" ? "general-public lay user (8th-grade equivalent — short sentences, bullet steps)" : "qualified clinician"}. Use \"[NEEDS INPUT: <what>]\" for genuinely missing specifics (specific torque values, lot codes, etc.). Do NOT invent.",`,
+    '  "intended_use_label": "≤ 50 words. Label-card statement of intended use. Concise — a label has limited space.",',
+    '  "contraindications_label": "≤ 60 words. Concise contraindications statement suitable for label/IFU."',
     "}",
     "```",
     "",

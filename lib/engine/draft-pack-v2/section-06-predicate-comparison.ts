@@ -55,8 +55,8 @@ function buildHasPredicateMessage(sources: SourceData): string {
   );
 
   return [
-    "Generate the substantial-equivalence narrative for Section 6 (Predicate Device Comparison) of a CDSCO MD-7/MD-3 Draft Pack.",
-    "Phrasing variety: open with 'Per MDR 2017 Rule 60' OR 'In line with substantial-equivalence principles documented in CDSCO published materials'. Avoid openers used in earlier sections.",
+    "Generate Section 6 (Predicate Device Comparison) — substantial-equivalence narrative — for a CDSCO MD-7/MD-3 Draft Pack.",
+    "Opening framing: lead with the predicate(s) and what they share with the subject device. Cite MDR 2017 §32 once when the equivalence basis is invoked — not as the opening clause.",
     "",
     "## Applicant data",
     `Intake one-liner: ${sources.intake.one_liner}`,
@@ -95,8 +95,8 @@ function buildNovelMessage(sources: SourceData): string {
   const wa = sources.wizard_answers;
   const card = sources.readiness_card;
   return [
-    "Generate the novel-device declaration for Section 6 (Predicate Device Comparison) of a CDSCO MD-7/MD-3 Draft Pack.",
-    "Phrasing variety: open with 'Per MDR 2017 §3.2 and the no-predicate pathway documented in CDSCO published materials'.",
+    "Generate Section 6 (Predicate Device Comparison) — novel-device declaration — for a CDSCO MD-7/MD-3 Draft Pack.",
+    "Opening framing: state plainly that no Indian predicate is claimed and what that means for the pathway. Practical tone — this is the section that triggers the MD-26/MD-27 pre-permission requirement, treat it that way.",
     "",
     "## Applicant data",
     `Intake one-liner: ${sources.intake.one_liner}`,

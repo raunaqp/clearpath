@@ -65,7 +65,7 @@ function buildUserMessage(sources: SourceData): string {
 
   return [
     "Generate Section 8 (Design & Manufacturing) for a CDSCO MD-7/MD-3 Draft Pack.",
-    "Phrasing variety: open with 'Per MDR 2017 Fourth Schedule Appendix II §8.7' OR 'In accordance with ISO 13485 §7.3 design controls'. Vary from earlier sections.",
+    "Opening framing: lead with the design-controls scope and manufacturing model (own-site / contract / software-only). Operational realism welcomed — naming a typical management-review cadence (quarterly), audit sequence (internal → CB Stage 1 → Stage 2), or CAPA SLA (30 days for major NCs) reads like a consultant authored it. Do NOT invent specific certificate numbers / dates.",
     "",
     "## Applicant data",
     `Intake one-liner: ${sources.intake.one_liner}`,
@@ -84,21 +84,21 @@ function buildUserMessage(sources: SourceData): string {
     "## Output (STRICT JSON)",
     "```",
     "{",
-    `  "design_history_summary": "150-300 words. ISO 13485 §7.3 design-controls framing — design inputs, design reviews, V&V activities, design transfer. Anchor to Q7 commercial stage (${wa.q7 ?? "[TBD]"}) and the intended use. For software, frame around IEC 62304 lifecycle.",`,
-    '  "manufacturing_process_summary": "150-300 words. For hardware: process flow, in-process controls, finished-product release. For software-only: SDLC + release engineering + version control + deployment topology.",',
-    `  "quality_management_overview": "200-400 words. Cover the 11 QMS sub-blocks per MDR 2017 Fifth Schedule (Quality Manual, Doc Control, Records Control, Mgmt Responsibility, Resource Mgmt, Production Controls, Internal Audit, NCP, CAPA, Env Requirements). Anchor to B6 status: ${wa.b6_iso_13485_status ?? "[TBD]"}. Be honest about gaps. ${card.classification.cdsco_class === "D" ? "Class D — ≥ 300 words, explicit on internal audit cadence and CAPA SLA." : ""}",`,
+    `  "design_history_summary": "120-220 words. Design controls — design inputs, design reviews, V&V activities, design transfer — anchored to commercial stage (${wa.q7 ?? "[NEEDS INPUT: commercial stage]"}). For software, frame around IEC 62304 lifecycle phases. Naming a typical design-review cadence (e.g., gate review at each milestone) is welcome where the source supports it.",`,
+    '  "manufacturing_process_summary": "120-220 words. Hardware: process flow + in-process controls + finished-product release. Software-only: SDLC + release engineering + version control + deployment topology + rollback procedure. Tight prose; not a textbook.",',
+    `  "quality_management_overview": "150-300 words. Cover the 11 QMS sub-blocks but do NOT bullet-list all 11 by name — group them into 3-4 paragraphs (governance + doc/record control; resource + production controls; audit/NCP/CAPA; environment). Anchor to B6 status: ${wa.b6_iso_13485_status ?? "[NEEDS INPUT: ISO 13485 status]"}. Honest about gaps. ${card.classification.cdsco_class === "D" ? "Class D — explicit on internal audit cadence (typical quarterly internal + annual management review) and CAPA SLA (30 days for major NCs)." : ""}",`,
     softwarePresent
-      ? `  "software_development_lifecycle": "150-300 words. Map C1 = ${wa.c1_software_lifecycle_model ?? "[TBD]"} to IEC 62304 framing. waterfall → phased V-model; agile → iterative sprints + risk-based regression; hybrid → scaled-agile with stage gates. Cite IEC 62304:2006/AMD1:2015 §5.",`
+      ? `  "software_development_lifecycle": "120-220 words. C1 = ${wa.c1_software_lifecycle_model ?? "[NEEDS INPUT: software lifecycle model]"}. waterfall → phased V-model; agile → iterative sprints + risk-based regression (mention typical sprint length where natural); hybrid → scaled-agile with stage gates. Cite IEC 62304 §5 once.",`
       : '  "software_development_lifecycle": null,',
     card.classification.acp_required
-      ? '  "algorithm_change_protocol": "150-300 words. Sprint 2 stub for the 5-component ACP per Oct 2025 CDSCO SaMD draft: (1) modification scope, (2) retraining triggers, (3) validation thresholds, (4) human oversight, (5) re-submission triggers. Use [TBD] for component-specific values pending Sprint 4 ACP question.",'
+      ? '  "algorithm_change_protocol": "120-220 words. Five-component ACP per Oct 2025 CDSCO SaMD draft — for each component, write what the applicant has committed to OR what the structure looks like. Where the specific applicant commitment is unknown, write \"[NEEDS INPUT: <component>]\". Operational realism: name realistic drift-detection metrics (calibration drift, performance drift on monitored cohorts), monitoring cadence (weekly to monthly), and the escalation path (clinical reviewer → re-validation → re-submission trigger).",'
       : '  "algorithm_change_protocol": null,',
     sterile
-      ? '  "sterilization_validation": "150-300 words. Cover sterilisation mode (EtO / steam / radiation / aseptic), validation per ISO 11135 / ISO 11137 / ISO 17665 family, bioburden + sterility-assurance level, packaging shelf-life. [TBD] for the specific mode pending Sprint 3 sterilisation-mode question."'
+      ? '  "sterilization_validation": "120-220 words. Sterilisation mode (EtO / steam / radiation / aseptic) — \"[NEEDS INPUT: specific sterilisation mode]\" if Sprint 3 question not yet asked. Validation per ISO 11135 / ISO 11137 / ISO 17665, bioburden + SAL framework, packaging shelf-life."'
       : '  "sterilization_validation": null,',
-    `  "iso_13485_evidence": "40-120 words. Template based on B6 status (${wa.b6_iso_13485_status ?? "[TBD]"}). For 'certified': certificate # [TBD], issued by [TBD], valid through [TBD]. For 'in_progress': describe engagement (CB / Stage 1 / Stage 2 schedule). For 'not_started': honest gap statement + engagement plan."`,
+    `  "iso_13485_evidence": "40-100 words. Based on B6 = ${wa.b6_iso_13485_status ?? "[NEEDS INPUT: ISO 13485 status]"}. 'certified' → \"[NEEDS INPUT: certificate number, CB, valid through]\". 'in_progress' → describe engagement (CB / Stage 1 / Stage 2 schedule) with [NEEDS INPUT] for unknown specifics. 'not_started' → honest engagement plan."`,
     "  ,",
-    '  "batch_release_documentation": "40-120 words. Hardware: minimum 3 consecutive batches per DMF §8.20. Software: version release certificate per IEC 62304 §5.8."',
+    '  "batch_release_documentation": "40-100 words. Hardware: minimum 3 consecutive batches per DMF §8.20 — note that batch records are retained per the QMS doc-control schedule. Software: version release certificate per IEC 62304 §5.8."',
     "}",
     "```",
     "",

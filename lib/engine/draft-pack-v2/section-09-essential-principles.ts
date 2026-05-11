@@ -71,7 +71,7 @@ function buildUserMessage(sources: SourceData): string {
 
   return [
     "Generate Section 9 (Essential Principles Conformity) for a CDSCO MD-7/MD-3 Draft Pack.",
-    "Phrasing variety: open with 'Per MDR 2017 First Schedule (Essential Principles)' OR 'In conformity with the Essential Principles documented in MDR 2017'. Vary from earlier openers.",
+    "Opening framing: this section is anchored by a checklist (the table). Lead the prose with a brief 2-3 sentence framing of what the checklist covers and which standards underpin it (62304, 81001-5-1, 14971, 62366-1 — name only the ones in scope). Keep the prose around the table TIGHT — the table does the work, the prose orients the reviewer.",
     "",
     "## Applicant data",
     `Class: ${card.classification.cdsco_class} / qualifier: ${card.classification.class_qualifier ?? "—"}`,
@@ -104,13 +104,13 @@ function buildUserMessage(sources: SourceData): string {
       : `    { "principle": "EP-SW — software conformance", "applicability": "n_a (no software)", "evidence_reference": "N/A", "rationale": "No software in the device." }`,
     `  ],`,
     sw
-      ? '  "software_conformance_subsection": "180-350 words. IEC 62304 (lifecycle), IEC 81001-5-1 (cybersecurity), IEC 62366-1 (usability). Cite Section 8 SDLC + Section 11 software V&V. Adaptive AI → cite ACP cross-reference.",'
+      ? '  "software_conformance_subsection": "120-240 words. IEC 62304 (lifecycle), IEC 81001-5-1 (cybersecurity), IEC 62366-1 (usability). Cross-reference Section 8 SDLC + Section 11 software V&V briefly — do not restate them. Adaptive AI → one sentence on the ACP cross-reference.",'
       : '  "software_conformance_subsection": null,',
     cyber
-      ? `  "cybersecurity_subsection": "150-300 words. Map C2 cybersecurity posture (${JSON.stringify(wa.c2_cybersecurity_posture ?? "(not captured)")}) to IEC 81001-5-1 + DPDP 2023. Document data-at-rest encryption, data-in-transit encryption, authentication model. Acknowledge gaps with [TBD]."`
+      ? `  "cybersecurity_subsection": "120-220 words. Map C2 posture (${JSON.stringify(wa.c2_cybersecurity_posture ?? "(not captured)")}) to IEC 81001-5-1 + DPDP 2023. Cover the three pillars — encryption at rest, encryption in transit, authentication — in one paragraph each, tightly. Where C2 is unset, write \"[NEEDS INPUT: <subfield>]\" with the specific subfield."`
       : '  "cybersecurity_subsection": null,',
     `  ,`,
-    `  "usability_engineering_summary": "80-200 words. IEC 62366-1 framing. Intended user: ${wa.q3 ?? "[TBD]"}; use environment: ${wa.b2_use_environment ?? "[TBD]"}. Lay-user home environment → higher usability burden (formative + summative testing referenced)."`,
+    `  "usability_engineering_summary": "80-150 words. IEC 62366-1 framing. Intended user: ${wa.q3 ?? "[NEEDS INPUT: user type]"}; use environment: ${wa.b2_use_environment ?? "[NEEDS INPUT: use environment]"}. Lay-user home environment → mention formative + summative usability testing in one sentence each."`,
     "}",
     "```",
     "",

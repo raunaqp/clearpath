@@ -50,7 +50,7 @@ function buildUserMessage(sources: SourceData): string {
 
   return [
     "Generate Section 12 (Clinical Evidence & Post-Market Surveillance) for a CDSCO MD-7/MD-3 Draft Pack.",
-    "Phrasing variety: open with 'Per MDR 2017 vigilance-reporting expectations' OR 'In accordance with Schedule III post-market obligations'.",
+    "Opening framing: lead with the clinical evidence STATUS — what exists today, what's planned — and the PMS operational model. This section is where deployment realism matters most. Name specific cadences (e.g., 'quarterly trend report'), specific roles ('RA Officer notified within 24h of a Serious AE'), specific forms (MD-42, MD-43, Form-25). Where applicant data is silent, write \"[NEEDS INPUT: <what>]\" — do not fabricate cadences or roles.",
     "",
     "## Applicant data",
     `Class: ${card.classification.cdsco_class} / qualifier: ${card.classification.class_qualifier ?? "—"}`,
@@ -64,14 +64,14 @@ function buildUserMessage(sources: SourceData): string {
     "## Output (STRICT JSON)",
     "```",
     "{",
-    `  "clinical_evidence_summary": "200-400 words. Map B5 status (${wa.b5_clinical_evidence_status ?? "[TBD]"}) to study description. For 'none': honest gap statement + bridge to evidence_plan. For 'pilot_data': describe pilot + acknowledge pivotal dependency. For 'published_study': cite '[TBD] DOI'. For 'multi_center_trial': describe ([TBD] study ID + sample size). ${card.classification.cdsco_class === "D" ? "Class D — ≥ 300 words; clinical evidence effectively mandatory." : ""}",`,
-    `  "evidence_plan": "150-300 words. Sprint 3 prospective study plan + CTRI registration intent + EC engagement (mark [TBD] for specifics pending Sprint 4 questions).",`,
-    `  "pms_plan_summary": "250-500 words. Active vigilance reporting per MDR 2017. Cover: complaint handling, adverse event reporting (MD-42 / MD-43 forms), periodic safety updates, post-market clinical follow-up cadence. ${card.classification.ai_ml_flag ? "AI/ML — MUST include drift monitoring + periodic algorithm performance reports (cross-ref Section 8 ACP)." : ""}",`,
-    `  "vigilance_reporting_framework": "60-200 words. Name the forms: MD-42 (manufacturer adverse event reporting), MD-43 (post-market surveillance), Form-25 (medical device adverse event report). Cite MDR 2017 vigilance schedule.",`,
+    `  "clinical_evidence_summary": "150-300 words. Map B5 status (${wa.b5_clinical_evidence_status ?? "[NEEDS INPUT: clinical evidence status]"}) to a concrete description. For 'pilot_data': describe the pilot + acknowledge pivotal dependency. Where source data anchors specific numbers (sample size, sensitivity), cite them as preliminary. For 'published_study' or 'multi_center_trial' without source-data IDs, write \"[NEEDS INPUT: study ID / DOI / CTRI registration]\". ${card.classification.cdsco_class === "D" ? "Class D — clinical evidence effectively mandatory; be explicit." : ""}",`,
+    `  "evidence_plan": "120-220 words. Prospective study plan + CTRI registration intent + EC engagement. Use \"[NEEDS INPUT: pivotal trial design — primary endpoint, sample size, comparator]\" for unknowns; do not fabricate study parameters.",`,
+    `  "pms_plan_summary": "200-400 words. Active vigilance per MDR 2017. Three paragraphs: (1) complaint handling — intake → triage → CAPA workflow, naming the typical SLA (24h ack, 30 days root-cause); (2) adverse event reporting — MD-42 / MD-43 / Form-25 — name the form for each event class and the regulatory timing (Serious AE: 15-day reporting per MDR 2017); (3) periodic reporting + post-market clinical follow-up. ${card.classification.ai_ml_flag ? "AI/ML — name the drift-monitoring metric (calibration drift, performance drift) + cadence (monthly) + escalation (clinical reviewer → ACP retraining trigger)." : ""}",`,
+    `  "vigilance_reporting_framework": "60-150 words. Forms (MD-42 manufacturer AE, MD-43 PMS, Form-25 device AE) + their triggering events + their reporting windows. Cite the MDR 2017 vigilance schedule once.",`,
     triggerCiPath
-      ? '  "clinical_investigation_pathway_note": "60-150 words. Surface the MD-22 / MD-23 clinical-investigation pathway. Sequence: MD-26 → MD-27 → MD-22 (CI permission) → MD-23 (CI grant) → CI conduct → MD-7 → MD-9. Recommend the Reviewer Concierge tier for sequencing.",'
+      ? '  "clinical_investigation_pathway_note": "60-130 words. Surface the MD-22 / MD-23 clinical-investigation pathway with the full sequence: MD-26 → MD-27 → MD-22 (CI permission) → MD-23 (CI grant) → CI conduct → MD-7 → MD-9. Mention that the Reviewer Concierge tier supports dual-pathway sequencing.",'
       : '  "clinical_investigation_pathway_note": null,',
-    `  "post_market_clinical_followup": "60-200 words. PMCF triggers and cadence. ${wa.q1 === "critical" && (card.classification.cdsco_class === "C" || card.classification.cdsco_class === "D") ? "Q1=critical + Class C/D — quarterly cadence minimum; ≥ 150 words." : "Annual default cadence; tighten for high-risk subgroups."}"`,
+    `  "post_market_clinical_followup": "60-150 words. PMCF triggers and cadence. ${wa.q1 === "critical" && (card.classification.cdsco_class === "C" || card.classification.cdsco_class === "D") ? "Q1=critical + Class C/D — quarterly cadence minimum, with a sentence on how PMCF reports feed back into the RMF (Section 10)." : "Annual default cadence; tighten for high-risk subgroups."}"`,
     "}",
     "```",
   ].join("\n");

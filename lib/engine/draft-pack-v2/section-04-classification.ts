@@ -83,7 +83,8 @@ function buildUserMessage(sources: SourceData): string {
     : "AI extraction: not run (one-liner-only intake).";
 
   return [
-    "Generate the IMDRF rationale, CDSCO rationale, and grouping statement for Section 4 (Classification & Grouping) of a CDSCO MD-7/MD-3 Draft Pack.",
+    "Generate Section 4 (Classification & Grouping) for a CDSCO MD-7/MD-3 Draft Pack.",
+    "Opening framing: anchor the classification call by walking through the IMDRF significance × situation derivation BEFORE invoking MDR 2017 Schedule II. Substance before citation. Use varied sentence structure — do not start three consecutive sentences with 'Per MDR 2017' or 'Based on published CDSCO guidance'.",
     "",
     "## Applicant data",
     `Product (one-liner): ${sources.intake.one_liner}`,
@@ -106,12 +107,12 @@ function buildUserMessage(sources: SourceData): string {
     aiSummary,
     "",
     "## Output (STRICT JSON)",
-    "Return ONLY this JSON object:",
+    "Return ONLY this JSON object. Aim for the lower end of word bands; Class C/D + novel earns expansion (heightened scrutiny), most other cases do not.",
     "```",
     "{",
-    `  "imdrf_rationale": "80-200 words. Map the device to IMDRF category ${card.classification.imdrf_category ?? "X"} using the significance × situation cell (${q2Label} × ${q1Label}). Quote IMDRF SaMD framework where appropriate.",`,
-    `  "cdsco_rationale": "80-200 words. Tie the IMDRF category to CDSCO Class ${card.classification.cdsco_class ?? "X"} per MDR 2017 Schedule II / SaMD Oct 2025 draft. Be specific about the rule basis.",`,
-    `  "grouping_statement": "40-120 words. Default to a single-product, single-SKU statement unless the applicant data suggests a family. Family grouping detail (model variants, accessories) is a Sprint 3 gap; mark with [TBD] when not derivable."`,
+    `  "imdrf_rationale": "80-150 words. Walk through the significance × situation derivation (${q2Label} × ${q1Label}) → Category ${card.classification.imdrf_category ?? "X"}. Cite IMDRF SaMD WG/N12 where relevant — once.",`,
+    `  "cdsco_rationale": "80-150 words. Tie the IMDRF category to CDSCO Class ${card.classification.cdsco_class ?? "X"}. Cite MDR 2017 Schedule II or the Oct 2025 SaMD draft — once each, where they earn their place.",`,
+    `  "grouping_statement": "40-100 words. If the source data does not name variants or accessories, write one sentence stating the single-product assumption and mark variants with \"[NEEDS INPUT: model variants, SKU codes, accessories if any]\"."`,
     "}",
     "```",
     "",

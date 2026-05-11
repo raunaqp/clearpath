@@ -66,7 +66,7 @@ function buildUserMessage(sources: SourceData): string {
 
   return [
     "Generate Section 10 (Risk Management — ISO 14971) for a CDSCO MD-7/MD-3 Draft Pack.",
-    "Phrasing variety: open with 'In accordance with ISO 14971:2019 risk-management framework' OR 'Per the risk-management cycle documented in MDR 2017 and ISO 14971'.",
+    "Opening framing: the risk register is the centrepiece. Lead with how the register was built (clinical hazard analysis + applicant-declared risks + Risk Card top-gap items) and HOW residual risk is being managed operationally — review cadence (e.g., quarterly RMF review), who owns it (RA lead / clinical reviewer), how new field reports feed back in. This is the section where consultant credibility lives or dies; make it specific.",
     "",
     "## Applicant data",
     `Q1 clinical state: ${wa.q1 ?? "[TBD]"}`,
@@ -96,21 +96,14 @@ function buildUserMessage(sources: SourceData): string {
     `    { "risk_id": "R1", "hazard": "...", "hazardous_situation": "...", "harm": "...", "severity": "serious|critical|...", "probability": "rare|occasional|...", "mitigation": "...", "residual_severity": "...", "residual_probability": "..." }`,
     `    /* ≥ 3 rows; Class D → ≥ 5 rows */`,
     "  ],",
-    `  "risk_summary_narrative": "200-400 words. Overview tying highest residual risks to clinical state (${wa.q1 ?? "[TBD]"}) and intended use. Reference at least one register row by risk_id. ${card.classification.cdsco_class === "D" ? "Class D — ≥ 300 words; each register row's severity explicitly evaluated." : ""}",`,
-    `  "residual_risk_assessment": "80-200 words. State residual risks have been evaluated and mitigations documented. Where residual is still elevated, frame as 'monitored under PMS' (cross-ref Section 12).",`,
-    `  "risk_management_file_reference": "20-80 words. ${wa.b6_iso_13485_status === "certified" ? "RMF maintained per ISO 14971 §3 and integrated with the QMS." : "[TBD] RMF formalisation pending ISO 13485 engagement (Section 8)."}",`,
+    `  "risk_summary_narrative": "150-300 words. Tight overview tying highest residual risks to clinical state (${wa.q1 ?? "[NEEDS INPUT: clinical state]"}) and intended use. Reference at least one register row by risk_id. Specific operational detail welcomed: who reviews the RMF (typical RA lead + clinical reviewer), cadence (quarterly), how field reports flow in. ${card.classification.cdsco_class === "D" ? "Class D — explicit on the heightened review cadence (monthly during pilot, quarterly post-grant)." : ""}",`,
+    `  "residual_risk_assessment": "80-150 words. Document the evaluation outcome. Where residual is elevated for specific rows, name them (R3, R5 etc.) and explain why post-market monitoring is sufficient — what specific signal flips them into a CAPA.",`,
+    `  "risk_management_file_reference": "20-80 words. ${wa.b6_iso_13485_status === "certified" ? "RMF maintained per ISO 14971 §3 and integrated with the QMS." : "[NEEDS INPUT: RMF formalisation timeline tied to ISO 13485 engagement (see Section 8)]."}",`,
     card.classification.ai_ml_flag
-      ? `  "ai_ml_specific_risks": [
-    { "risk": "Model drift / distribution shift in deployed environment", "mitigation": "Continuous drift monitoring per Algorithm Change Protocol (Section 8). Alert thresholds trigger validation cycle." },
-    { "risk": "Subgroup performance disparity", "mitigation": "Pre-deployment subgroup validation; ongoing fairness audits. ([TBD] subgroup detail — Sprint 4 question)" },
-    { "risk": "Adversarial / out-of-distribution inputs", "mitigation": "Input sanity checks; rejection of clearly out-of-distribution samples." }
-  ],`
+      ? `  "ai_ml_specific_risks": "GENERATE 3-5 rows in the array form below. Each mitigation should sound like someone who has actually deployed an ML model — name a specific metric, a monitoring cadence, an escalation path. Avoid generic statements like 'continuous monitoring'. Examples (DO NOT copy verbatim — write fresh, anchored to this device): { risk: 'Calibration drift in deployed cohort (output probability vs observed rate)', mitigation: 'Weekly Brier-score check on a held-out monitoring cohort; > 0.05 drift flagged to clinical reviewer; if confirmed, retraining cycle triggered under ACP §4.' }, { risk: 'Subgroup performance disparity (age, sex, comorbidity strata)', mitigation: 'Pre-deployment subgroup validation at launch; quarterly fairness audit on prospective data. [NEEDS INPUT: specific subgroup strata in scope]' }, { risk: 'Adversarial / out-of-distribution inputs', mitigation: 'Input sanity checks at inference boundary; OOD score thresholding with rejection path. Clinician notified on rejection.' }",`
       : '  "ai_ml_specific_risks": null,',
     sterile
-      ? `  "sterility_risks": [
-    { "risk": "Sterilisation process failure / SAL not achieved", "mitigation": "Sterilisation-process validation per ISO 11135/11137/17665 (Section 8 §8.14). Routine bio-burden monitoring." },
-    { "risk": "Sterile-barrier breach in transit", "mitigation": "Packaging validation per ISO 11607; inspection at user end before use (Section 7 IFU)." }
-  ]`
+      ? `  "sterility_risks": "Generate 2-3 rows. Examples: { risk: 'Sterilisation process failure / SAL not achieved', mitigation: 'Process validation per ISO 11135/11137/17665; routine bio-burden monitoring per release schedule; non-conforming lots quarantined under CAPA.' }, { risk: 'Sterile-barrier breach in transit', mitigation: 'Packaging validation per ISO 11607; user inspection step in IFU (Section 7) before clinical use.' }"`
       : '  "sterility_risks": null',
     "}",
     "```",

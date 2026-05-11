@@ -90,7 +90,7 @@ function buildUserMessage(args: {
   return [
     "Generate the Executive Summary (Section 1) for a CDSCO MD-7/MD-3 Draft Pack. You are the CONSOLIDATOR — you read the other 11 sections (snippets below) and produce a cohesive, regulator-grade summary.",
     "",
-    "Phrasing variety: open with 'This Draft Pack documents' OR 'The applicant has prepared this submission' OR direct device-name opening. Vary from earlier sections.",
+    "Opening framing: lead with the device + class + pathway in the first sentence. Direct, substantive opener — no throat-clearing, no 'This Draft Pack documents...' meta-commentary. Picture a senior consultant explaining the submission to a CDSCO reviewer in two minutes: what is it, what class, what pathway, where's the risk, what's done, what's open.",
     "",
     "## Applicant data",
     `Company: ${sources.ai_extracted?.company?.legal_name ?? sources.intake.name}`,
@@ -130,8 +130,8 @@ function buildUserMessage(args: {
     "## Output (STRICT JSON)",
     "```",
     "{",
-    `  "body": "250-350 words. Cohesive executive summary covering: device + class statement, intended use one-liner, regulatory pathway, key strengths (ISO 13485 status, clinical evidence stage, predicate basis), top 3 gaps, expected timeline anchor. Open with a regulatory citation phrase NOT used in Sections 2-12. ${card.classification.cdsco_class === "D" ? "Class D — emphasise heightened scrutiny." : ""}",`,
-    `  "headline_gaps": ["3 action items derived from Risk Card top_gaps. Each ≤ 30 words, phrased as a verb-led action sentence ('Lock the BSI India Stage 1 audit before Q3 2026.')", "...", "..."],`,
+    `  "body": "220-320 words. Cohesive executive summary covering: device + class statement, intended use one-liner, regulatory pathway, key strengths (ISO 13485 status, clinical evidence stage, predicate basis), top 3 gaps, expected timeline anchor. Short paragraphs (3-4 sentences each). ${card.classification.cdsco_class === "D" ? "Class D — note heightened scrutiny without belabouring it." : ""}",`,
+    `  "headline_gaps": ["3 action items derived from Risk Card top_gaps. Each ≤ 30 words, verb-led, specific. Names the owner if natural ('RA lead to lock BSI India Stage 1 audit before Q3 2026.'). Avoid 'ensure', 'must', 'will'.", "...", "..."],`,
     card.recommended_path === "clinical_investigation"
       ? '  "recommended_path_note": "60-120 words. Surface MD-22 / MD-23 clinical-investigation pathway. Recommend Reviewer Concierge for dual-pathway sequencing."'
       : '  "recommended_path_note": null',

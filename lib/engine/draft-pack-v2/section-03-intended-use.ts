@@ -57,8 +57,8 @@ function buildUserMessage(sources: SourceData): string {
   const card = sources.readiness_card;
 
   return [
-    "Generate the body of Section 3 (Intended Use & Indications) for a CDSCO MD-7/MD-3 Draft Pack.",
-    "Phrasing variety: open with 'In accordance with MDR 2017 §4' OR 'Per MDR 2017 indications-of-use guidance'. Vary from earlier sections.",
+    "Generate Section 3 (Intended Use & Indications) for a CDSCO MD-7/MD-3 Draft Pack.",
+    "Opening framing: lead with the clinical scope — who the device is for, what condition or context, in what setting. Do NOT open with a regulatory citation; the regulatory anchor (MDR 2017 §4) belongs in a citation, not the opening sentence.",
     "",
     "## Applicant data",
     `Intake one-liner: ${sources.intake.one_liner}`,
@@ -73,12 +73,12 @@ function buildUserMessage(sources: SourceData): string {
     `AI extraction — data sensitivity: ${ai?.suggested_wizard_answers?.data_sensitivity ?? "(not captured)"}`,
     "",
     "## Output (STRICT JSON)",
-    "Return ONLY this JSON object:",
+    "Return ONLY this JSON object. Lower-end of each band is usually right.",
     "```",
     "{",
-    '  "indication_paragraph": "60-180 words. State the indication, who uses it, the use environment, and the population. Open with a regulatory citation phrase that has NOT been used in Section 4 (avoid \\"Based on published CDSCO guidance\\" and \\"Per MDR 2017 Schedule II\\"). For AI/ML devices, include the explicit statement that the device DOES NOT perform autonomous diagnosis — clinician remains the decision-maker.",',
-    '  "contraindications": "40-180 words. Be honest about contraindications. Where specifics are not in source data, frame as \\"to be confirmed during clinical validation\\" — that is acceptable regulatory language.",',
-    '  "patient_population": "40-180 words. Describe the target patient population — demographics, condition, exclusions. If pitch-extract patient_population is null, render \\"[TBD] — pending Sprint 3 patient-population question\\"."',
+    '  "indication_paragraph": "60-150 words. State the indication, who uses it, the use environment, and the population — in that order. For AI/ML devices, include ONE sentence that the device does not perform autonomous diagnosis and the clinician remains the decision-maker. Do not repeat that statement elsewhere in this section.",',
+    '  "contraindications": "40-120 words. Honest about real contraindications for this product class. Specific clinical limits the source data does not disclose → \"[NEEDS INPUT: <what>]\" rather than vague language.",',
+    '  "patient_population": "40-120 words. Demographics, condition, exclusions. Where pitch-extract patient_population is null, write \"[NEEDS INPUT: target patient demographics and exclusion criteria]\"."',
     "}",
     "```",
     "",

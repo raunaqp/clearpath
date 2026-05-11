@@ -51,7 +51,7 @@ function buildUserMessage(sources: SourceData): string {
 
   return [
     "Generate Section 11 (Verification & Validation) for a CDSCO MD-7/MD-3 Draft Pack.",
-    "Phrasing variety: open with 'Per ISO 13485 §7.3 design controls and IEC 62304 §5' OR 'In accordance with verification-and-validation expectations of MDR 2017'. Vary from earlier sections.",
+    "Opening framing: lead with the V&V structure — what was verified, against what, with what outcome. Be concrete about evidence references. Where applicant data names studies/sites/sample sizes, cite them and label as preliminary subject to pivotal confirmation. Otherwise \"[NEEDS INPUT: <what>]\" — do not invent.",
     "",
     "## Applicant data",
     `Class: ${card.classification.cdsco_class} / qualifier: ${card.classification.class_qualifier ?? "—"}`,
@@ -64,14 +64,13 @@ function buildUserMessage(sources: SourceData): string {
     "## Output (STRICT JSON)",
     "```",
     "{",
-    `  "verification_protocol_summary": "150-300 words. What was tested (functional, safety, performance), against what specs/standards, and which Essential Principles (Section 9) each test maps to. ${card.classification.cdsco_class === "D" ? "Class D — ≥ 250 words." : ""}",`,
-    `  "validation_summary": "150-300 words. Real-world performance against intended use. Be honest about B5 = ${wa.b5_clinical_evidence_status ?? "[TBD]"}. For 'none' or 'pilot_data': acknowledge gap and cross-reference Section 12 evidence plan. ${card.classification.cdsco_class === "D" ? "Class D — ≥ 250 words." : ""}",`,
-    // Biocompatibility is a Sprint 3 question (patient-contact tier). Sprint 2 fills a stub.
-    `  "biocompatibility_evidence": "100-250 words OR null. Render the sub-block (non-null) unless this is clearly a software-only product with no patient contact. Map to ISO 10993 series — be conservative: '[TBD]' for the specific test panel pending Sprint 3 patient-contact-type question. Default to surface_intact_skin tier when ambiguous.",`,
+    `  "verification_protocol_summary": "120-220 words. What was tested (functional, safety, performance), against what specs/standards, and which Essential Principles (Section 9) each test maps to. Concrete test categories (functional bench, software unit V&V, performance under load, etc.) — not a generic overview.",`,
+    `  "validation_summary": "120-220 words. Real-world performance against intended use. Honest about B5 = ${wa.b5_clinical_evidence_status ?? "[NEEDS INPUT: clinical evidence status]"}. For 'none' or 'pilot_data': acknowledge gap + cross-reference Section 12 evidence plan. Where source data anchors specific numbers (e.g., AIIMS pilot 94% sensitivity), cite them and label preliminary subject to pivotal confirmation.",`,
+    `  "biocompatibility_evidence": "80-180 words OR null. Render the sub-block unless software-only with no patient contact. Map to ISO 10993 series — \"[NEEDS INPUT: ISO 10993 test panel — anchored to confirmed patient-contact tier]\" rather than fabricating specifics. Default to surface_intact_skin tier when ambiguous.",`,
     sw
-      ? `  "software_verification_validation": "180-350 words. IEC 62304 §5.5 (Software Unit V&V) + §5.6 (System V&V) + §5.7 (Software Release). Cite C1 = ${wa.c1_software_lifecycle_model ?? "[TBD]"} for SDLC. ${card.classification.acp_required ? "ACP-required AI/ML — explicitly include drift validation, subgroup performance, threshold-based retraining triggers (cross-ref Section 8 ACP, Section 10 ai_ml_specific_risks)." : ""}",`
+      ? `  "software_verification_validation": "140-260 words. IEC 62304 §5.5 (Software Unit V&V) + §5.6 (System V&V) + §5.7 (Software Release). Anchor to C1 = ${wa.c1_software_lifecycle_model ?? "[NEEDS INPUT: software lifecycle model]"} for SDLC. ${card.classification.acp_required ? "ACP-required AI/ML — name SPECIFIC validation metrics: held-out cohort accuracy, drift-detection threshold (Brier or KL), subgroup performance bounds, threshold-based retraining triggers. Cross-ref Section 8 ACP + Section 10 ai_ml risks." : ""}",`
       : '  "software_verification_validation": null,',
-    `  "stability_data_summary": "60-180 words. ${sw ? "Software: 'Not applicable in the classical hardware-stability sense; version-specific change-control covered in Section 8 batch_release.'" : "Hardware: real-time + accelerated stability per ICH Q1A framing. [TBD] for specific shelf life pending Sprint 3 stability-status question."}"`,
+    `  "stability_data_summary": "60-150 words. ${sw ? "Software: not applicable in the classical hardware-stability sense — version-specific change-control under Section 8 batch_release covers analogous obligations." : "Hardware: real-time + accelerated stability per ICH Q1A framing. \"[NEEDS INPUT: specific shelf life]\" pending Sprint 3 stability-status question."}"`,
     "}",
     "```",
   ].join("\n");
