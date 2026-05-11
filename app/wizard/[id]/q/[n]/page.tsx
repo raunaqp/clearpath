@@ -149,7 +149,13 @@ export default async function WizardStepPage({
   // (and arrays are non-empty). Demo packets prefill all 7 at intake;
   // real users won't hit this until they've answered everything. When
   // true, the wizard exposes a "Skip to card →" affordance.
-  const allAnswersPrefilled = (() => {
+  //
+  // Phase 3.5 follow-up — in force_prefill mode the AI banner should
+  // win over the "Skip to card" demo affordance, so treat the wizard
+  // as not-fully-prefilled in that mode.
+  const allAnswersPrefilled = forcePrefill
+    ? false
+    : (() => {
     const a = initialAnswers as Record<string, unknown>;
     for (let i = 1; i <= total; i++) {
       const v = a[`q${i}`];
