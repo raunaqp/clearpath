@@ -9,6 +9,7 @@
  * yet → show "your pack is being prepared".
  */
 import { notFound, redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { getServiceClient } from "@/lib/supabase";
 import { getUser } from "@/lib/auth/session";
 import { GlobalHeader } from "@/components/layout/GlobalHeader";
@@ -59,9 +60,24 @@ export default async function DraftPackPage({
   const { print } = await searchParams;
   const printMode = print === "1";
 
-  const user = await getUser();
-  if (!user) {
-    redirect(`/login?return_to=${encodeURIComponent(`/draft/${id}`)}`);
+  // PDF v2 (Phase 6) bypass: Chrome headless inside the same Vercel
+  // function fetches this page with an internal token in headers. The
+  // token never leaves the server. Required to render PDFs without
+  // forwarding the customer's session cookie.
+  const hdrs = await headers();
+  const presentedToken = hdrs.get("x-internal-print-token");
+  const expectedToken = process.env.INTERNAL_PRINT_TOKEN;
+  const isInternalPrint =
+    printMode &&
+    !!expectedToken &&
+    !!presentedToken &&
+    presentedToken === expectedToken;
+
+  if (!isInternalPrint) {
+    const user = await getUser();
+    if (!user) {
+      redirect(`/login?return_to=${encodeURIComponent(`/draft/${id}`)}`);
+    }
   }
 
   const supabase = getServiceClient();
@@ -213,30 +229,50 @@ export default async function DraftPackPage({
 
   if (printMode) {
     // Stripped-down body Chrome headless screenshots into PDF v2.
+    // Use plain block-level wrappers — Tailwind classes on <main>/<div>
+    // can introduce subtle layout containers that suppress Chrome's
+    // page-break-before. Inline styles for the print container keep
+    // the page-break behaviour predictable.
     return (
-      <main className="bg-white text-ink font-sans">
-        <header className="px-10 pt-12 pb-6 border-b border-line">
-          <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-amber-brand">
+      <div style={{ background: "#ffffff", color: "#0E1411", fontFamily: "var(--font-geist-sans), Inter, system-ui, sans-serif" }}>
+        <div
+          style={{
+            padding: "48px 40px 24px",
+            borderBottom: "1px solid #D9D5C8",
+            pageBreakAfter: "always",
+            breakAfter: "page",
+          }}
+        >
+          <p style={{ fontFamily: "var(--font-geist-mono), monospace", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "#BA7517", margin: 0 }}>
             Tier 2 · CDSCO MD-7 / MD-3 Draft Pack
           </p>
-          <h1 className="font-serif text-3xl text-ink mt-2">{deviceName}</h1>
+          <h1 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: "30px", color: "#0E1411", margin: "8px 0 0" }}>
+            {deviceName}
+          </h1>
           {classLabel ? (
-            <p className="text-muted text-sm mt-1">{classLabel}</p>
+            <p style={{ color: "#6B766F", fontSize: "14px", margin: "4px 0 0" }}>{classLabel}</p>
           ) : null}
-          <p className="text-muted text-xs mt-3">
+          <p style={{ color: "#6B766F", fontSize: "12px", margin: "12px 0 0" }}>
             Assessment {id} · Generated{" "}
             {new Date(order.delivered_at ?? order.created_at).toLocaleString()}
           </p>
-        </header>
-        <div className="px-10 py-8 space-y-12">
-          {renderable.map((s) => (
-            <SectionRenderer key={s.section_key} section={s} printMode />
+        </div>
+        <div style={{ padding: "32px 40px" }}>
+          {renderable.map((s, idx) => (
+            <div
+              key={s.section_key}
+              style={{
+                pageBreakBefore: idx === 0 ? undefined : "always",
+                breakBefore: idx === 0 ? undefined : "page",
+                pageBreakInside: "avoid",
+                breakInside: "avoid-page",
+              }}
+            >
+              <SectionRenderer section={s} printMode />
+            </div>
           ))}
         </div>
-        <footer className="px-10 py-6 border-t border-line text-xs text-muted font-mono">
-          INTERNAL DRAFT — pending consultant review
-        </footer>
-      </main>
+      </div>
     );
   }
 

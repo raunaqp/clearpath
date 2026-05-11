@@ -206,4 +206,22 @@ mark.marker-needs-input {
    the @media print rule firing inside Chrome headless. */
 .draft-section--print details { display: block; }
 .draft-section--print details > summary { display: none; }
-.draft-section--print { page-break-inside: avoid; }
+.draft-section--print {
+  page-break-inside: avoid;
+  break-inside: avoid-page;
+  page-break-after: always !important;
+  break-after: page !important;
+  padding-top: 0.5rem;
+}
+.draft-section--print:last-of-type {
+  page-break-after: auto !important;
+  break-after: auto !important;
+}
+/* Slightly larger type for print so the dossier reads as a 25+ page
+   document rather than a too-dense 8-page wall of text. */
+.draft-section--print .draft-prose {
+  font-size: 11pt;
+  line-height: 1.55;
+}
+.draft-section--print .draft-prose h3 { font-size: 13pt; }
+.draft-section--print .draft-prose h4 { font-size: 11.5pt; }
