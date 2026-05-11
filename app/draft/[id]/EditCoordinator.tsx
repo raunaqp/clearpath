@@ -155,9 +155,12 @@ export function EditCoordinatorProvider({
       setState((s) => ({ ...s, saving: false, error: result.message }));
       return;
     }
-    close();
-    router.refresh();
-  }, [state.activeKey, state.draft, saveCore, close, router]);
+    // Full reload — router.refresh() raced with the editor close()
+    // and customers saw a flash of AI baseline before the new content
+    // landed. location.reload() eliminates the race entirely; the
+    // server-component re-render is guaranteed before any paint.
+    window.location.reload();
+  }, [state.activeKey, state.draft, saveCore]);
 
   const cancel = useCallback(() => {
     if (dirty) {
@@ -182,13 +185,20 @@ export function EditCoordinatorProvider({
     }
     // Save succeeded; resolve pending action.
     if (pending?.kind === "switch") {
+      // Section X is saved, immediately open Section Y in edit mode.
+      // Editor stays mounted, so no "stale flash" — router.refresh
+      // brings the rest of the page up to date in the background.
       performSwitch(pending.targetKey, pending.targetInitial);
+      setPending(null);
+      router.refresh();
     } else {
-      close();
+      // "cancel" kind — closing the editor. Reload eliminates the
+      // briefly-visible AI baseline for the section that was being
+      // closed. Same fix as save().
+      setPending(null);
+      window.location.reload();
     }
-    setPending(null);
-    router.refresh();
-  }, [state.activeKey, state.draft, saveCore, pending, performSwitch, close, router]);
+  }, [state.activeKey, state.draft, saveCore, pending, performSwitch, router]);
 
   const modalDiscard = useCallback(() => {
     if (pending?.kind === "switch") {
@@ -253,16 +263,16 @@ function UnsavedChangesModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="unsaved-changes-heading"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#0E1411]/40 px-4"
     >
-      <div className="w-full max-w-md rounded-card bg-bg-card border border-line shadow-xl px-6 py-5">
+      <div className="w-full max-w-md rounded-card bg-[#FDFCF8] border border-[#D9D5C8] shadow-xl px-6 py-5">
         <h2
           id="unsaved-changes-heading"
-          className="font-serif text-lg text-ink"
+          className="font-serif text-lg text-[#0E1411]"
         >
           Save changes?
         </h2>
-        <p className="mt-2 text-sm text-ink-2 leading-relaxed">
+        <p className="mt-2 text-sm text-[#2A3430] leading-relaxed">
           {pending.kind === "switch"
             ? "You have unsaved edits in the current section. Save them before opening a different section?"
             : "You have unsaved edits. Save them before closing the editor?"}
@@ -272,7 +282,7 @@ function UnsavedChangesModal({
             type="button"
             onClick={onCancel}
             disabled={saving}
-            className="inline-flex items-center rounded-md border border-line bg-bg-card px-3 py-1.5 text-sm font-medium text-ink-2 hover:bg-bg-sink disabled:opacity-50"
+            className="inline-flex items-center rounded-md border border-[#D9D5C8] bg-[#FDFCF8] px-3 py-1.5 text-sm font-medium text-[#2A3430] hover:bg-[#EFECE3] disabled:opacity-50"
           >
             Cancel
           </button>
@@ -280,7 +290,7 @@ function UnsavedChangesModal({
             type="button"
             onClick={onDiscard}
             disabled={saving}
-            className="inline-flex items-center rounded-md border border-coral-brand/50 bg-bg-card px-3 py-1.5 text-sm font-medium text-coral-brand hover:bg-coral-light disabled:opacity-50"
+            className="inline-flex items-center rounded-md border border-[#993C1D]/50 bg-[#FDFCF8] px-3 py-1.5 text-sm font-medium text-[#993C1D] hover:bg-[#FAECE7] disabled:opacity-50"
           >
             Discard changes
           </button>
@@ -288,7 +298,7 @@ function UnsavedChangesModal({
             type="button"
             onClick={onSave}
             disabled={saving}
-            className="inline-flex items-center rounded-md bg-teal-deep px-3 py-1.5 text-sm font-medium text-white hover:bg-[#0a5a47] disabled:opacity-60"
+            className="inline-flex items-center rounded-md bg-[#0F6E56] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#0a5a47] disabled:opacity-60"
           >
             {saving ? "Saving…" : "Save"}
           </button>

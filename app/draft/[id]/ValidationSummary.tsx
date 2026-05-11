@@ -47,7 +47,7 @@ export function ValidationSummary({ report }: { report: ValidationReport }) {
         />
       ) : null}
       {!hasAny ? (
-        <div className="sm:col-span-3 rounded-card border border-teal-deep/30 bg-teal-light px-4 py-3 text-sm text-teal-deep">
+        <div className="sm:col-span-3 rounded-card border border-[#0F6E56]/30 bg-[#E1F5EE] px-4 py-3 text-sm text-[#0F6E56]">
           No critical findings. Draft Pack passes all 10 cross-section
           invariants.
         </div>
@@ -66,10 +66,10 @@ function Stat({
   tone: "neutral" | "teal" | "amber" | "coral";
 }) {
   const toneCls = {
-    neutral: "border-line-soft bg-bg-card text-ink-2",
-    teal: "border-teal-deep/30 bg-teal-light text-teal-deep",
-    amber: "border-amber-brand/40 bg-amber-light text-amber-deep",
-    coral: "border-coral-brand/40 bg-coral-light text-coral-brand",
+    neutral: "border-[#E8E4D6] bg-[#FDFCF8] text-[#2A3430]",
+    teal: "border-[#0F6E56]/30 bg-[#E1F5EE] text-[#0F6E56]",
+    amber: "border-[#BA7517]/40 bg-[#FAEEDA] text-[#633806]",
+    coral: "border-[#993C1D]/40 bg-[#FAECE7] text-[#993C1D]",
   }[tone];
   return (
     <div className={`rounded-card border px-4 py-3 ${toneCls}`}>
@@ -91,9 +91,9 @@ function FindingsBlock({
   tone: "neutral" | "amber" | "coral";
 }) {
   const toneCls = {
-    neutral: "border-line-soft bg-bg-card text-ink-2",
-    amber: "border-amber-brand/40 bg-amber-light text-amber-deep",
-    coral: "border-coral-brand/40 bg-coral-light text-coral-brand",
+    neutral: "border-[#E8E4D6] bg-[#FDFCF8] text-[#2A3430]",
+    amber: "border-[#BA7517]/40 bg-[#FAEEDA] text-[#633806]",
+    coral: "border-[#993C1D]/40 bg-[#FAECE7] text-[#993C1D]",
   }[tone];
   return (
     <details

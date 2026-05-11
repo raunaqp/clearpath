@@ -45,14 +45,14 @@ type StatusVisual = { label: string; cls: string };
 function statusVisual(status: RenderableSection["completion_status"]): StatusVisual {
   switch (status) {
     case "complete":
-      return { label: "Complete", cls: "bg-teal-light text-teal-deep" };
+      return { label: "Complete", cls: "bg-[#E1F5EE] text-[#0F6E56]" };
     case "failed":
-      return { label: "Failed", cls: "bg-coral-light text-coral-brand" };
+      return { label: "Failed", cls: "bg-[#FAECE7] text-[#993C1D]" };
     case "pending":
-      return { label: "Pending", cls: "bg-bg-sink text-muted" };
+      return { label: "Pending", cls: "bg-[#EFECE3] text-[#6B766F]" };
     case "draft":
     default:
-      return { label: "Draft", cls: "bg-amber-light text-amber-deep" };
+      return { label: "Draft", cls: "bg-[#FAEEDA] text-[#633806]" };
   }
 }
 
@@ -110,12 +110,12 @@ export function SectionRenderer({ section, printMode = false }: Props) {
         printMode && "draft-section--print"
       )}
     >
-      <header className="mb-4 flex items-start justify-between gap-4 border-b border-line pb-3">
+      <header className="mb-4 flex items-start justify-between gap-4 border-b border-[#D9D5C8] pb-3">
         <div>
-          <p className="font-mono text-xs uppercase tracking-widest text-muted">
-            Section {section.section_number}
+          <p className="font-mono text-xs uppercase tracking-widest text-[#6B766F]">
+            MD-7 Section {section.section_number.toString().padStart(2, "0")}
           </p>
-          <h2 className="mt-1 font-serif text-2xl text-ink leading-snug">
+          <h2 className="mt-1 font-serif text-2xl text-[#0E1411] leading-snug">
             {section.title}
           </h2>
         </div>
@@ -130,12 +130,12 @@ export function SectionRenderer({ section, printMode = false }: Props) {
       </header>
 
       {section.completion_status === "failed" && section.meta?.error_message ? (
-        <div className="mb-4 rounded-lg border border-coral-brand bg-coral-light px-4 py-3 text-sm text-coral-brand">
+        <div className="mb-4 rounded-lg border border-[#993C1D] bg-[#FAECE7] px-4 py-3 text-sm text-[#993C1D]">
           <strong>Generation error:</strong> {section.meta.error_message}
         </div>
       ) : null}
 
-      <div className="draft-prose font-serif text-base leading-relaxed text-ink-2">
+      <div className="draft-prose font-serif text-base leading-relaxed text-[#2A3430]">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           rehypePlugins={[rehypeRaw]}
@@ -145,19 +145,19 @@ export function SectionRenderer({ section, printMode = false }: Props) {
       </div>
 
       {section.citations.length > 0 ? (
-        <div className="mt-6 rounded-card border border-line-soft bg-bg-card px-4 py-3 text-sm">
-          <p className="mb-2 font-mono text-xs uppercase tracking-widest text-muted">
+        <div className="mt-6 rounded-card border border-[#E8E4D6] bg-[#FDFCF8] px-4 py-3 text-sm">
+          <p className="mb-2 font-mono text-xs uppercase tracking-widest text-[#6B766F]">
             References
           </p>
           <ul className="space-y-2">
             {section.citations.map((c) => (
-              <li key={c.citation_id} className="text-ink-2">
-                <span className="font-medium text-teal-deep">
+              <li key={c.citation_id} className="text-[#2A3430]">
+                <span className="font-medium text-[#0F6E56]">
                   {c.citation_id}
                 </span>{" "}
                 {c.source_doc}
                 {c.exact_reference ? (
-                  <span className="text-muted">
+                  <span className="text-[#6B766F]">
                     {" — "}
                     <em>{c.exact_reference}</em>
                   </span>
@@ -169,56 +169,56 @@ export function SectionRenderer({ section, printMode = false }: Props) {
       ) : null}
 
       <details
-        className="mt-4 text-sm text-muted"
+        className="mt-4 text-sm text-[#6B766F]"
         // PDF/print pass forces all <details> open via CSS, but we also
         // open them in markup for the print=1 server render so the meta
         // appears even without JS.
         open={printMode || undefined}
       >
-        <summary className="cursor-pointer select-none text-xs font-mono uppercase tracking-widest hover:text-ink-2">
+        <summary className="cursor-pointer select-none text-xs font-mono uppercase tracking-widest hover:text-[#2A3430]">
           Generation meta
         </summary>
         <dl className="mt-2 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-xs">
           {section.meta?.generation_strategy ? (
             <>
-              <dt className="text-muted">strategy</dt>
-              <dd className="font-mono text-ink-2">
+              <dt className="text-[#6B766F]">strategy</dt>
+              <dd className="font-mono text-[#2A3430]">
                 {section.meta.generation_strategy}
               </dd>
             </>
           ) : null}
           {section.meta?.model ? (
             <>
-              <dt className="text-muted">model</dt>
-              <dd className="font-mono text-ink-2">{section.meta.model}</dd>
+              <dt className="text-[#6B766F]">model</dt>
+              <dd className="font-mono text-[#2A3430]">{section.meta.model}</dd>
             </>
           ) : null}
           {typeof section.meta?.llm_cost_usd === "number" ? (
             <>
-              <dt className="text-muted">cost</dt>
-              <dd className="font-mono text-ink-2">
+              <dt className="text-[#6B766F]">cost</dt>
+              <dd className="font-mono text-[#2A3430]">
                 ${section.meta.llm_cost_usd.toFixed(4)}
               </dd>
             </>
           ) : null}
           {section.word_count != null ? (
             <>
-              <dt className="text-muted">words</dt>
-              <dd className="font-mono text-ink-2">{section.word_count}</dd>
+              <dt className="text-[#6B766F]">words</dt>
+              <dd className="font-mono text-[#2A3430]">{section.word_count}</dd>
             </>
           ) : null}
           {section.meta?.source_fields?.length ? (
             <>
-              <dt className="text-muted">source fields</dt>
-              <dd className="font-mono text-ink-2 break-all">
+              <dt className="text-[#6B766F]">source fields</dt>
+              <dd className="font-mono text-[#2A3430] break-all">
                 {section.meta.source_fields.join(", ")}
               </dd>
             </>
           ) : null}
           {section.meta?.generated_at ? (
             <>
-              <dt className="text-muted">generated</dt>
-              <dd className="font-mono text-ink-2">
+              <dt className="text-[#6B766F]">generated</dt>
+              <dd className="font-mono text-[#2A3430]">
                 {new Date(section.meta.generated_at).toLocaleString()}
               </dd>
             </>

@@ -70,9 +70,19 @@ export async function renderDraftPackPdfV2(
     const page = await browser.newPage();
     page.setDefaultNavigationTimeout(PRINT_TIMEOUT_MS);
     page.setDefaultTimeout(PRINT_TIMEOUT_MS);
-    await page.setExtraHTTPHeaders({
+    // x-vercel-protection-bypass — when Vercel Deployment Protection
+    // is on (preview deploys), this header lets the function's own
+    // self-call past the SSO gate. Production deploys aren't protected
+    // so the header is harmless if missing.
+    const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+    const reqHeaders: Record<string, string> = {
       "x-internal-print-token": internalToken,
-    });
+    };
+    if (bypassSecret && bypassSecret.trim().length > 0) {
+      reqHeaders["x-vercel-protection-bypass"] = bypassSecret;
+      reqHeaders["x-vercel-set-bypass-cookie"] = "true";
+    }
+    await page.setExtraHTTPHeaders(reqHeaders);
     // 'load' rather than 'networkidle0' — the dev HMR WebSocket keeps
     // network activity alive forever, and our printable page has no
     // post-load XHR/streaming. Use 'load' for predictable settle time.

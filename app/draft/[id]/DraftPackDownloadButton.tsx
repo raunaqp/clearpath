@@ -38,12 +38,12 @@ export function DraftPackDownloadButton({
         type="button"
         onClick={handleClick}
         disabled={pending}
-        className="inline-flex items-center gap-2 rounded-md bg-teal-deep px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#0a5a47] disabled:opacity-60 disabled:cursor-not-allowed"
+        className="inline-flex items-center gap-2 rounded-md bg-[#0F6E56] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#0a5a47] disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {pending ? "Generating PDF…" : "Download PDF"}
       </button>
       {error ? (
-        <p className="text-xs text-coral-brand">{error}</p>
+        <p className="text-xs text-[#993C1D]">{error}</p>
       ) : null}
     </div>
   );

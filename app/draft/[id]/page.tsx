@@ -19,6 +19,12 @@ import { DraftPackDownloadButton } from "./DraftPackDownloadButton";
 import { ValidationSummary } from "./ValidationSummary";
 import { SectionCard } from "./SectionCard";
 import { EditCoordinatorProvider } from "./EditCoordinator";
+import {
+  packCompletion,
+  sectionPendingCount,
+  sectionStatus,
+  type SectionStatus,
+} from "./completion";
 import { loadSourceData } from "@/lib/engine/draft-pack-v2/persist";
 import { validateDraftPackV2 } from "@/lib/engine/draft-pack-v2-validator";
 import type { SectionOutput, SectionKey, SectionCompletionStatus } from "@/lib/engine/draft-pack-v2/types";
@@ -138,11 +144,16 @@ export default async function DraftPackPage({
     renderable: RenderableSection;
     hasOverlay: boolean;
     initialEditContent: string;
+    status: SectionStatus;
+    pendingCount: number;
   };
   const draftSections: DraftSection[] = (sectionRows ?? [])
     .map((r) => {
+      // hasOverlay = "customer saved an edit, even an empty one".
+      // The previous `length > 0` check meant saving an empty string
+      // reverted to the AI baseline — confirmed bug.
       const hasOverlay =
-        typeof r.content_edited === "string" && r.content_edited.length > 0;
+        r.content_edited !== null && r.content_edited !== undefined;
       const displayContent = hasOverlay
         ? (r.content_edited as string)
         : r.content ?? "";
@@ -164,36 +175,43 @@ export default async function DraftPackPage({
         },
         hasOverlay,
         initialEditContent: displayContent,
+        status: sectionStatus(displayContent),
+        pendingCount: sectionPendingCount(displayContent),
       };
     })
     .sort(
       (a, b) =>
         a.renderable.section_number - b.renderable.section_number
     );
+
+  // Pack-level completion summary for the header strip + tooltip.
+  const completion = packCompletion(
+    draftSections.map((d) => d.renderable.content)
+  );
   const renderable: RenderableSection[] = draftSections.map((d) => d.renderable);
 
   // Empty state — paid + verified but generator hasn't populated yet.
   if (renderable.length === 0) {
     return (
-      <div className="min-h-screen bg-bg flex flex-col">
+      <div className="min-h-screen bg-[#F7F6F2] flex flex-col">
         <GlobalHeader signedIn />
         <main className="flex-1 px-4 sm:px-6 lg:px-8 pt-16 pb-24">
           <div className="max-w-2xl mx-auto text-center">
-            <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-amber-brand mb-3">
+            <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-3">
               Tier 2 · Draft Pack
             </p>
-            <h1 className="font-serif text-3xl text-ink leading-tight mb-4">
+            <h1 className="font-serif text-3xl text-[#0E1411] leading-tight mb-4">
               Your Draft Pack is being prepared
             </h1>
-            <p className="text-muted text-base leading-relaxed mb-8">
+            <p className="text-[#6B766F] text-base leading-relaxed mb-8">
               Payment is verified. Generation runs against your wizard answers,
               uploads, and Risk Card. We&apos;ll email you at{" "}
-              <span className="text-ink-2 font-medium">{assessment.email}</span>{" "}
+              <span className="text-[#2A3430] font-medium">{assessment.email}</span>{" "}
               when it&apos;s ready — most within 2 hours, worst case 6.
             </p>
             <a
               href={`/upgrade/${id}`}
-              className="inline-flex items-center text-sm text-teal-deep underline underline-offset-2 hover:text-ink"
+              className="inline-flex items-center text-sm text-[#0F6E56] underline underline-offset-2 hover:text-[#0E1411]"
             >
               ← Back to order status
             </a>
@@ -306,17 +324,18 @@ export default async function DraftPackPage({
   }
 
   return (
-    <div className="min-h-screen bg-bg flex flex-col">
+    <div className="min-h-screen bg-[#F7F6F2] flex flex-col">
       <GlobalHeader signedIn />
       <main className="flex-1 px-4 sm:px-6 lg:px-8 pt-8 pb-24">
         <div className="max-w-content mx-auto grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8">
           <aside className="hidden lg:block">
             <div className="sticky top-24">
               <DraftPackTOC
-                sections={renderable.map((r) => ({
-                  number: r.section_number,
-                  title: r.title,
-                  status: r.completion_status,
+                sections={draftSections.map((d) => ({
+                  number: d.renderable.section_number,
+                  title: d.renderable.title,
+                  status: d.status,
+                  pendingCount: d.pendingCount,
                 }))}
               />
             </div>
@@ -324,26 +343,50 @@ export default async function DraftPackPage({
 
           <div>
             <header className="mb-6">
-              <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-amber-brand">
+              <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517]">
                 Tier 2 · CDSCO MD-7 / MD-3 Draft Pack
               </p>
-              <h1 className="font-serif text-3xl sm:text-4xl text-ink mt-2 leading-tight">
+              <h1 className="font-serif text-3xl sm:text-4xl text-[#0E1411] mt-2 leading-tight">
                 {deviceName}
               </h1>
               {classLabel ? (
-                <p className="text-muted text-base mt-2">{classLabel}</p>
+                <p className="text-[#6B766F] text-base mt-2">{classLabel}</p>
               ) : null}
 
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 <DraftPackDownloadButton assessmentId={id} />
                 <a
                   href={`/upgrade/${id}`}
-                  className="text-sm text-muted underline underline-offset-2 hover:text-ink"
+                  className="text-sm text-[#6B766F] underline underline-offset-2 hover:text-[#0E1411]"
                 >
                   Order status
                 </a>
-                <span className="text-xs text-muted font-mono">
-                  {renderable.length} sections · ${totalCost.toFixed(2)} cost
+              </div>
+
+              {/* Completion strip — Phase 5.5.E */}
+              <div
+                className="mt-5 flex flex-wrap items-center gap-3 text-sm"
+                title={`${completion.complete} of ${completion.total} sections complete · ${completion.wip} need input · ${completion.empty} empty · ${completion.totalPending} pending marker${completion.totalPending === 1 ? "" : "s"} total`}
+              >
+                <div className="inline-flex items-center gap-2 rounded-pill bg-[#FDFCF8] border border-[#E8E4D6] px-3 py-1.5">
+                  <span
+                    className="inline-block h-2 w-2 rounded-full bg-[#0F6E56]"
+                    aria-hidden
+                  />
+                  <span className="font-mono text-xs uppercase tracking-widest text-[#6B766F]">
+                    Document
+                  </span>
+                  <span className="font-medium text-[#0E1411]">
+                    {completion.percent}% complete
+                  </span>
+                </div>
+                <span className="text-xs text-[#6B766F] font-mono">
+                  {completion.complete}/{completion.total} sections ·{" "}
+                  {completion.totalPending} item
+                  {completion.totalPending === 1 ? "" : "s"} pending
+                </span>
+                <span className="text-xs text-[#6B766F] font-mono">
+                  ${totalCost.toFixed(2)} generation cost
                 </span>
               </div>
             </header>
@@ -360,6 +403,8 @@ export default async function DraftPackPage({
                     section={d.renderable}
                     hasOverlay={d.hasOverlay}
                     initialEditContent={d.initialEditContent}
+                    status={d.status}
+                    pendingCount={d.pendingCount}
                   />
                 ))}
               </div>
