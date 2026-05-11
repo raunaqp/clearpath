@@ -5,6 +5,7 @@ import { UpgradePageViewTracker } from "@/components/upgrade/UpgradePageViewTrac
 import { GlobalHeader } from "@/components/layout/GlobalHeader";
 import { PaymentForm } from "./PaymentForm";
 import { StatusPanel, type Tier2Order } from "./StatusPanel";
+import type { WizardAnswers } from "@/lib/wizard/types";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,7 @@ type AssessmentRow = {
   status: string;
   email: string;
   tier2_intent_clicked: string | null;
+  wizard_answers: WizardAnswers | null;
 };
 
 export default async function UpgradePage({
@@ -36,7 +38,9 @@ export default async function UpgradePage({
 
   const { data: assessment, error } = await supabase
     .from("assessments")
-    .select("id, share_token, status, email, tier2_intent_clicked")
+    .select(
+      "id, share_token, status, email, tier2_intent_clicked, wizard_answers"
+    )
     .eq("id", id)
     .maybeSingle<AssessmentRow>();
 
@@ -63,6 +67,15 @@ export default async function UpgradePage({
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle<Tier2Order>();
+
+  // Sprint 2 Story 2.5 Phase 3 — gate payment behind the Tier B wizard.
+  // Customers with an existing order bypass this (they're past wizard).
+  // New customers without b1_intended_use_statement get bounced to
+  // /upgrade/{id}/wizard to fill the Tier B intake.
+  const tierBComplete = !!assessment.wizard_answers?.b1_intended_use_statement;
+  if (!order && !tierBComplete) {
+    redirect(`/upgrade/${id}/wizard`);
+  }
 
   const cardHref = assessment.share_token ? `/c/${assessment.share_token}` : "/";
 
