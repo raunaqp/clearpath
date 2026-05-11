@@ -87,3 +87,123 @@ html, body {
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-thumb { background: #D9D5C8; border-radius: 8px; }
 ::-webkit-scrollbar-thumb:hover { background: #6B766F; }
+
+/* ----- Draft pack section renderer ----- */
+
+.draft-prose h1,
+.draft-prose h2 { display: none; } /* parent renders the heading */
+
+.draft-prose h3 {
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #0E1411;
+  margin: 1.25rem 0 0.5rem;
+}
+.draft-prose h4 {
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2A3430;
+  margin: 1rem 0 0.4rem;
+}
+.draft-prose p {
+  margin: 0 0 0.85rem;
+}
+.draft-prose strong { color: #0E1411; font-weight: 600; }
+.draft-prose em { font-style: italic; }
+.draft-prose ul,
+.draft-prose ol {
+  margin: 0 0 0.85rem 1.4rem;
+  padding: 0;
+}
+.draft-prose ul { list-style: disc; }
+.draft-prose ol { list-style: decimal; }
+.draft-prose li { margin: 0.15rem 0; }
+.draft-prose a {
+  color: #0F6E56;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.draft-prose blockquote {
+  border-left: 3px solid #D9D5C8;
+  padding-left: 0.8rem;
+  margin: 0.5rem 0 0.85rem;
+  color: #2A3430;
+}
+.draft-prose code {
+  background: #EFECE3;
+  border-radius: 3px;
+  padding: 0 0.2rem;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.92em;
+}
+.draft-prose pre {
+  background: #EFECE3;
+  border-radius: 6px;
+  padding: 0.7rem 0.9rem;
+  overflow-x: auto;
+  font-size: 0.92em;
+  margin: 0.5rem 0 0.85rem;
+}
+.draft-prose pre code { background: transparent; padding: 0; }
+.draft-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92em;
+  margin: 0.5rem 0 0.85rem;
+}
+.draft-prose th,
+.draft-prose td {
+  border: 1px solid #D9D5C8;
+  padding: 0.45rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+.draft-prose th {
+  background: #EFECE3;
+  font-weight: 600;
+  color: #0E1411;
+}
+
+/* [TBD] and [NEEDS INPUT: ...] markers — inline-styled so they survive
+   in PDF render even if Tailwind isn't applied to raw HTML. */
+.marker-tbd,
+mark.marker-tbd {
+  background: #FAEEDA;
+  color: #633806;
+  border: 1px solid #BA7517;
+  border-radius: 3px;
+  padding: 0 4px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.85em;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.marker-needs-input,
+mark.marker-needs-input {
+  background: #FAECE7;
+  color: #993C1D;
+  border: 1px solid #993C1D;
+  border-radius: 3px;
+  padding: 0 4px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.85em;
+  font-weight: 500;
+}
+
+/* Print mode: force all <details> open, drop interactive chrome. */
+@media print {
+  .draft-section details { display: block; }
+  .draft-section details > summary { display: none; }
+  .draft-section details[open] > summary { display: none; }
+  .draft-section { page-break-inside: avoid; page-break-after: always; }
+  .draft-section:last-of-type { page-break-after: auto; }
+}
+
+/* draft-section--print: same effects, but JS-applied for the PDF route's
+   server-rendered "print=1" mode, so the renderer doesn't depend on
+   the @media print rule firing inside Chrome headless. */
+.draft-section--print details { display: block; }
+.draft-section--print details > summary { display: none; }
+.draft-section--print { page-break-inside: avoid; }
