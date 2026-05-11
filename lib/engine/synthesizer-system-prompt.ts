@@ -94,7 +94,9 @@ Return ONLY a single JSON object matching this schema exactly. No markdown fence
 
   "tier0_card_tagline": "short pullout for screenshot",
   "tier1_teaser": "what ₹499 unlocks",
-  "tier2_teaser": "what ₹25K unlocks"
+  "tier2_teaser": "what ₹25K unlocks",
+
+  "recommended_path": "manufacturing_license | clinical_investigation | unclear"
 }
 \`\`\`
 
@@ -120,6 +122,7 @@ Return ONLY a single JSON object matching this schema exactly. No markdown fence
 - \`acp_required\` is \`true\` only when \`ai_ml_flag\` is true AND it is a medical device.
 - \`top_gaps\` length is 2–3. Order by severity high → low.
 - Every key in the schema MUST be present. Use \`null\` (or \`"not_applicable"\` for verdicts) — never omit.
+- \`recommended_path\` MUST be one of \`"manufacturing_license"\`, \`"clinical_investigation"\`, or \`"unclear"\`. See "Recommended path" section below for the decision rule.
 
 ---
 
@@ -299,6 +302,41 @@ When in doubt, anchor LOWER (honesty over confidence rule).
 \`\`\`
 
 Use softening: "likely TRL 4", "appears to be on the predicate track" rather than absolute claims.
+
+---
+
+# Recommended path (§3.7c) — Story 2.5 Phase 1
+
+Light pathway signal that seeds the upgraded Tier 2 Draft Pack. ALWAYS emit one of three values:
+
+- \`"manufacturing_license"\` — proceed to MD-3 (Class A/B) or MD-7 (Class C/D) manufacturing license. **Default when classification is clear and the device is commercializable.**
+- \`"clinical_investigation"\` — likely needs MD-22 clinical investigation approval BEFORE manufacturing license. Higher-risk + novel + unproven path.
+- \`"unclear"\` — classification or pathway ambiguous; downstream Draft Pack defaults to MD-7/MD-3 with a journey caveat.
+
+## Decision rule (apply in order; first match wins)
+
+1. **\`"clinical_investigation"\`** when ALL three hold:
+   - \`classification.cdsco_class\` is \`"C"\` or \`"D"\`, AND
+   - \`classification.novel_or_predicate\` is \`"novel"\` or \`null\` (no predicate claimed), AND
+   - \`readiness.dimensions.clinical_evidence\` is \`0\` (no validation studies / publications / EC engagements detected).
+
+   Rationale: novel high-risk devices without prior clinical data typically need MD-22 approval before CDSCO will issue MD-7.
+
+2. **\`"manufacturing_license"\`** when ALL three hold:
+   - \`classification.medical_device_status\` is \`"is_medical_device"\` or \`"hybrid"\`, AND
+   - \`classification.cdsco_class\` is one of \`"A"\`, \`"B"\`, \`"C"\`, \`"D"\` (i.e., classification is concrete), AND
+   - the \`"clinical_investigation"\` rule above did NOT trigger.
+
+3. **\`"unclear"\`** in all remaining cases. Examples:
+   - \`medical_device_status\` is \`"not_medical_device"\` or \`"wellness_carve_out"\` (Tier 2 Draft Pack rarely applies; the field is informational).
+   - \`cdsco_class\` is \`null\` (classification ambiguous).
+   - Sub-feature scoping where the parent platform is N/A.
+
+## Notes for the synthesizer
+
+- This is a SIBLING signal to readiness/risk/timeline, not a composite. Do not let it influence other fields.
+- The Draft Pack downstream uses this to decide whether to surface a journey note ("your device may need MD-22 first"). It does NOT change which CDSCO forms are generated in V1 — MD-7/MD-3 content always generates.
+- Soften your reasoning in adjacent fields if path = \`"clinical_investigation"\` (e.g., readiness.note can mention "clinical investigation pathway typically precedes manufacturing license").
 
 ---
 

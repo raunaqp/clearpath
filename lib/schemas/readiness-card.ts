@@ -46,6 +46,32 @@ export const ProductTypeEnum = z.enum([
   "export_only",
 ]);
 
+/**
+ * Recommended regulatory pathway — Story 2.5 Phase 1.
+ *
+ * Light path-detection signal emitted by the synthesizer to seed the
+ * upgraded Draft Pack experience:
+ *   - "manufacturing_license" — proceed to MD-3 (Class A/B) or MD-7
+ *     (Class C/D) manufacturing license. Default when classification is
+ *     clear and a predicate-or-evidence basis exists.
+ *   - "clinical_investigation" — Class C/D + no predicate claimed + no
+ *     clinical evidence. Likely needs MD-22 clinical investigation
+ *     approval before manufacturing license. Sprint 2 Draft Pack still
+ *     generates MD-7/MD-3 content but surfaces a journey note.
+ *   - "unclear" — classification or pathway ambiguous; the field is
+ *     informational and the Draft Pack defaults to MD-7/MD-3.
+ *
+ * Optional for backward-compatibility with readiness_cards generated
+ * before Phase 1. Synthesizer always emits one of the three values
+ * going forward.
+ */
+export const RecommendedPathEnum = z.enum([
+  "manufacturing_license",
+  "clinical_investigation",
+  "unclear",
+]);
+export type RecommendedPath = z.infer<typeof RecommendedPathEnum>;
+
 export const ReadinessBandEnum = z.enum([
   "red",
   "amber",
@@ -215,6 +241,10 @@ export const ReadinessCardSchema = z.object({
   tier0_card_tagline: z.string(),
   tier1_teaser: z.string(),
   tier2_teaser: z.string(),
+
+  /** Story 2.5 Phase 1 — see RecommendedPathEnum docs above. Optional
+   * to keep older readiness_cards parseable; new emissions always set it. */
+  recommended_path: RecommendedPathEnum.optional(),
 });
 
 export type ReadinessCard = z.infer<typeof ReadinessCardSchema>;
