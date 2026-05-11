@@ -46,22 +46,12 @@ function deriveQ2FromExtraction(
 ): InfoSignificance | undefined {
   if (!ai) return undefined;
   const aiMl = ai.suggested_wizard_answers?.ai_ml;
-  const intendedUse = (
-    ai.suggested_wizard_answers?.intended_use ??
-    ai.intended_use_one_liner ??
-    ""
-  ).toLowerCase();
-  // Only emit a default when the deck signals an active model. Static
-  // displays without ML inference stay blank.
+  // Phase 3.5 follow-up FIX 1 — regex-on-intended-use mishandled negation
+  // ("does not perform autonomous diagnosis" matched 'diagnos' and
+  // 'autonom'). Replaced with ai_ml signal only: if the deck declares an
+  // active model, default Q2 to "drives" (the safer middle option). User
+  // adjusts on Q2 with full context. Static displays without ML stay blank.
   if (aiMl !== "static" && aiMl !== "adaptive") return undefined;
-  if (/diagnos|treat|autonom|automated decision/.test(intendedUse)) {
-    return "diagnoses_treats";
-  }
-  if (/recommend|flag|alert|predict|suggest|support|decision/.test(intendedUse)) {
-    return "drives";
-  }
-  // AI/ML present but copy doesn't disambiguate — pick the safer middle
-  // option. The user can adjust on Q2 with full context.
   return "drives";
 }
 
@@ -77,10 +67,17 @@ function deriveQ6FromExtraction(
 
 export default async function WizardStepPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string; n: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { id, n } = await params;
+  const sp = await searchParams;
+  // Phase 3.5 follow-up FIX 3 — `?force_prefill=1` ignores saved q-values
+  // and re-derives from ai_extracted. Smoke-test affordance; harmless if
+  // non-devs find it (it just shows the extraction-derived suggestions).
+  const forcePrefill = sp.force_prefill === "1";
   const step = parseInt(n, 10);
   const total = totalSteps();
 
@@ -113,25 +110,40 @@ export default async function WizardStepPage({
   const initialSkipped = meta.wizard_skipped_questions ?? [];
 
   // Phase 3.5 INV-1 — merge ai_extracted suggestions into initial values
-  // for fields the user hasn't saved yet. Saved values always win.
+  // for fields the user hasn't saved yet. Saved values normally win,
+  // unless ?force_prefill=1 is set (FIX 3 — smoke-test affordance).
   const aiFields =
     data.ai_extracted?.status === "complete"
       ? data.ai_extracted.fields
       : null;
-  const derivedQ2 = savedAnswers.q2 ?? deriveQ2FromExtraction(aiFields);
-  const derivedQ6 =
-    savedAnswers.q6 && savedAnswers.q6.length > 0
-      ? savedAnswers.q6
-      : deriveQ6FromExtraction(aiFields);
+  const extractedQ2 = deriveQ2FromExtraction(aiFields);
+  const extractedQ6 = deriveQ6FromExtraction(aiFields);
+  const derivedQ2 = forcePrefill
+    ? extractedQ2
+    : savedAnswers.q2 ?? extractedQ2;
+  const derivedQ6 = forcePrefill
+    ? extractedQ6
+    : savedAnswers.q6 && savedAnswers.q6.length > 0
+    ? savedAnswers.q6
+    : extractedQ6;
   const initialAnswers: WizardAnswers = {
     ...savedAnswers,
     ...(derivedQ2 ? { q2: derivedQ2 } : {}),
     ...(derivedQ6 ? { q6: derivedQ6 } : {}),
   };
+  // Phase 3.5 follow-up FIX 2 — banner persists until BOTH Q2 and Q6
+  // have user-saved values. Previously the banner hid the moment any
+  // q-field was saved, which dropped it before the user actually saw
+  // the prefilled Q2/Q6 questions. With force_prefill, always show.
+  const q2NeedsAttention =
+    extractedQ2 !== undefined && (forcePrefill || !savedAnswers.q2);
+  const q6NeedsAttention =
+    extractedQ6 !== undefined &&
+    (forcePrefill ||
+      !savedAnswers.q6 ||
+      savedAnswers.q6.length === 0);
   const aiBannerVisible =
-    aiFields !== null &&
-    Object.keys(savedAnswers).length === 0 &&
-    (derivedQ2 !== undefined || derivedQ6 !== undefined);
+    aiFields !== null && (q2NeedsAttention || q6NeedsAttention);
 
   // All-answers-prefilled detection — true when every q1..q7 is non-null
   // (and arrays are non-empty). Demo packets prefill all 7 at intake;
