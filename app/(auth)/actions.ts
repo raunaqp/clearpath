@@ -52,11 +52,15 @@ export async function signupAction(_prev: FormState, formData: FormData): Promis
   const returnTo = safeReturnTo(formData.get("return_to") as string | null);
   const supabase = await getServerSupabase();
   const origin = await originFromHeaders();
+  // emailRedirectTo is where Supabase appends ?code or (in the token_hash
+  // template recommended for SSR) where {{ .SiteURL }} resolves to. Either
+  // way, our /auth/callback handles both shapes. `next` survives the round
+  // trip and tells the callback where to send the user post-verification.
   const { error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
-      emailRedirectTo: `${origin}/auth/callback?return_to=${encodeURIComponent(returnTo)}`,
+      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(returnTo)}`,
     },
   });
   if (error) return { error: error.message };
@@ -96,8 +100,10 @@ export async function requestPasswordResetAction(
   if (!parsed.success) return { error: "Enter a valid email." };
   const supabase = await getServerSupabase();
   const origin = await originFromHeaders();
+  // Callback branches on `type` and forces recovery to /reset-password/update.
+  // We still pass `next` for completeness — harmless for recovery flow.
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: `${origin}/auth/callback?return_to=${encodeURIComponent("/reset-password/update")}`,
+    redirectTo: `${origin}/auth/callback?next=${encodeURIComponent("/reset-password/update")}`,
   });
   if (error) {
     // Don't leak whether the email exists — generic ok message.
