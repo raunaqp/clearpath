@@ -39,6 +39,10 @@ Schema:
     "user_population": string | null,                  // who operates the device (clinician, lay user, etc.)
     "setting_of_use": string | null                    // home / opd / inpatient / surgical / pre_hospital / mixed
   },
+  "regulatory_signals": {
+    "iso_13485_status": "certified"|"in_progress"|"not_started"|"not_applicable" | null,
+    "clinical_evidence_level": "none"|"pilot_data"|"published_study"|"multi_center_trial" | null
+  },
   "confidence": "high"|"medium"|"low",
   "notes": string                                      // optional, max 1 sentence on what was unclear
 }
@@ -51,6 +55,8 @@ Rules:
 - For company.legal_name, prefer the full registered name (e.g. "BioSense Medical Devices Pvt Ltd") over a brand name.
 - For company.constitution, leave null if not stated outright — don't guess from the legal_name suffix.
 - For product_meta.setting_of_use, normalise to one of: home / opd / inpatient / surgical / pre_hospital / mixed. Use null when the deck doesn't say.
+- For regulatory_signals.iso_13485_status: "certified" if the deck states ISO 13485 certification is active; "in_progress" if a CB engagement / audit / Stage 1 / 2 is mentioned even if not yet awarded; "not_started" if explicitly stated; "not_applicable" only if the deck states ISO 13485 doesn't apply (e.g., pure software with no QMS scope). Null when unclear.
+- For regulatory_signals.clinical_evidence_level: "none" if no studies mentioned; "pilot_data" for pilot studies, retrospective analyses, internal data, single-site early use; "published_study" if a peer-reviewed publication or CTRI-registered study is described; "multi_center_trial" if a multi-site EC-approved prospective trial is named. Null when unclear.
 - Confidence "high" when 6+ fields directly stated; "low" when most fields inferred.
 - Keep all strings short and factual.
 - Return STRICT JSON. No markdown fences. No preamble. No trailing text.`;

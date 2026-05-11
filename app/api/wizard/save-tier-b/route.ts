@@ -21,10 +21,14 @@ import {
 const bodySchema = z.object({
   assessment_id: z.string().uuid(),
   answers: TierBAnswersPartialSchema,
+  /** Phase 3.5 Bug A — set on the final submit call so the
+   *  /upgrade/[id] gate can distinguish "in-progress" from "submitted". */
+  completed: z.boolean().optional(),
 });
 
 type AssessmentMeta = Record<string, unknown> & {
   tier_b_started_at?: string;
+  tier_b_completed_at?: string;
 };
 
 export async function POST(req: NextRequest) {
@@ -54,7 +58,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { assessment_id, answers } = parsed.data;
+  const { assessment_id, answers, completed } = parsed.data;
 
   const supabase = getServiceClient();
 
@@ -87,8 +91,12 @@ export async function POST(req: NextRequest) {
   const currentMeta: AssessmentMeta =
     (existing.meta as AssessmentMeta | null) ?? {};
   const mergedMeta: AssessmentMeta = { ...currentMeta };
+  const now = new Date().toISOString();
   if (!mergedMeta.tier_b_started_at) {
-    mergedMeta.tier_b_started_at = new Date().toISOString();
+    mergedMeta.tier_b_started_at = now;
+  }
+  if (completed) {
+    mergedMeta.tier_b_completed_at = now;
   }
 
   const { error: updateError } = await supabase

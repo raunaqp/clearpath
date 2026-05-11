@@ -94,12 +94,13 @@ export function TierBWizardClient({
   const requiredOk = useMemo(() => {
     if (!values.b1_intended_use_statement?.trim()) return false;
     if (!values.b2_use_environment) return false;
-    if (
-      !values.b3_predicate_devices ||
-      values.b3_predicate_devices.length === 0 ||
-      values.b3_predicate_devices.every((p) => !p.device_name.trim())
-    )
-      return false;
+    // Phase 3.5 Bug E — B3 satisfied if at least one predicate has a name
+    // OR the "no predicate" override is checked.
+    const predicatesOk =
+      !!values.b3_no_predicate ||
+      (Array.isArray(values.b3_predicate_devices) &&
+        values.b3_predicate_devices.some((p) => p.device_name.trim().length > 0));
+    if (!predicatesOk) return false;
     if (
       !values.b4_risks_and_mitigations ||
       values.b4_risks_and_mitigations.length === 0 ||
@@ -124,9 +125,12 @@ export function TierBWizardClient({
       const fullPayload: Partial<WizardAnswers> = {
         b1_intended_use_statement: values.b1_intended_use_statement,
         b2_use_environment: values.b2_use_environment,
-        b3_predicate_devices: values.b3_predicate_devices?.filter(
-          (p) => p.device_name.trim().length > 0
-        ),
+        b3_predicate_devices: values.b3_no_predicate
+          ? []
+          : values.b3_predicate_devices?.filter(
+              (p) => p.device_name.trim().length > 0
+            ),
+        b3_no_predicate: !!values.b3_no_predicate,
         b4_risks_and_mitigations: values.b4_risks_and_mitigations?.filter(
           (r) => r.risk.trim().length > 0
         ),
@@ -141,12 +145,15 @@ export function TierBWizardClient({
         fullPayload.c2_cybersecurity_posture = values.c2_cybersecurity_posture;
       }
 
+      // Phase 3.5 Bug A — set the completion flag so the /upgrade/[id]
+      // gate uses an explicit "submitted" signal instead of field presence.
       const res = await fetch("/api/wizard/save-tier-b", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           assessment_id: assessmentId,
           answers: fullPayload,
+          completed: true,
         }),
       });
       if (!res.ok) {
@@ -226,22 +233,48 @@ export function TierBWizardClient({
         />
       </FieldShell>
 
-      {/* B3 — predicate devices (manual entry, LLM suggestions Phase 4b) */}
+      {/* B3 — predicate devices (manual entry; "no predicate" override) */}
       <FieldShell
         question={TIER_B_QUESTIONS[2]}
         state={fieldStates["b3_predicate_devices"]}
       >
-        <PredicateList
-          value={values.b3_predicate_devices ?? []}
-          onChange={(next) =>
-            setValues((v) => ({ ...v, b3_predicate_devices: next }))
-          }
-          onBlur={(next) =>
-            void saveField("b3_predicate_devices", {
-              b3_predicate_devices: next,
-            })
-          }
-        />
+        <label className="flex items-center gap-2 mb-3 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={!!values.b3_no_predicate}
+            onChange={(e) => {
+              const next = e.target.checked;
+              // When toggling on, clear any partial entries; when toggling
+              // off, leave the previous entries so the user can resume.
+              setValues((v) => ({
+                ...v,
+                b3_no_predicate: next,
+                b3_predicate_devices: next ? [] : v.b3_predicate_devices,
+              }));
+              void saveField("b3_predicate_devices", {
+                b3_no_predicate: next,
+                b3_predicate_devices: next ? [] : values.b3_predicate_devices,
+              });
+            }}
+            className="accent-[#0F6E56]"
+          />
+          <span className="text-[#0E1411]">
+            I have no predicate device for this product
+          </span>
+        </label>
+        {!values.b3_no_predicate && (
+          <PredicateList
+            value={values.b3_predicate_devices ?? []}
+            onChange={(next) =>
+              setValues((v) => ({ ...v, b3_predicate_devices: next }))
+            }
+            onBlur={(next) =>
+              void saveField("b3_predicate_devices", {
+                b3_predicate_devices: next,
+              })
+            }
+          />
+        )}
       </FieldShell>
 
       {/* B4 — risks + mitigations */}
@@ -557,6 +590,11 @@ function PredicateList({
 
 /* ─── risk + mitigation pairs ────────────────────────────────────── */
 
+// Phase 3.5 Bug C — B4 max raised from 3 to 5; rows render fully from
+// the server-supplied prefill (no slice). Bug D — explicit Risk /
+// Mitigation labels above each input. Bug C — × remove icon per row.
+const B4_MAX_ROWS = 5;
+
 function RiskMitigationList({
   value,
   onChange,
@@ -574,13 +612,14 @@ function RiskMitigationList({
   };
 
   const removeRow = (idx: number) => {
+    if (rows.length <= 1) return;
     const next = rows.filter((_, i) => i !== idx);
-    onChange(next.length > 0 ? next : [{ risk: "", mitigation: "" }]);
+    onChange(next);
     onBlur(next.filter((r) => r.risk.trim().length > 0));
   };
 
   const addRow = () => {
-    if (rows.length >= 3) return;
+    if (rows.length >= B4_MAX_ROWS) return;
     onChange([...rows, { risk: "", mitigation: "" }]);
   };
 
@@ -589,50 +628,73 @@ function RiskMitigationList({
       {rows.map((row, idx) => (
         <div
           key={idx}
-          className="rounded-md border border-[#D9D5C8] bg-white p-3 space-y-2"
+          className="rounded-md border border-[#D9D5C8] bg-white p-3 space-y-3 relative"
         >
-          <input
-            type="text"
-            placeholder="Risk"
-            value={row.risk}
-            onChange={(e) => update(idx, { risk: e.target.value })}
-            onBlur={() =>
-              onBlur(rows.filter((r) => r.risk.trim().length > 0))
-            }
-            maxLength={300}
-            className="w-full text-sm rounded border border-[#D9D5C8] px-2 py-1.5 focus:outline-none focus:border-[#0F6E56]"
-          />
-          <input
-            type="text"
-            placeholder="Mitigation"
-            value={row.mitigation}
-            onChange={(e) => update(idx, { mitigation: e.target.value })}
-            onBlur={() =>
-              onBlur(rows.filter((r) => r.risk.trim().length > 0))
-            }
-            maxLength={300}
-            className="w-full text-sm rounded border border-[#D9D5C8] px-2 py-1.5 focus:outline-none focus:border-[#0F6E56]"
-          />
-          {rows.length > 1 && (
-            <button
-              type="button"
-              onClick={() => removeRow(idx)}
-              className="text-xs text-[#6B766F] hover:text-[#993C1D] underline"
+          <div className="flex items-center justify-between">
+            <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-[#6B766F]">
+              Risk {idx + 1}
+            </p>
+            {rows.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeRow(idx)}
+                aria-label={`Remove risk ${idx + 1}`}
+                className="text-[#6B766F] hover:text-[#993C1D] w-6 h-6 inline-flex items-center justify-center rounded transition-colors"
+              >
+                ×
+              </button>
+            )}
+          </div>
+          <div>
+            <label
+              htmlFor={`b4-risk-${idx}`}
+              className="block text-xs text-[#6B766F] mb-1"
             >
-              Remove
-            </button>
-          )}
+              Risk:
+            </label>
+            <input
+              id={`b4-risk-${idx}`}
+              type="text"
+              placeholder="e.g., ISO 13485 certification not yet achieved"
+              value={row.risk}
+              onChange={(e) => update(idx, { risk: e.target.value })}
+              onBlur={() =>
+                onBlur(rows.filter((r) => r.risk.trim().length > 0))
+              }
+              maxLength={300}
+              className="w-full text-sm rounded border border-[#D9D5C8] px-2 py-1.5 focus:outline-none focus:border-[#0F6E56]"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor={`b4-mit-${idx}`}
+              className="block text-xs text-[#6B766F] mb-1"
+            >
+              Mitigation:
+            </label>
+            <input
+              id={`b4-mit-${idx}`}
+              type="text"
+              placeholder="e.g., Stage 1 audit scheduled Q3 2026 with BSI India"
+              value={row.mitigation}
+              onChange={(e) => update(idx, { mitigation: e.target.value })}
+              onBlur={() =>
+                onBlur(rows.filter((r) => r.risk.trim().length > 0))
+              }
+              maxLength={300}
+              className="w-full text-sm rounded border border-[#D9D5C8] px-2 py-1.5 focus:outline-none focus:border-[#0F6E56]"
+            />
+          </div>
         </div>
       ))}
-      {rows.length < 3 && (
-        <button
-          type="button"
-          onClick={addRow}
-          className="text-xs text-[#0F6E56] hover:text-[#0d5c48] underline"
-        >
-          + Add another risk
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={addRow}
+        disabled={rows.length >= B4_MAX_ROWS}
+        className="text-xs text-[#0F6E56] hover:text-[#0d5c48] disabled:opacity-50 disabled:cursor-not-allowed underline"
+      >
+        + Add another risk{rows.length >= B4_MAX_ROWS ? " (max 5)" : ""}
+      </button>
     </div>
   );
 }

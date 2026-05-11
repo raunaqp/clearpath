@@ -81,6 +81,9 @@ export type WizardAnswers = {
   b1_intended_use_statement?: string;
   b2_use_environment?: UseEnvironment;
   b3_predicate_devices?: PredicateDevice[];
+  /** Phase 3.5 Bug E — "I have no predicate device" override. When true,
+   *  B3 is considered satisfied even with zero predicate entries. */
+  b3_no_predicate?: boolean;
   b4_risks_and_mitigations?: RiskMitigation[];
   b5_clinical_evidence_status?: ClinicalEvidenceStatus;
   b6_iso_13485_status?: Iso13485Status;
@@ -215,7 +218,9 @@ export const TierBAnswersPartialSchema = z.object({
   b1_intended_use_statement: z.string().trim().min(1).max(2000).optional(),
   b2_use_environment: UseEnvironmentSchema.optional(),
   b3_predicate_devices: z.array(PredicateDeviceSchema).max(3).optional(),
-  b4_risks_and_mitigations: z.array(RiskMitigationSchema).max(3).optional(),
+  b3_no_predicate: z.boolean().optional(),
+  // Phase 3.5 Bug C — B4 max raised from 3 to 5.
+  b4_risks_and_mitigations: z.array(RiskMitigationSchema).max(5).optional(),
   b5_clinical_evidence_status: ClinicalEvidenceStatusSchema.optional(),
   b6_iso_13485_status: Iso13485StatusSchema.optional(),
   c1_software_lifecycle_model: SoftwareLifecycleModelSchema.optional(),

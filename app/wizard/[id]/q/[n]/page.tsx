@@ -5,7 +5,15 @@ import WizardClient from "@/components/wizard/WizardClient";
 import { QuestionContextPane } from "@/components/layout/QuestionContextPane";
 import { displayName } from "@/lib/wizard/display-name";
 import { totalSteps } from "@/lib/wizard/questions";
-import type { WizardAnswers } from "@/lib/wizard/types";
+import type {
+  DataSensitivity,
+  InfoSignificance,
+  WizardAnswers,
+} from "@/lib/wizard/types";
+import type {
+  AiExtractedRow,
+  PitchAiExtracted,
+} from "@/lib/intake/ai-extract";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +33,47 @@ type Row = {
   product_type: string | null;
   wizard_answers: WizardAnswers | null;
   meta: AssessmentMeta | null;
+  ai_extracted: AiExtractedRow | null;
 };
+
+// Phase 3.5 INV-1 — heuristics to map ai_extracted suggestions to Tier A
+// answer values. Conservative: only prefill where the extraction signal
+// is clear. Q1/Q3/Q4/Q5/Q7 have no clean extraction counterpart — leave
+// blank so the user fills them.
+
+function deriveQ2FromExtraction(
+  ai: PitchAiExtracted | null
+): InfoSignificance | undefined {
+  if (!ai) return undefined;
+  const aiMl = ai.suggested_wizard_answers?.ai_ml;
+  const intendedUse = (
+    ai.suggested_wizard_answers?.intended_use ??
+    ai.intended_use_one_liner ??
+    ""
+  ).toLowerCase();
+  // Only emit a default when the deck signals an active model. Static
+  // displays without ML inference stay blank.
+  if (aiMl !== "static" && aiMl !== "adaptive") return undefined;
+  if (/diagnos|treat|autonom|automated decision/.test(intendedUse)) {
+    return "diagnoses_treats";
+  }
+  if (/recommend|flag|alert|predict|suggest|support|decision/.test(intendedUse)) {
+    return "drives";
+  }
+  // AI/ML present but copy doesn't disambiguate — pick the safer middle
+  // option. The user can adjust on Q2 with full context.
+  return "drives";
+}
+
+function deriveQ6FromExtraction(
+  ai: PitchAiExtracted | null
+): DataSensitivity[] | undefined {
+  if (!ai) return undefined;
+  const sens = ai.suggested_wizard_answers?.data_sensitivity;
+  if (sens === "identifiable" || sens === "deidentified") return ["phi"];
+  if (sens === "none") return ["none"];
+  return undefined;
+}
 
 export default async function WizardStepPage({
   params,
@@ -44,7 +92,7 @@ export default async function WizardStepPage({
   const { data, error } = await supabase
     .from("assessments")
     .select(
-      "id, one_liner, uploaded_docs, status, share_token, product_type, wizard_answers, meta"
+      "id, one_liner, uploaded_docs, status, share_token, product_type, wizard_answers, meta, ai_extracted"
     )
     .eq("id", id)
     .maybeSingle<Row>();
@@ -61,8 +109,29 @@ export default async function WizardStepPage({
   const pdfCount = Array.isArray(data.uploaded_docs)
     ? data.uploaded_docs.length
     : 0;
-  const initialAnswers: WizardAnswers = data.wizard_answers ?? {};
+  const savedAnswers: WizardAnswers = data.wizard_answers ?? {};
   const initialSkipped = meta.wizard_skipped_questions ?? [];
+
+  // Phase 3.5 INV-1 — merge ai_extracted suggestions into initial values
+  // for fields the user hasn't saved yet. Saved values always win.
+  const aiFields =
+    data.ai_extracted?.status === "complete"
+      ? data.ai_extracted.fields
+      : null;
+  const derivedQ2 = savedAnswers.q2 ?? deriveQ2FromExtraction(aiFields);
+  const derivedQ6 =
+    savedAnswers.q6 && savedAnswers.q6.length > 0
+      ? savedAnswers.q6
+      : deriveQ6FromExtraction(aiFields);
+  const initialAnswers: WizardAnswers = {
+    ...savedAnswers,
+    ...(derivedQ2 ? { q2: derivedQ2 } : {}),
+    ...(derivedQ6 ? { q6: derivedQ6 } : {}),
+  };
+  const aiBannerVisible =
+    aiFields !== null &&
+    Object.keys(savedAnswers).length === 0 &&
+    (derivedQ2 !== undefined || derivedQ6 !== undefined);
 
   // All-answers-prefilled detection — true when every q1..q7 is non-null
   // (and arrays are non-empty). Demo packets prefill all 7 at intake;
@@ -97,6 +166,7 @@ export default async function WizardStepPage({
               conflictEncountered={meta.conflict_detected === true}
               pdfCount={pdfCount}
               allAnswersPrefilled={allAnswersPrefilled}
+              aiBannerVisible={aiBannerVisible}
             />
           </div>
         </div>

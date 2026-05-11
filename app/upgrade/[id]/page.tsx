@@ -9,6 +9,10 @@ import type { WizardAnswers } from "@/lib/wizard/types";
 
 export const dynamic = "force-dynamic";
 
+type AssessmentMeta = {
+  tier_b_completed_at?: string;
+};
+
 type AssessmentRow = {
   id: string;
   share_token: string | null;
@@ -16,6 +20,7 @@ type AssessmentRow = {
   email: string;
   tier2_intent_clicked: string | null;
   wizard_answers: WizardAnswers | null;
+  meta: AssessmentMeta | null;
 };
 
 export default async function UpgradePage({
@@ -39,7 +44,7 @@ export default async function UpgradePage({
   const { data: assessment, error } = await supabase
     .from("assessments")
     .select(
-      "id, share_token, status, email, tier2_intent_clicked, wizard_answers"
+      "id, share_token, status, email, tier2_intent_clicked, wizard_answers, meta"
     )
     .eq("id", id)
     .maybeSingle<AssessmentRow>();
@@ -68,16 +73,17 @@ export default async function UpgradePage({
     .limit(1)
     .maybeSingle<Tier2Order>();
 
-  // Sprint 2 Story 2.5 Phase 3 — gate payment behind the Tier B wizard.
-  // Customers with an existing order bypass this (they're past wizard).
-  // New customers without b1_intended_use_statement get bounced to
-  // /upgrade/{id}/wizard to fill the Tier B intake.
-  const tierBComplete = !!assessment.wizard_answers?.b1_intended_use_statement;
+  // Sprint 2 Story 2.5 Phase 3.5 Bug A — gate payment on the explicit
+  // submission flag (meta.tier_b_completed_at), not on field presence.
+  // Field-presence broke on refresh because save-on-blur populates b1
+  // mid-edit. Customers with an existing order bypass this (past wizard).
+  const tierBComplete = !!assessment.meta?.tier_b_completed_at;
   if (!order && !tierBComplete) {
     redirect(`/upgrade/${id}/wizard`);
   }
 
   const cardHref = assessment.share_token ? `/c/${assessment.share_token}` : "/";
+  const wizardHref = `/upgrade/${id}/wizard`;
 
   return (
     <div className="min-h-screen bg-[#F7F6F2] flex flex-col">
@@ -217,12 +223,21 @@ export default async function UpgradePage({
 
             <PaymentForm assessmentId={id} email={assessment.email} />
 
-            <div className="mt-8">
+            <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:gap-6 gap-3">
               <a
                 href={cardHref}
                 className="text-sm text-[#6B766F] underline underline-offset-2 hover:text-[#0E1411]"
               >
                 ← Back to your Readiness Card
+              </a>
+              {/* Phase 3.5 Bug B — keep the wizard reachable from the
+                  payment page so users can revise their answers before
+                  paying. */}
+              <a
+                href={wizardHref}
+                className="text-sm text-[#6B766F] underline underline-offset-2 hover:text-[#0E1411]"
+              >
+                Edit wizard answers
               </a>
             </div>
             </>

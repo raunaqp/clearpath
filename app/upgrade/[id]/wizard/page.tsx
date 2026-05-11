@@ -73,7 +73,8 @@ function buildInitialB4(card: ReadinessCard | null): RiskMitigation[] {
   if (!card || !Array.isArray(card.top_gaps) || card.top_gaps.length === 0) {
     return [];
   }
-  return card.top_gaps.slice(0, 3).map((gap) => ({
+  // Phase 3.5 Bug C — use full top_gaps (no slice), capped by max B4 rows.
+  return card.top_gaps.slice(0, 5).map((gap) => ({
     risk: gap.gap_title,
     mitigation: gap.fix_action,
   }));
@@ -137,8 +138,19 @@ export default async function TierBWizardPage({
     redirect("/dashboard");
   }
 
-  // If Tier B already complete, bounce to the payment page.
-  if (data.wizard_answers?.b1_intended_use_statement) {
+  // Phase 3.5 Bug A — never auto-redirect to payment based on field
+  // presence. Wizard stays accessible while user is editing. The
+  // canonical "wizard submitted" signal is meta.tier_b_completed_at.
+  // The only auto-redirect we keep is: if an order exists, the user
+  // is past the wizard. Send them to the payment/status page.
+  const { data: order } = await supabase
+    .from("tier2_orders")
+    .select("id")
+    .eq("assessment_id", id)
+    .neq("status", "failed")
+    .limit(1)
+    .maybeSingle();
+  if (order) {
     redirect(`/upgrade/${id}`);
   }
 
@@ -158,11 +170,19 @@ export default async function TierBWizardPage({
       normaliseUseEnvironment(ai?.product_meta?.setting_of_use) ??
       undefined,
     b3_predicate_devices: data.wizard_answers?.b3_predicate_devices ?? [],
+    b3_no_predicate: data.wizard_answers?.b3_no_predicate ?? false,
     b4_risks_and_mitigations:
       data.wizard_answers?.b4_risks_and_mitigations ?? buildInitialB4(card),
+    // Phase 3.5 INV-2 — prefill B5 / B6 from ai_extracted.regulatory_signals
+    // when present. Existing saved values always win.
     b5_clinical_evidence_status:
-      data.wizard_answers?.b5_clinical_evidence_status ?? undefined,
-    b6_iso_13485_status: data.wizard_answers?.b6_iso_13485_status ?? undefined,
+      data.wizard_answers?.b5_clinical_evidence_status ??
+      ai?.regulatory_signals?.clinical_evidence_level ??
+      undefined,
+    b6_iso_13485_status:
+      data.wizard_answers?.b6_iso_13485_status ??
+      ai?.regulatory_signals?.iso_13485_status ??
+      undefined,
     c1_software_lifecycle_model:
       data.wizard_answers?.c1_software_lifecycle_model ?? undefined,
     c2_cybersecurity_posture:

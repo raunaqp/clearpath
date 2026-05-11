@@ -89,6 +89,20 @@ export const PitchAiExtractedSchema = z.object({
       setting_of_use: z.string().max(200).nullable().optional(),
     })
     .optional(),
+  // Story 2.5 Phase 3.5 — INV-2 fix: extract regulatory signals that map
+  // directly to Tier B B5 (clinical evidence status) + B6 (ISO 13485).
+  regulatory_signals: z
+    .object({
+      iso_13485_status: z
+        .enum(["certified", "in_progress", "not_started", "not_applicable"])
+        .nullable()
+        .optional(),
+      clinical_evidence_level: z
+        .enum(["none", "pilot_data", "published_study", "multi_center_trial"])
+        .nullable()
+        .optional(),
+    })
+    .optional(),
   confidence: z.enum(["high", "medium", "low"]),
   notes: z.string().max(500).optional(),
 });

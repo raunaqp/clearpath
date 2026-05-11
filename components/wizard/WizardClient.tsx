@@ -25,6 +25,10 @@ type Props = {
    * Surfaces a "Skip to card →" affordance so partners can jump
    * straight to synthesis after one click of narration. */
   allAnswersPrefilled?: boolean;
+  /** Phase 3.5 INV-1 — show the "AI prefilled from your pitch deck"
+   *  banner. True only on first visit when extraction provided
+   *  defaults and the user has no saved answers yet. */
+  aiBannerVisible?: boolean;
 };
 
 type CheckResponse = {
@@ -42,6 +46,7 @@ export default function WizardClient({
   conflictEncountered,
   pdfCount,
   allAnswersPrefilled = false,
+  aiBannerVisible = false,
 }: Props) {
   const router = useRouter();
   const total = totalSteps();
@@ -445,6 +450,18 @@ export default function WizardClient({
 
   return (
     <div className="max-w-xl mx-auto w-full">
+      {aiBannerVisible && !allAnswersPrefilled && (
+        <div className="mb-4 rounded-lg border border-[#D4A93C]/40 bg-[#FFF8E1] px-3 py-2">
+          <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-[#7A5C0F] mb-1">
+            AI prefilled from your pitch deck
+          </p>
+          <p className="text-xs text-[#3A2F0E] leading-snug">
+            We&apos;ve suggested answers where your deck gave us a clear
+            signal. Review and adjust as needed — your edits overwrite the
+            suggestion.
+          </p>
+        </div>
+      )}
       {allAnswersPrefilled && (
         <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-[#0F6E56]/30 bg-[#E1F5EE]/50 px-3 py-2">
           <p className="text-xs text-[#0E1411] leading-snug">
