@@ -9,7 +9,7 @@
 
 - **Pricing model:** 3 customer-facing tiers, deck-aligned
   - Tier 0 — Risk Card (Free)
-  - Tier 1 — Draft Pack (₹4,999 list / ₹2,499 launch discount)
+  - Tier 1 — Draft Pack (Sprint 2: ₹499 production · Sprint 3 target: ₹4,999 list / ₹2,499 launch — see `pricing-strategy-v1.md`)
   - Tier 2 — Reviewer Concierge (₹75,000) — Sprint 3 launch, Sprint 2 captures demand
 - **Architecture:** clearpath (consumer + expert flow) and cdsco-reviewer-tool (regulator tool) stay separate repos
 - **Auth:** Email + password, gated at Risk-Card-to-Draft-Pack transition
@@ -57,23 +57,27 @@ Reference docs:
 
 ---
 
-### Story 2.1 — Tier 1 launch pricing copy update (clearpath repo)
+### Story 2.1 — Pricing strategy reconciliation (docs only) [REVISED 2026-05-11]
 
-**Priority:** High. Quick win, deck alignment.
+**Priority:** High. Unblocks Sprint 3 pricing change.
 **Effort:** 0.5 day
 
+**Why scope changed:** Original Story 2.1 assumed ₹4,999 baseline and Cashfree integration. Audit on 2026-05-11 found production is at ₹499 with manual UPI payment proof flow (no Cashfree in `clearpath` repo). Bare price change without product upgrade was rejected — price increase will ship with the sectioned/editable Draft Pack in Sprint 3.
+
 **Scope:**
-- Update landing page pricing display: ~~₹4,999~~ → ₹2,499 launch price
-- Update upgrade page (post-Risk-Card): same dual pricing
-- "Launch pricing — limited time" framing
-- Cashfree payment intent updated to ₹2,499
-- Email confirmations reflect new pricing
-- Existing customers at ₹4,999 (if any) noted in DB for free Tier 2 upgrade when launches
+- Update `docs/roadmap/pricing-strategy-v1.md` to reflect actual production state (₹499) vs target launch pricing (₹4,999/₹2,499)
+- Add "Production vs target pricing" transition plan
+- Update Tier 1 section with current state / target state / migration triggers
+- Defer Tier 1 launch pricing change to Sprint 3, alongside upgraded Draft Pack ship
+- Update revenue projections to reflect ₹499 baseline for Sprint 2
+- Add note in resolved decisions log
+- **No code changes in `clearpath` repo. Production pricing stays at ₹499.**
 
 **Acceptance:**
-- All customer-facing pages show dual pricing cleanly
-- New checkouts at ₹2,499 effective price
-- No regressions on existing Risk Card → Draft Pack flow
+- `pricing-strategy-v1.md` reflects two-phase pricing reality
+- `sprint-2-plan.md` Story 2.1 + Sprint 3 outline reflect deferred change
+- Resolved decisions log updated with the discovery and decision
+- Zero `clearpath` app code changes
 
 ---
 
@@ -104,7 +108,7 @@ Reference docs:
 - Sessions persist (no re-login per visit)
 - Mobile + desktop tested
 
-**Dependencies:** Story 2.1 (pricing update first)
+**Dependencies:** Story 2.1 (pricing reconciliation docs)
 
 ---
 
@@ -270,7 +274,7 @@ Sun May 24: Sprint 2 retrospective. Sprint 3 planning.
 ## What ships at end of Sprint 2
 
 **On clearpath-medtech.vercel.app:**
-1. Pricing aligned with deck — Tier 1 ₹4,999/₹2,499 launch, Tier 2 ₹75K Coming Soon
+1. Pricing strategy reconciled in docs — production stays at ₹499; target launch pricing (₹4,999/₹2,499) deferred to Sprint 3 alongside upgraded Draft Pack. Tier 2 ₹75K Coming Soon.
 2. Customer authentication (email + password, dashboard, password reset)
 3. Upgraded Draft Pack experience — sectioned, editable, citation-traceable per mockup
 4. Tier 2 demand signal capture — early access form
@@ -291,12 +295,14 @@ Sun May 24: Sprint 2 retrospective. Sprint 3 planning.
 
 ## Sprint 3-6 outline
 
-### Sprint 3 (May 25 - Jun 7) — Tier 2 Reviewer Concierge launch
+### Sprint 3 (May 25 - Jun 7) — Tier 1 launch pricing + Tier 2 Reviewer Concierge launch
+- **Tier 1 launch pricing change** (₹499 → ₹4,999 list / ₹2,499 effective) shipped alongside upgraded Draft Pack
+- Cashfree integration for Tier 1 (₹2,499) + Tier 2 (₹75K) — replaces UPI payment proof flow
 - Build Tier 2 experience per mockup page 4 (named reviewer bench, engagement timeline, maker-checker)
-- Cashfree integration for ₹75K
 - Expert recruitment + onboarding
 - First 2-3 paying Tier 2 customers
 - Question unification
+- Existing ₹499 customers tagged in DB for Tier 2 upgrade discount
 
 ### Sprint 4 (Jun 8 - Jun 21) — Polish + scaling
 - Mobile responsive Tier 1 + Tier 2
@@ -343,7 +349,7 @@ Sprint 2 closes successfully when:
 1. cdsco-reviewer-tool polished and demo-ready
 2. Customer auth (email + password) live
 3. Upgraded Draft Pack experience live — sectioned, editable, citation-traceable
-4. Pricing copy aligned with deck
+4. Pricing strategy reconciled in docs (price change deferred to Sprint 3)
 5. Tier 2 Coming Soon + demand capture live
 6. Disclaimer/ToU live
 7. Sprint 2 retrospective documented

@@ -26,6 +26,28 @@
 
 ---
 
+## Production vs target pricing (added 2026-05-11)
+
+**Current production state (Sprint 2):**
+- Tier 1 Draft Pack ships at **₹499** (PDF format, manual UPI payment proof flow)
+- Live across landing page, upgrade page, FAQ, generated PDF — 15 in-code references in `clearpath/`
+- No Cashfree integration in `clearpath` repo yet — payment is UPI QR + screenshot/txn ID upload
+
+**Target launch pricing (Sprint 3+):**
+- ₹4,999 list / ₹2,499 effective (50% launch discount)
+
+**Transition plan:**
+- Target pricing ships in **Sprint 3** alongside the upgraded Draft Pack experience (sectioned + editable + citations per investor deck mockup page 3)
+- Sprint 2 stays at ₹499 — no pricing copy or payment flow changes in `clearpath` repo
+- **Rationale:** pricing increase is justified by product upgrade, not a bare price change. Shipping the new price first would break the implicit promise that customers paying more get more product.
+
+**Existing ₹499 customer treatment:**
+- Grandfathered at ₹499 for any in-flight Tier 1 work
+- Offered Tier 2 Reviewer Concierge upgrade discount when Tier 2 launches in Sprint 3
+- DB metadata flag added at Tier 2 launch time, not now (no schema work in Sprint 2)
+
+---
+
 ## Tier 0 — Risk Card (Free)
 
 ### Scope
@@ -48,15 +70,30 @@
 
 ---
 
-## Tier 1 — Draft Pack (₹4,999 / ₹2,499 launch)
+## Tier 1 — Draft Pack (Sprint 2: ₹499 production · Sprint 3 target: ₹4,999 / ₹2,499 launch)
 
-### Scope (current production - PDF format)
+### Current state (Sprint 2)
+- **Price:** ₹499 (production)
+- **Format:** PDF download
+- **Payment:** Manual UPI (QR + payment proof upload)
+- **Live across:** landing page, upgrade page, payment form, FAQ, generated PDF
+
+### Target state (Sprint 3+)
+- **Price:** ₹4,999 list / ₹2,499 effective (50% launch discount)
+- **Format:** Sectioned web view + PDF download
+- **Payment:** Cashfree integration
+- **Migration triggers (all must hold before price moves):**
+  1. Upgraded Draft Pack experience shipped (Story 2.5 — sectioned + editable + citations)
+  2. Cashfree integration shipped (Sprint 3)
+  3. Existing ₹499 customers migrated/grandfathered per policy above
+
+### Scope — current production (PDF format, ₹499)
 - Auto-generated CDSCO MDR submission documents
 - Content mapped to CDSCO structure with full source citations
 - PDF download
-- Self-serve, credit-card decision
+- Self-serve, manual UPI payment
 
-### Scope (Sprint 2-3 upgrade per mockup)
+### Scope — target product (Sprint 2-3 upgrade per mockup, ₹4,999/₹2,499)
 - Section-based web view (12 sections per CDSCO MDR structure)
 - All sections editable by customer
 - Citation-traceable references (inline + right panel)
@@ -176,12 +213,19 @@ Approach: Launch discount mechanism, not gimmick.
 | Tier | Name | India price | Singapore price | Margin | Vol target Sprint 4 |
 |---|---|---|---|---|---|
 | 0 | Risk Card | Free | Free | N/A | Funnel: 200-500/mo |
-| 1 | Draft Pack | ₹2,499 launch / ₹4,999 list | SGD 99 | 95%+ | 30-60/mo |
+| 1 | Draft Pack | Sprint 2: ₹499 · Sprint 3+ target: ₹2,499 launch / ₹4,999 list | SGD 99 | 95%+ | 30-60/mo |
 | 2 | Reviewer Concierge | ₹75,000 | SGD 2,500 | ~80% | 3-5/mo |
 
 ---
 
-## Revenue projection (rough, end of Sprint 4)
+## Revenue projection (rough)
+
+**Sprint 2 baseline (current production at ₹499):**
+- Tier 1: 5-10 × ₹499 = ₹2,495 - ₹4,990/month
+- Intentionally low — Sprint 2 focuses on product upgrade, not revenue
+- Revenue ramp begins Sprint 3 when launch pricing ships alongside upgraded Draft Pack
+
+**End-of-Sprint-4 projection (post launch pricing change):**
 
 Conservative case:
 - Tier 1: 45 × ₹2,499 = ₹1,12,455/month
@@ -202,15 +246,17 @@ This is end-of-Sprint-4 (~Jun 21, 2026) target. Year 1 deck target (₹3 Cr ARR 
 ## Tier rollout sequence
 
 **Sprint 2 (May 11-24):**
-- Tier 1 pricing copy update (₹4,999 list / ₹2,499 launch)
+- Pricing strategy reconciliation — production stays at ₹499 (see "Production vs target pricing" section)
 - Build Tier 1 upgraded product (sectioned + editable + citations)
 - Tier 2 "Coming Soon" placeholder + demand capture form
 
 **Sprint 3 (May 25 - Jun 7):**
+- **Tier 1 launch pricing change** (₹499 → ₹4,999 list / ₹2,499 effective) — ships alongside upgraded Draft Pack experience
+- Cashfree integration for Tier 1 (₹2,499) + Tier 2 (₹75K) — replaces UPI payment proof flow
 - Build Tier 2 Reviewer Concierge product (per mockup page 4)
-- Cashfree integration for Tier 2 ₹75K
 - Expert recruitment (2 anchor reviewers + bench)
 - First 1-2 paying Tier 2 customers (manual onboarding)
+- Existing ₹499 customers tagged in DB for Tier 2 upgrade discount
 
 **Sprint 4 (Jun 8 - Jun 21):**
 - Tier 2 fully launched publicly
@@ -305,3 +351,4 @@ All from Sprint 2 planning session 2026-05-10:
 8. ✅ Refund policy per tier locked
 9. ✅ Bundling: NO bundles
 10. ✅ Singapore pricing 2-3x India per deck
+11. ✅ **2026-05-11:** Discovered Sprint 2 plan assumed ₹4,999 baseline; production is at ₹499 (manual UPI flow, no Cashfree integration in `clearpath` repo). Revised plan to defer price change to Sprint 3 alongside upgraded Draft Pack ship. Production stays at ₹499 for Sprint 2. Bare price change without product upgrade was rejected.
