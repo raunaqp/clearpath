@@ -61,6 +61,17 @@ function handleAdmin(req: NextRequest): NextResponse {
 }
 
 async function handleCustomerAuth(req: NextRequest): Promise<NextResponse> {
+  // Defense in depth: if env is missing on this deploy, redirect to /login
+  // (which renders without Supabase). Avoids 500'ing the whole route.
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = `?return_to=${encodeURIComponent(req.nextUrl.pathname + req.nextUrl.search)}`;
+    return NextResponse.redirect(url);
+  }
   const res = NextResponse.next({ request: req });
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
