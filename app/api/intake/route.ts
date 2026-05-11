@@ -126,21 +126,28 @@ export async function POST(req: NextRequest) {
         : 0;
     nextMeta.conflict_edit_attempts = priorAttempts + 1;
 
-    // Story 2.5 Phase 2 — refresh ai_extracted state based on new uploads.
+    // Story 2.5 Phase 2 + Phase 1 (Sprint 2 follow-up) — refresh
+    // ai_extracted state based on new uploads. Pitch-deck path keeps
+    // sha256 caching; one-liner-only path re-extracts on each resume
+    // (cost is ~$0.005 per call, change-detection-by-hash would add
+    // complexity we don't need yet).
     const pitchDeck = findPitchDeck(uploaded_docs);
+    const oneLinerHasSignal = one_liner.trim().length >= 20;
     const priorExtract = (existing.ai_extracted as AiExtractedRow | null) ?? null;
     const sameDeckAsBefore =
       !!pitchDeck &&
       priorExtract?.status === "complete" &&
       priorExtract?.source_sha256 === pitchDeck.sha256;
 
-    const nextAiExtracted: AiExtractedRow | null = pitchDeck
+    const nextAiExtracted: AiExtractedRow = pitchDeck
       ? sameDeckAsBefore
-        ? priorExtract // keep cached extraction
+        ? priorExtract! // keep cached extraction
         : buildPendingRow({
             source_sha256: pitchDeck.sha256,
             source_filename: pitchDeck.filename,
           })
+      : oneLinerHasSignal
+      ? buildPendingRow({ source_sha256: null, source_filename: null })
       : buildSkippedRow();
 
     const { error: updateError } = await supabase
@@ -169,7 +176,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Fire-and-forget extraction when we have a new (or first) pitch deck.
+    // Fire-and-forget extraction.
     if (pitchDeck && !sameDeckAsBefore) {
       after(async () => {
         try {
@@ -182,19 +189,38 @@ export async function POST(req: NextRequest) {
           console.error("[ai-extract] runPitchExtraction threw:", err);
         }
       });
+    } else if (!pitchDeck && oneLinerHasSignal) {
+      // Phase 1 — one-liner-only re-extraction on resume.
+      after(async () => {
+        try {
+          await runPitchExtraction({
+            assessmentId: existing.id,
+            oneLiner: one_liner,
+          });
+        } catch (err) {
+          console.error(
+            "[ai-extract] runPitchExtraction (one-liner) threw:",
+            err
+          );
+        }
+      });
     }
 
     return NextResponse.json({ assessmentId: existing.id }, { status: 200 });
   }
 
-  // Story 2.5 Phase 2 — set initial ai_extracted state at insert time so
-  // the wizard sees a meaningful status from the first render.
+  // Story 2.5 Phase 2 + Phase 1 — set initial ai_extracted state at
+  // insert time. Pitch deck OR one-liner-only both fire extraction;
+  // empty one-liner means nothing to extract from → skipped.
   const pitchDeck = findPitchDeck(uploaded_docs);
+  const oneLinerHasSignal = one_liner.trim().length >= 20;
   const initialAiExtracted: AiExtractedRow = pitchDeck
     ? buildPendingRow({
         source_sha256: pitchDeck.sha256,
         source_filename: pitchDeck.filename,
       })
+    : oneLinerHasSignal
+    ? buildPendingRow({ source_sha256: null, source_filename: null })
     : buildSkippedRow();
 
   const { data, error } = await supabase
@@ -235,6 +261,22 @@ export async function POST(req: NextRequest) {
         });
       } catch (err) {
         console.error("[ai-extract] runPitchExtraction threw:", err);
+      }
+    });
+  } else if (oneLinerHasSignal) {
+    // Phase 1 — one-liner-only extraction (no PDF, no URL needed).
+    const assessmentId = data.id;
+    after(async () => {
+      try {
+        await runPitchExtraction({
+          assessmentId,
+          oneLiner: one_liner,
+        });
+      } catch (err) {
+        console.error(
+          "[ai-extract] runPitchExtraction (one-liner) threw:",
+          err
+        );
       }
     });
   }

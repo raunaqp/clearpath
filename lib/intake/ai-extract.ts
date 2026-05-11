@@ -126,10 +126,16 @@ export type AiExtractedRow = {
   completed_at: string | null;
 };
 
-/** Build the persistent shape we write to assessments.ai_extracted. */
+/** Build the persistent shape we write to assessments.ai_extracted.
+ *
+ * Phase 1 — one-liner-only extraction: source_sha256 + source_filename
+ * are null when there's no pitch deck. The presence/absence of those
+ * fields is how we distinguish pitch-deck extractions (with sha256)
+ * from one-liner extractions (null) downstream.
+ */
 export function buildPendingRow(args: {
-  source_sha256: string;
-  source_filename: string;
+  source_sha256: string | null;
+  source_filename: string | null;
 }): AiExtractedRow {
   return {
     status: "pending",
@@ -167,8 +173,18 @@ function stripFences(text: string): string {
 
 function buildIntakeContext(args: {
   oneLiner: string;
-  filename: string;
+  filename: string | null;
 }): string {
+  if (args.filename === null) {
+    // Phase 1 — one-liner-only extraction. No deck, no URL. Extract
+    // purely from the description. Honest about confidence.
+    return [
+      "Intake one-liner (provided by applicant on the form):",
+      `- Description: ${args.oneLiner}`,
+      "",
+      "No pitch deck or website was provided. Extract per the JSON schema using ONLY the one-liner above. For fields the one-liner can't possibly cover (company.legal_name, company.cin, exact addresses, model_number, ISO certificate details, clinical study details), set them to null. For suggested_wizard_answers, infer what you reasonably can. Set confidence to 'low' or 'medium' — never 'high' — for one-liner-only extractions.",
+    ].join("\n");
+  }
   return [
     "Intake one-liner (provided by applicant on the form):",
     `- Description: ${args.oneLiner}`,
@@ -204,7 +220,10 @@ async function persistRow(
 export type RunPitchExtractionInput = {
   assessmentId: string;
   oneLiner: string;
-  pitchDeck: {
+  /** Phase 1 — when omitted, runs in one-liner-only mode: no PDF
+   *  download, text-only Opus call, source_sha256/filename null in
+   *  the persisted row. Cost drops from ~$0.10 to ~$0.005. */
+  pitchDeck?: {
     sha256: string;
     storage_path: string;
     filename: string;
@@ -222,12 +241,17 @@ export async function runPitchExtraction(
   input: RunPitchExtractionInput
 ): Promise<void> {
   const startedAt = Date.now();
+  // Phase 1 — source fields are null in one-liner-only mode. Used for
+  // every persistRow call below to keep the call sites compact.
+  const sourceSha = input.pitchDeck?.sha256 ?? null;
+  const sourceFile = input.pitchDeck?.filename ?? null;
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     await persistRow(input.assessmentId, {
       status: "failed",
-      source_sha256: input.pitchDeck.sha256,
-      source_filename: input.pitchDeck.filename,
+      source_sha256: sourceSha,
+      source_filename: sourceFile,
       fields: null,
       cost_usd: null,
       duration_ms: null,
@@ -238,41 +262,45 @@ export async function runPitchExtraction(
     return;
   }
 
-  let pdfBase64: string;
-  try {
-    pdfBase64 = await downloadPdfAsBase64(input.pitchDeck.storage_path);
-  } catch (err) {
-    await persistRow(input.assessmentId, {
-      status: "failed",
-      source_sha256: input.pitchDeck.sha256,
-      source_filename: input.pitchDeck.filename,
-      fields: null,
-      cost_usd: null,
-      duration_ms: null,
-      error: `download failed: ${err instanceof Error ? err.message : String(err)}`,
-      started_at: new Date(startedAt).toISOString(),
-      completed_at: new Date().toISOString(),
-    });
-    return;
+  let pdfBase64: string | null = null;
+  if (input.pitchDeck) {
+    try {
+      pdfBase64 = await downloadPdfAsBase64(input.pitchDeck.storage_path);
+    } catch (err) {
+      await persistRow(input.assessmentId, {
+        status: "failed",
+        source_sha256: sourceSha,
+        source_filename: sourceFile,
+        fields: null,
+        cost_usd: null,
+        duration_ms: null,
+        error: `download failed: ${err instanceof Error ? err.message : String(err)}`,
+        started_at: new Date(startedAt).toISOString(),
+        completed_at: new Date().toISOString(),
+      });
+      return;
+    }
   }
 
   const client = new Anthropic({ apiKey });
   const intakeText = buildIntakeContext({
     oneLiner: input.oneLiner,
-    filename: input.pitchDeck.filename,
+    filename: input.pitchDeck?.filename ?? null,
   });
 
-  const userContent: Anthropic.MessageParam["content"] = [
-    { type: "text", text: intakeText },
-    {
-      type: "document",
-      source: {
-        type: "base64",
-        media_type: "application/pdf",
-        data: pdfBase64,
-      },
-    },
-  ];
+  const userContent: Anthropic.MessageParam["content"] = pdfBase64
+    ? [
+        { type: "text", text: intakeText },
+        {
+          type: "document",
+          source: {
+            type: "base64",
+            media_type: "application/pdf",
+            data: pdfBase64,
+          },
+        },
+      ]
+    : [{ type: "text", text: intakeText }];
 
   let response: Anthropic.Message;
   try {
@@ -291,8 +319,8 @@ export async function runPitchExtraction(
   } catch (err) {
     await persistRow(input.assessmentId, {
       status: "failed",
-      source_sha256: input.pitchDeck.sha256,
-      source_filename: input.pitchDeck.filename,
+      source_sha256: sourceSha,
+      source_filename: sourceFile,
       fields: null,
       cost_usd: null,
       duration_ms: Date.now() - startedAt,
@@ -340,8 +368,8 @@ export async function runPitchExtraction(
   } catch (err) {
     await persistRow(input.assessmentId, {
       status: "failed",
-      source_sha256: input.pitchDeck.sha256,
-      source_filename: input.pitchDeck.filename,
+      source_sha256: sourceSha,
+      source_filename: sourceFile,
       fields: null,
       cost_usd: cost,
       duration_ms: durationMs,
@@ -354,8 +382,8 @@ export async function runPitchExtraction(
 
   await persistRow(input.assessmentId, {
     status: "complete",
-    source_sha256: input.pitchDeck.sha256,
-    source_filename: input.pitchDeck.filename,
+    source_sha256: sourceSha,
+    source_filename: sourceFile,
     fields: parsedFields,
     cost_usd: cost,
     duration_ms: durationMs,
