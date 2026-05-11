@@ -5,6 +5,7 @@ import { getServiceClient } from "@/lib/supabase";
 import { ReadinessCardSchema } from "@/lib/schemas/readiness-card";
 import { ReadinessCardContainer } from "@/components/card/ReadinessCardContainer";
 import { GlobalHeader } from "@/components/layout/GlobalHeader";
+import { getUser } from "@/lib/auth/session";
 import { deriveTRL } from "@/lib/engine/trl";
 import { runCompletenessForCard } from "@/lib/completeness/category";
 import type { CheckerDocument } from "@/lib/completeness/types";
@@ -35,6 +36,7 @@ export default async function CardPage({
   params: Promise<{ share_token: string }>;
 }) {
   const { share_token } = await params;
+  const user = await getUser();
   const supabase = getServiceClient();
 
   const { data, error } = await supabase
@@ -94,7 +96,7 @@ export default async function CardPage({
 
   return (
     <div className="min-h-screen bg-[#F7F6F2] flex flex-col">
-      <GlobalHeader />
+      <GlobalHeader signedIn={!!user} />
       <main className="flex-1 px-4 sm:px-6 lg:px-8 pt-8 lg:pt-12 pb-12">
         <div className="max-w-4xl mx-auto">
           {/* Card actions row — sits above the card itself in the page

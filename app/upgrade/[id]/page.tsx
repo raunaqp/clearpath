@@ -1,5 +1,6 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getServiceClient } from "@/lib/supabase";
+import { getUser } from "@/lib/auth/session";
 import { UpgradePageViewTracker } from "@/components/upgrade/UpgradePageViewTracker";
 import { GlobalHeader } from "@/components/layout/GlobalHeader";
 import { PaymentForm } from "./PaymentForm";
@@ -21,6 +22,16 @@ export default async function UpgradePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+
+  // Auth gate — clicking "Generate Draft Pack" requires an account (Story 2.2).
+  // Risk Card flow stays anonymous; the gate kicks in here, at the
+  // Card → Draft Pack transition. Unauthed users get bounced to /signup
+  // with a return_to so they land back on this exact upgrade page.
+  const user = await getUser();
+  if (!user) {
+    redirect(`/signup?return_to=${encodeURIComponent(`/upgrade/${id}`)}`);
+  }
+
   const supabase = getServiceClient();
 
   const { data: assessment, error } = await supabase
@@ -57,7 +68,7 @@ export default async function UpgradePage({
 
   return (
     <div className="min-h-screen bg-[#F7F6F2] flex flex-col">
-      <GlobalHeader />
+      <GlobalHeader signedIn />
       <main className="flex-1 px-4 sm:px-6 lg:px-8 pt-8 lg:pt-12 pb-12">
         <UpgradePageViewTracker assessmentId={id} />
         <div className="max-w-3xl mx-auto">
