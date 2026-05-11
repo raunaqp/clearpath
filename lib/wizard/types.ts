@@ -61,9 +61,12 @@ export type EncryptionPosture = "yes" | "no" | "partial";
 export type AuthenticationModel = "none" | "local" | "federated" | "sso";
 
 export type CybersecurityPosture = {
-  data_at_rest_encryption: EncryptionPosture;
-  data_in_transit_encryption: EncryptionPosture;
-  authentication_model: AuthenticationModel;
+  // Phase 3.9 follow-up — sub-fields optional to allow partial state
+  // during save-on-blur click-through. Final submit gate requires all
+  // three (see TierBWizardClient.tsx requiredOk).
+  data_at_rest_encryption?: EncryptionPosture;
+  data_in_transit_encryption?: EncryptionPosture;
+  authentication_model?: AuthenticationModel;
 };
 
 export type WizardAnswers = {
@@ -203,10 +206,14 @@ export const AuthenticationModelSchema = z.enum([
   "sso",
 ]);
 
+// Phase 3.9 follow-up — sub-fields individually optional so save-on-blur
+// during C2 click-through doesn't return 422 with a partial object.
+// Client-side requiredOk gate still enforces all three before submit
+// (see TierBWizardClient.tsx requiredOk memo).
 export const CybersecurityPostureSchema = z.object({
-  data_at_rest_encryption: EncryptionPostureSchema,
-  data_in_transit_encryption: EncryptionPostureSchema,
-  authentication_model: AuthenticationModelSchema,
+  data_at_rest_encryption: EncryptionPostureSchema.optional(),
+  data_in_transit_encryption: EncryptionPostureSchema.optional(),
+  authentication_model: AuthenticationModelSchema.optional(),
 });
 
 /**

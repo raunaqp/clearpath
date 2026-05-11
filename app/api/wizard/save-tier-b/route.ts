@@ -49,10 +49,20 @@ export async function POST(req: NextRequest) {
 
   const parsed = bodySchema.safeParse(body);
   if (!parsed.success) {
+    // Phase 3.9 follow-up — surface the full zod failure list so we can
+    // diagnose 422s without re-deploying. Issues land in the response
+    // body AND in Vercel logs.
+    const issuesSummary = parsed.error.issues.map((i) => ({
+      path: i.path.join("."),
+      code: i.code,
+      message: i.message,
+    }));
+    console.error("[save-tier-b] zod validation failed:", issuesSummary);
     const first = parsed.error.issues[0];
     return NextResponse.json(
       {
         error: `${first.path.join(".")}: ${first.message}`,
+        issues: issuesSummary,
       },
       { status: 422 }
     );
