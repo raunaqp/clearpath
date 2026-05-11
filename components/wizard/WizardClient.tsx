@@ -26,9 +26,12 @@ type Props = {
    * straight to synthesis after one click of narration. */
   allAnswersPrefilled?: boolean;
   /** Phase 3.5 INV-1 — show the "AI prefilled from your pitch deck"
-   *  banner. True only on first visit when extraction provided
-   *  defaults and the user has no saved answers yet. */
+   *  banner. True when extraction provided defaults that the user
+   *  hasn't overridden yet. */
   aiBannerVisible?: boolean;
+  /** Phase 3.7 Issue B — number of prefilled questions, used in the
+   *  banner copy. */
+  aiPrefilledCount?: number;
 };
 
 type CheckResponse = {
@@ -47,6 +50,7 @@ export default function WizardClient({
   pdfCount,
   allAnswersPrefilled = false,
   aiBannerVisible = false,
+  aiPrefilledCount = 0,
 }: Props) {
   const router = useRouter();
   const total = totalSteps();
@@ -453,7 +457,9 @@ export default function WizardClient({
       {aiBannerVisible && !allAnswersPrefilled && (
         <div className="mb-4 rounded-lg border border-[#D4A93C]/40 bg-[#FFF8E1] px-3 py-2">
           <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-[#7A5C0F] mb-1">
-            AI prefilled from your pitch deck
+            AI prefilled {aiPrefilledCount}{" "}
+            {aiPrefilledCount === 1 ? "question" : "questions"} from your pitch
+            deck
           </p>
           <p className="text-xs text-[#3A2F0E] leading-snug">
             We&apos;ve suggested answers where your deck gave us a clear

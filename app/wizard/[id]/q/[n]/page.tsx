@@ -6,8 +6,12 @@ import { QuestionContextPane } from "@/components/layout/QuestionContextPane";
 import { displayName } from "@/lib/wizard/display-name";
 import { totalSteps } from "@/lib/wizard/questions";
 import type {
+  ClinicalState,
+  CommercialStage,
   DataSensitivity,
   InfoSignificance,
+  Integrations,
+  UserType,
   WizardAnswers,
 } from "@/lib/wizard/types";
 import type {
@@ -65,6 +69,116 @@ function deriveQ6FromExtraction(
   return undefined;
 }
 
+// Phase 3.7 Issue B — expanded prefill heuristics for Q1, Q3, Q5, Q7.
+// Q4 (scale) is intentionally not derived — decks rarely state volume
+// reliably. Conservative throughout: skip when ambiguous.
+
+function deriveQ1FromExtraction(
+  ai: PitchAiExtracted | null
+): ClinicalState | undefined {
+  if (!ai) return undefined;
+  const cls = ai.suggested_classification;
+  // Use the curated one-liner — typically positive-tense and short, so
+  // less likely to trip on negations like "does not perform diagnosis".
+  const text = (ai.intended_use_one_liner ?? "").toLowerCase();
+  if (cls === "C" || cls === "D") {
+    if (/\btreat\w*|deliver\w*|intervention|therap\w*|inject|infus/.test(text)) {
+      return "critical";
+    }
+    if (/diagnos|detect|predict|screen|early warning|monitor.*risk/.test(text)) {
+      return "serious";
+    }
+    return undefined;
+  }
+  if (cls === "A" || cls === "B") {
+    if (/monitor|track|measure|record|display|wellness|fitness/.test(text)) {
+      return "non_serious";
+    }
+    return undefined;
+  }
+  return undefined;
+}
+
+function deriveQ3FromExtraction(
+  ai: PitchAiExtracted | null
+): UserType | undefined {
+  if (!ai) return undefined;
+  const pop = (ai.product_meta?.user_population ?? "").toLowerCase();
+  if (!pop) return undefined;
+  const hcp = /cardiolog|doctor|nurse|clinician|physician|radiolog|surgeon|icu|hcp|healthcare prof|specialist|consultant/.test(
+    pop
+  );
+  const patient =
+    /\bpatient|consumer|general public|lay user|self.administered|caregiver/.test(
+      pop
+    );
+  const admin = /administrator|manager|operator|back.office|clerk|registrar/.test(
+    pop
+  );
+  if (hcp && patient) return "both";
+  if (hcp) return "hcps";
+  if (patient) return "patients";
+  if (admin) return "admin";
+  return undefined;
+}
+
+function deriveQ5FromExtraction(
+  ai: PitchAiExtracted | null
+): Integrations | undefined {
+  if (!ai) return undefined;
+  const corpus = [
+    ai.suggested_wizard_answers?.intended_use ?? "",
+    ai.intended_use_one_liner ?? "",
+    ai.product_meta?.setting_of_use ?? "",
+    ai.notes ?? "",
+  ]
+    .join(" ")
+    .toLowerCase();
+  if (!corpus.trim()) return undefined;
+  const hospital =
+    /\b(emr|ehr|hms|his|pacs|lims|hospital information|hospital system|hospital integration)\b/.test(
+      corpus
+    );
+  const abdm = /\b(abdm|abha|ayushman bharat)\b/.test(corpus);
+  const standalone = /standalone|no integration|self.contained/.test(corpus);
+  if (hospital && abdm) return "both";
+  if (hospital) return "hospital";
+  if (abdm) return "abdm";
+  if (standalone) return "neither";
+  return undefined;
+}
+
+function deriveQ7FromExtraction(
+  ai: PitchAiExtracted | null
+): CommercialStage | undefined {
+  if (!ai) return undefined;
+  const corpus = [
+    ai.notes ?? "",
+    ai.suggested_wizard_answers?.intended_use ?? "",
+    ai.intended_use_one_liner ?? "",
+  ]
+    .join(" ")
+    .toLowerCase();
+  if (!corpus.trim()) return undefined;
+  if (/\bfiled\b|applied for licen|cdsco application submitted|md-?7 application|grant(ed)?/.test(
+    corpus
+  )) {
+    return "filed";
+  }
+  if (/series [a-z]\b|scaling|growth stage|commercial launch|in[- ]market/.test(corpus)) {
+    return "scaling";
+  }
+  if (/\bpilot\b|\bmvp\b|early traction|\bbeta\b|first customers|first hospital/.test(
+    corpus
+  )) {
+    return "mvp";
+  }
+  if (/idea stage|prototype|concept stage|pre.mvp|early stage/.test(corpus)) {
+    return "pre_mvp";
+  }
+  return undefined;
+}
+
 export default async function WizardStepPage({
   params,
   searchParams,
@@ -116,34 +230,60 @@ export default async function WizardStepPage({
     data.ai_extracted?.status === "complete"
       ? data.ai_extracted.fields
       : null;
+  // Phase 3.7 Issue B — 6 derivable questions (Q1/Q2/Q3/Q5/Q6/Q7).
+  // Q4 stays unprefilled (decks rarely state user volume reliably).
+  const extractedQ1 = deriveQ1FromExtraction(aiFields);
   const extractedQ2 = deriveQ2FromExtraction(aiFields);
+  const extractedQ3 = deriveQ3FromExtraction(aiFields);
+  const extractedQ5 = deriveQ5FromExtraction(aiFields);
   const extractedQ6 = deriveQ6FromExtraction(aiFields);
-  const derivedQ2 = forcePrefill
-    ? extractedQ2
-    : savedAnswers.q2 ?? extractedQ2;
+  const extractedQ7 = deriveQ7FromExtraction(aiFields);
+
+  const derivedQ1 = forcePrefill ? extractedQ1 : savedAnswers.q1 ?? extractedQ1;
+  const derivedQ2 = forcePrefill ? extractedQ2 : savedAnswers.q2 ?? extractedQ2;
+  const derivedQ3 = forcePrefill ? extractedQ3 : savedAnswers.q3 ?? extractedQ3;
+  const derivedQ5 = forcePrefill ? extractedQ5 : savedAnswers.q5 ?? extractedQ5;
   const derivedQ6 = forcePrefill
     ? extractedQ6
     : savedAnswers.q6 && savedAnswers.q6.length > 0
     ? savedAnswers.q6
     : extractedQ6;
+  const derivedQ7 = forcePrefill ? extractedQ7 : savedAnswers.q7 ?? extractedQ7;
+
   const initialAnswers: WizardAnswers = {
     ...savedAnswers,
+    ...(derivedQ1 ? { q1: derivedQ1 } : {}),
     ...(derivedQ2 ? { q2: derivedQ2 } : {}),
+    ...(derivedQ3 ? { q3: derivedQ3 } : {}),
+    ...(derivedQ5 ? { q5: derivedQ5 } : {}),
     ...(derivedQ6 ? { q6: derivedQ6 } : {}),
+    ...(derivedQ7 ? { q7: derivedQ7 } : {}),
   };
-  // Phase 3.5 follow-up FIX 2 — banner persists until BOTH Q2 and Q6
-  // have user-saved values. Previously the banner hid the moment any
-  // q-field was saved, which dropped it before the user actually saw
-  // the prefilled Q2/Q6 questions. With force_prefill, always show.
+
+  // Banner persists while any extracted-derived answer still needs user
+  // attention. Counts the actual number of prefilled questions for the
+  // banner copy ("AI prefilled N questions from your pitch deck").
+  const q1NeedsAttention =
+    extractedQ1 !== undefined && (forcePrefill || !savedAnswers.q1);
   const q2NeedsAttention =
     extractedQ2 !== undefined && (forcePrefill || !savedAnswers.q2);
+  const q3NeedsAttention =
+    extractedQ3 !== undefined && (forcePrefill || !savedAnswers.q3);
+  const q5NeedsAttention =
+    extractedQ5 !== undefined && (forcePrefill || !savedAnswers.q5);
   const q6NeedsAttention =
     extractedQ6 !== undefined &&
-    (forcePrefill ||
-      !savedAnswers.q6 ||
-      savedAnswers.q6.length === 0);
-  const aiBannerVisible =
-    aiFields !== null && (q2NeedsAttention || q6NeedsAttention);
+    (forcePrefill || !savedAnswers.q6 || savedAnswers.q6.length === 0);
+  const q7NeedsAttention =
+    extractedQ7 !== undefined && (forcePrefill || !savedAnswers.q7);
+  const aiPrefilledCount =
+    (q1NeedsAttention ? 1 : 0) +
+    (q2NeedsAttention ? 1 : 0) +
+    (q3NeedsAttention ? 1 : 0) +
+    (q5NeedsAttention ? 1 : 0) +
+    (q6NeedsAttention ? 1 : 0) +
+    (q7NeedsAttention ? 1 : 0);
+  const aiBannerVisible = aiFields !== null && aiPrefilledCount > 0;
 
   // All-answers-prefilled detection — true when every q1..q7 is non-null
   // (and arrays are non-empty). Demo packets prefill all 7 at intake;
@@ -185,6 +325,7 @@ export default async function WizardStepPage({
               pdfCount={pdfCount}
               allAnswersPrefilled={allAnswersPrefilled}
               aiBannerVisible={aiBannerVisible}
+              aiPrefilledCount={aiPrefilledCount}
             />
           </div>
         </div>

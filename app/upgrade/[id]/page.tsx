@@ -32,11 +32,12 @@ export default async function UpgradePage({
 
   // Auth gate — clicking "Generate Draft Pack" requires an account (Story 2.2).
   // Risk Card flow stays anonymous; the gate kicks in here, at the
-  // Card → Draft Pack transition. Unauthed users get bounced to /signup
-  // with a return_to so they land back on this exact upgrade page.
+  // Card → Draft Pack transition. Phase 3.7 Issue C — default to /login
+  // (which links to /signup for new users), since most Tier 2 customers
+  // already have an account from the Risk Card email gate.
   const user = await getUser();
   if (!user) {
-    redirect(`/signup?return_to=${encodeURIComponent(`/upgrade/${id}`)}`);
+    redirect(`/login?return_to=${encodeURIComponent(`/upgrade/${id}`)}`);
   }
 
   const supabase = getServiceClient();

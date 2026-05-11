@@ -118,7 +118,8 @@ export default async function TierBWizardPage({
   // Auth gate — same pattern as /upgrade/[id]/page.tsx (Story 2.2).
   const user = await getUser();
   if (!user) {
-    redirect(`/signup?return_to=${encodeURIComponent(`/upgrade/${id}/wizard`)}`);
+    // Phase 3.7 Issue C — default to /login (signup link is on /login).
+    redirect(`/login?return_to=${encodeURIComponent(`/upgrade/${id}/wizard`)}`);
   }
 
   const supabase = getServiceClient();

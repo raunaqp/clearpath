@@ -151,7 +151,19 @@ export default async function DashboardPage() {
                             >
                               Resume wizard
                             </Link>
-                          ) : null}
+                          ) : (
+                            // Phase 3.7 Sub-fix A2 — universal CTA for every
+                            // other status (routing_complete / wizard_complete
+                            // / synthesizing / synthesizer_error / rejected /
+                            // abandoned). /assess/[id] is the central router
+                            // and resolves to the right next destination.
+                            <Link
+                              href={`/assess/${c.id}`}
+                              className="text-sm text-[#0F6E56] underline underline-offset-2 hover:no-underline"
+                            >
+                              Continue →
+                            </Link>
+                          )}
                           {c.status === "completed" && !order ? (
                             <Link
                               href={`/upgrade/${c.id}`}
