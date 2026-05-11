@@ -11,6 +11,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import RadioCard from "@/components/wizard/RadioCard";
 import {
   TIER_B_QUESTIONS,
   type TierBField,
@@ -23,6 +24,14 @@ import type {
   RiskMitigation,
   WizardAnswers,
 } from "@/lib/wizard/types";
+
+// Phase 3.8 FIX 2 — Tier B form parity with Tier A. Each question
+// renders as a card with a field-code eyebrow + serif prompt; radio
+// options use the same RadioCard component as the Tier A wizard.
+// Single-page format preserved.
+function fieldCode(field: TierBField): string {
+  return field.slice(0, 2).toUpperCase();
+}
 
 type Props = {
   assessmentId: string;
@@ -38,11 +47,11 @@ type FieldState =
   | { kind: "saved" }
   | { kind: "error"; message: string };
 
-const EMPTY_CYBER: CybersecurityPosture = {
-  data_at_rest_encryption: "no",
-  data_in_transit_encryption: "no",
-  authentication_model: "none",
-};
+// Phase 3.8 FIX 3 — no default cyber posture. C2 renders with nothing
+// pre-selected so the user actively answers each sub-field. (Previously
+// a "no/no/none" default was rendered visually but never persisted to
+// state, leaving the submit button disabled even when the form looked
+// complete.)
 
 export function TierBWizardClient({
   assessmentId,
@@ -110,7 +119,17 @@ export function TierBWizardClient({
     if (!values.b5_clinical_evidence_status) return false;
     if (!values.b6_iso_13485_status) return false;
     if (c1Trigger && !values.c1_software_lifecycle_model) return false;
-    if (c2Trigger && !values.c2_cybersecurity_posture) return false;
+    if (c2Trigger) {
+      const c2 = values.c2_cybersecurity_posture;
+      if (
+        !c2 ||
+        !c2.data_at_rest_encryption ||
+        !c2.data_in_transit_encryption ||
+        !c2.authentication_model
+      ) {
+        return false;
+      }
+    }
     return true;
   }, [values, c1Trigger, c2Trigger]);
 
@@ -182,7 +201,7 @@ export function TierBWizardClient({
 
   return (
     <form
-      className="space-y-8"
+      className="space-y-5 sm:space-y-6"
       onSubmit={(e) => {
         e.preventDefault();
         void handleSubmit();
@@ -208,7 +227,7 @@ export function TierBWizardClient({
           }
           rows={5}
           maxLength={2000}
-          className="w-full rounded-md border border-[#D9D5C8] bg-white px-3 py-2 text-sm text-[#0E1411] focus:outline-none focus:border-[#0F6E56]"
+          className="w-full rounded-xl border border-[#D9D5C8] bg-[#F7F6F2] px-4 py-3 text-[15px] text-[#0E1411] leading-relaxed focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0F6E56] focus-visible:ring-offset-1 focus-visible:ring-offset-white focus-visible:border-[#0F6E56]"
           placeholder="e.g., Continuous monitoring of glucose in adults with diabetes via a wearable subcutaneous patch."
         />
       </FieldShell>
@@ -368,7 +387,7 @@ export function TierBWizardClient({
           state={fieldStates["c2_cybersecurity_posture"]}
         >
           <CybersecurityFields
-            value={values.c2_cybersecurity_posture ?? EMPTY_CYBER}
+            value={values.c2_cybersecurity_posture}
             onChange={(next) => {
               setValues((v) => ({ ...v, c2_cybersecurity_posture: next }));
             }}
@@ -407,6 +426,10 @@ export function TierBWizardClient({
 
 /* ─── shared field shell ─────────────────────────────────────────── */
 
+// Phase 3.8 FIX 2 — restyled as a Tier-A-style card. Eyebrow shows the
+// field code (B1, B2, ...); prompt rendered in the same serif/size family
+// as Tier A question titles; subtle border + padding visually separates
+// each question block on the single-page layout.
 function FieldShell({
   question,
   state,
@@ -417,21 +440,26 @@ function FieldShell({
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <p className="font-serif text-lg text-[#0E1411] mb-1">
+    <section className="rounded-2xl bg-white border border-[#D9D5C8] p-5 sm:p-6 xl:p-7">
+      <p className="font-mono text-[10px] sm:text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-2">
+        {fieldCode(question.field)}
+      </p>
+      <h2 className="font-serif text-xl sm:text-2xl text-[#0E1411] leading-snug mb-2">
         {question.required && (
           <span aria-hidden className="text-[#993C1D] mr-1">
             *
           </span>
         )}
         {question.prompt}
-      </p>
+      </h2>
       {question.helper && (
-        <p className="text-sm text-[#6B766F] italic mb-3">{question.helper}</p>
+        <p className="text-sm text-[#6B766F] italic leading-relaxed mb-5">
+          {question.helper}
+        </p>
       )}
-      {children}
+      <div className="mt-1">{children}</div>
       <FieldStatus state={state} />
-    </div>
+    </section>
   );
 }
 
@@ -450,14 +478,43 @@ function FieldStatus({ state }: { state: FieldState | undefined }) {
   );
 }
 
-/* ─── radio group ────────────────────────────────────────────────── */
+/* ─── radio groups ───────────────────────────────────────────────── */
 
+// Top-level radio group — uses Tier A's RadioCard component so B2/B5/B6/C1
+// feel consistent with the Risk Card wizard.
 function RadioGroup({
   options,
   value,
   onChange,
 }: {
   options: Array<{ value: string; label: string; description?: string }>;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="space-y-2 sm:space-y-3">
+      {options.map((opt) => (
+        <RadioCard
+          key={opt.value}
+          label={opt.label}
+          description={opt.description}
+          selected={value === opt.value}
+          onSelect={() => onChange(opt.value)}
+        />
+      ))}
+    </div>
+  );
+}
+
+// Compact variant for nested radio groups (the 3 sub-questions inside C2
+// cybersecurity). Keeps that block tight rather than nesting 3 full
+// RadioCard stacks inside the C2 FieldShell card.
+function CompactRadioGroup({
+  options,
+  value,
+  onChange,
+}: {
+  options: Array<{ value: string; label: string }>;
   value: string;
   onChange: (value: string) => void;
 }) {
@@ -480,13 +537,8 @@ function RadioGroup({
               onChange={() => onChange(opt.value)}
               className="mt-0.5 accent-[#0F6E56]"
             />
-            <span className="text-sm">
-              <span className="font-medium text-[#0E1411]">{opt.label}</span>
-              {opt.description && (
-                <span className="text-[#6B766F] block text-xs mt-0.5">
-                  {opt.description}
-                </span>
-              )}
+            <span className="text-sm font-medium text-[#0E1411]">
+              {opt.label}
             </span>
           </label>
         );
@@ -529,7 +581,7 @@ function PredicateList({
       {rows.map((row, idx) => (
         <div
           key={idx}
-          className="rounded-md border border-[#D9D5C8] bg-white p-3 space-y-2"
+          className="rounded-xl border border-[#D9D5C8] bg-[#F7F6F2] p-4 space-y-2"
         >
           <input
             type="text"
@@ -540,7 +592,7 @@ function PredicateList({
               onBlur(rows.filter((r) => r.device_name.trim().length > 0))
             }
             maxLength={200}
-            className="w-full text-sm rounded border border-[#D9D5C8] px-2 py-1.5 focus:outline-none focus:border-[#0F6E56]"
+            className="w-full text-sm rounded-lg border border-[#D9D5C8] bg-[#F7F6F2] px-3 py-2 text-[#0E1411] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0F6E56] focus-visible:border-[#0F6E56]"
           />
           <input
             type="text"
@@ -551,7 +603,7 @@ function PredicateList({
               onBlur(rows.filter((r) => r.device_name.trim().length > 0))
             }
             maxLength={200}
-            className="w-full text-sm rounded border border-[#D9D5C8] px-2 py-1.5 focus:outline-none focus:border-[#0F6E56]"
+            className="w-full text-sm rounded-lg border border-[#D9D5C8] bg-[#F7F6F2] px-3 py-2 text-[#0E1411] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0F6E56] focus-visible:border-[#0F6E56]"
           />
           <textarea
             placeholder="Why this is a predicate (optional — e.g., same intended use, similar mechanism)"
@@ -562,7 +614,7 @@ function PredicateList({
             }
             maxLength={500}
             rows={2}
-            className="w-full text-sm rounded border border-[#D9D5C8] px-2 py-1.5 focus:outline-none focus:border-[#0F6E56]"
+            className="w-full text-sm rounded-lg border border-[#D9D5C8] bg-[#F7F6F2] px-3 py-2 text-[#0E1411] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0F6E56] focus-visible:border-[#0F6E56]"
           />
           {rows.length > 1 && (
             <button
@@ -628,7 +680,7 @@ function RiskMitigationList({
       {rows.map((row, idx) => (
         <div
           key={idx}
-          className="rounded-md border border-[#D9D5C8] bg-white p-3 space-y-3 relative"
+          className="rounded-xl border border-[#D9D5C8] bg-[#F7F6F2] p-4 space-y-3 relative"
         >
           <div className="flex items-center justify-between">
             <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-[#6B766F]">
@@ -662,7 +714,7 @@ function RiskMitigationList({
                 onBlur(rows.filter((r) => r.risk.trim().length > 0))
               }
               maxLength={300}
-              className="w-full text-sm rounded border border-[#D9D5C8] px-2 py-1.5 focus:outline-none focus:border-[#0F6E56]"
+              className="w-full text-sm rounded-lg border border-[#D9D5C8] bg-[#F7F6F2] px-3 py-2 text-[#0E1411] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0F6E56] focus-visible:border-[#0F6E56]"
             />
           </div>
           <div>
@@ -682,7 +734,7 @@ function RiskMitigationList({
                 onBlur(rows.filter((r) => r.risk.trim().length > 0))
               }
               maxLength={300}
-              className="w-full text-sm rounded border border-[#D9D5C8] px-2 py-1.5 focus:outline-none focus:border-[#0F6E56]"
+              className="w-full text-sm rounded-lg border border-[#D9D5C8] bg-[#F7F6F2] px-3 py-2 text-[#0E1411] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0F6E56] focus-visible:border-[#0F6E56]"
             />
           </div>
         </div>
@@ -719,52 +771,55 @@ function CybersecurityFields({
   onChange,
   onBlur,
 }: {
-  value: CybersecurityPosture;
+  value: CybersecurityPosture | undefined;
   onChange: (next: CybersecurityPosture) => void;
   onBlur: (next: CybersecurityPosture) => void;
 }) {
+  // Phase 3.8 FIX 3 — accept undefined and partial values. Each
+  // sub-field renders with "" (nothing selected) when missing; user
+  // must click to set. Submit gate requires all three.
   const update = <K extends keyof CybersecurityPosture>(
     key: K,
     next: CybersecurityPosture[K]
   ) => {
-    const merged = { ...value, [key]: next };
+    const merged = { ...(value ?? {}), [key]: next } as CybersecurityPosture;
     onChange(merged);
     onBlur(merged);
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div>
-        <p className="text-xs uppercase tracking-wider text-[#6B766F] mb-1">
+        <p className="text-xs uppercase tracking-wider text-[#6B766F] mb-2">
           Data at rest encryption
         </p>
-        <RadioGroup
+        <CompactRadioGroup
           options={ENCRYPTION_OPTIONS}
-          value={value.data_at_rest_encryption}
+          value={value?.data_at_rest_encryption ?? ""}
           onChange={(v) =>
             update("data_at_rest_encryption", v as EncryptionPosture)
           }
         />
       </div>
       <div>
-        <p className="text-xs uppercase tracking-wider text-[#6B766F] mb-1">
+        <p className="text-xs uppercase tracking-wider text-[#6B766F] mb-2">
           Data in transit encryption
         </p>
-        <RadioGroup
+        <CompactRadioGroup
           options={ENCRYPTION_OPTIONS}
-          value={value.data_in_transit_encryption}
+          value={value?.data_in_transit_encryption ?? ""}
           onChange={(v) =>
             update("data_in_transit_encryption", v as EncryptionPosture)
           }
         />
       </div>
       <div>
-        <p className="text-xs uppercase tracking-wider text-[#6B766F] mb-1">
+        <p className="text-xs uppercase tracking-wider text-[#6B766F] mb-2">
           Authentication model
         </p>
-        <RadioGroup
+        <CompactRadioGroup
           options={AUTH_OPTIONS}
-          value={value.authentication_model}
+          value={value?.authentication_model ?? ""}
           onChange={(v) =>
             update("authentication_model", v as AuthenticationModel)
           }

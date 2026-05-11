@@ -456,15 +456,9 @@ export default function WizardClient({
     <div className="max-w-xl mx-auto w-full">
       {aiBannerVisible && !allAnswersPrefilled && (
         <div className="mb-4 rounded-lg border border-[#D4A93C]/40 bg-[#FFF8E1] px-3 py-2">
-          <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-[#7A5C0F] mb-1">
-            AI prefilled {aiPrefilledCount}{" "}
-            {aiPrefilledCount === 1 ? "question" : "questions"} from your pitch
-            deck
-          </p>
           <p className="text-xs text-[#3A2F0E] leading-snug">
-            We&apos;ve suggested answers where your deck gave us a clear
-            signal. Review and adjust as needed — your edits overwrite the
-            suggestion.
+            We&apos;ve helped prefill some answers from your pitch deck —
+            review and adjust as needed.
           </p>
         </div>
       )}
