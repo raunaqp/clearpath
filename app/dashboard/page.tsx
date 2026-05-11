@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 type AssessmentRow = {
   id: string;
   created_at: string;
+  updated_at: string;
   share_token: string | null;
   status: string;
   one_liner: string | null;
@@ -48,11 +49,15 @@ export default async function DashboardPage() {
   const supabase = getServiceClient();
   const email = user.email.toLowerCase();
 
+  // Phase 3.9 FIX 1 — sort by updated_at so the "current application"
+  // (most recently touched) lands first regardless of creation order.
   const cardsRes = await supabase
     .from("assessments")
-    .select("id, created_at, share_token, status, one_liner, product_type")
+    .select(
+      "id, created_at, updated_at, share_token, status, one_liner, product_type"
+    )
     .ilike("email", email)
-    .order("created_at", { ascending: false })
+    .order("updated_at", { ascending: false })
     .limit(50);
   const cards = (cardsRes.data ?? []) as AssessmentRow[];
 
@@ -105,102 +110,151 @@ export default async function DashboardPage() {
             Everything you&apos;ve generated with ClearPath. Pick up where you left off.
           </p>
 
-          <Section title="Readiness Cards" count={cards.length}>
-            {cards.length === 0 ? (
+          {/* Phase 3.9 FIX 1 — split into "current application" (most
+              recently touched) + collapsed "previous applications".
+              Hides clutter for repeat users; prominent landing target
+              for fresh post-Risk-Card returns. */}
+          {cards.length === 0 ? (
+            <Section title="Your current application" count={0}>
               <EmptyState
                 copy="No Readiness Cards yet — start one to see your CDSCO classification, risk class, and timeline."
                 ctaHref="/start"
-                ctaLabel="Start a Readiness Card →"
+                ctaLabel="Start your assessment →"
               />
-            ) : (
-              <ul className="space-y-3">
-                {cards.map((c) => {
-                  const order = ordersByAssessment.get(c.id);
-                  return (
-                    <li
-                      key={c.id}
-                      className="rounded-lg bg-white border border-[#D9D5C8] px-4 sm:px-5 py-4"
-                    >
-                      <div className="flex items-start justify-between gap-3 flex-wrap">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[15px] text-[#0E1411] leading-snug">
-                            {c.one_liner ?? "Untitled product"}
-                          </p>
-                          <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-[#6B766F] mt-1.5">
-                            {new Date(c.created_at).toLocaleDateString("en-IN", {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            })}
-                            <span className="mx-2">·</span>
-                            {CARD_STATUS_LABEL[c.status] ?? c.status}
-                          </p>
-                        </div>
-                        <div className="flex gap-2 shrink-0">
-                          {c.status === "completed" && c.share_token ? (
-                            <Link
-                              href={`/c/${c.share_token}`}
-                              className="text-sm text-[#0F6E56] underline underline-offset-2 hover:no-underline"
-                            >
-                              View card
-                            </Link>
-                          ) : c.status === "wizard" ? (
-                            <Link
-                              href={`/wizard/${c.id}`}
-                              className="text-sm text-[#0F6E56] underline underline-offset-2 hover:no-underline"
-                            >
-                              Resume wizard
-                            </Link>
-                          ) : (
-                            // Phase 3.7 Sub-fix A2 — universal CTA for every
-                            // other status (routing_complete / wizard_complete
-                            // / synthesizing / synthesizer_error / rejected /
-                            // abandoned). /assess/[id] is the central router
-                            // and resolves to the right next destination.
-                            <Link
-                              href={`/assess/${c.id}`}
-                              className="text-sm text-[#0F6E56] underline underline-offset-2 hover:no-underline"
-                            >
-                              Continue →
-                            </Link>
-                          )}
-                          {c.status === "completed" && !order ? (
-                            <Link
-                              href={`/upgrade/${c.id}`}
-                              className="text-sm rounded-full bg-[#0F6E56] hover:bg-[#0d5c48] text-white px-3 py-1.5"
-                            >
-                              Draft Pack →
-                            </Link>
-                          ) : null}
-                        </div>
-                      </div>
-                      {order ? (
-                        <div className="mt-3 pt-3 border-t border-[#E5E7EB] flex items-center justify-between gap-3 flex-wrap">
-                          <p className="text-sm text-[#6B766F]">
-                            <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-[#BA7517] mr-2">
-                              Draft Pack
-                            </span>
-                            {ORDER_STATUS_LABEL[order.status] ?? order.status}
-                          </p>
-                          <Link
-                            href={`/upgrade/${c.id}`}
-                            className="text-sm text-[#0F6E56] underline underline-offset-2 hover:no-underline"
-                          >
-                            {order.status === "delivered"
-                              ? "Open Draft Pack →"
-                              : "View status →"}
-                          </Link>
-                        </div>
-                      ) : null}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </Section>
+            </Section>
+          ) : (
+            <>
+              <Section title="Your current application" count={1}>
+                <CardRow
+                  card={cards[0]}
+                  order={ordersByAssessment.get(cards[0].id)}
+                  highlight
+                />
+              </Section>
+
+              {cards.length > 1 && (
+                <details className="mb-10 group">
+                  <summary className="cursor-pointer list-none inline-flex items-center gap-1.5 text-sm text-[#6B766F] hover:text-[#0E1411] transition-colors mb-4 select-none">
+                    <span aria-hidden className="inline-block transition-transform group-open:rotate-90">
+                      ›
+                    </span>
+                    Show previous applications ({cards.length - 1})
+                  </summary>
+                  <ul className="space-y-3">
+                    {cards.slice(1).map((c) => (
+                      <CardRow
+                        key={c.id}
+                        card={c}
+                        order={ordersByAssessment.get(c.id)}
+                      />
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </>
+          )}
         </div>
       </main>
     </div>
+  );
+}
+
+function CardRow({
+  card,
+  order,
+  highlight = false,
+}: {
+  card: AssessmentRow;
+  order: OrderRow | undefined;
+  highlight?: boolean;
+}) {
+  // "Current" card gets accent border + tinted bg + roomier padding;
+  // previous applications keep the muted styling.
+  const wrapperClass = highlight
+    ? "rounded-xl bg-[#EAF3EF] border-2 border-[#0F6E56] px-5 sm:px-6 lg:px-7 py-5 sm:py-6"
+    : "rounded-lg bg-white border border-[#D9D5C8] px-4 sm:px-5 py-4";
+
+  // Highlighted card lives directly inside <Section> (already a <section>),
+  // so use <div> rather than nesting <section>s. Non-highlighted lives in
+  // the <ul> below and stays an <li>.
+  const Tag = highlight ? "div" : "li";
+  return (
+    <Tag className={wrapperClass}>
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div className="min-w-0 flex-1">
+          <p
+            className={
+              highlight
+                ? "text-[16px] sm:text-[17px] text-[#0E1411] leading-snug font-medium"
+                : "text-[15px] text-[#0E1411] leading-snug"
+            }
+          >
+            {card.one_liner ?? "Untitled product"}
+          </p>
+          <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-[#6B766F] mt-1.5">
+            {new Date(card.updated_at).toLocaleDateString("en-IN", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })}
+            <span className="mx-2">·</span>
+            {CARD_STATUS_LABEL[card.status] ?? card.status}
+          </p>
+        </div>
+        <div className="flex gap-2 shrink-0">
+          {card.status === "completed" && card.share_token ? (
+            <Link
+              href={`/c/${card.share_token}`}
+              className="text-sm text-[#0F6E56] underline underline-offset-2 hover:no-underline"
+            >
+              View card
+            </Link>
+          ) : card.status === "wizard" ? (
+            <Link
+              href={`/wizard/${card.id}`}
+              className="text-sm text-[#0F6E56] underline underline-offset-2 hover:no-underline"
+            >
+              Resume wizard
+            </Link>
+          ) : (
+            // Phase 3.7 Sub-fix A2 — universal CTA: /assess/[id] is the
+            // central status router and resolves to the right next page.
+            <Link
+              href={`/assess/${card.id}`}
+              className="text-sm text-[#0F6E56] underline underline-offset-2 hover:no-underline"
+            >
+              Continue →
+            </Link>
+          )}
+          {card.status === "completed" && !order ? (
+            <Link
+              href={`/upgrade/${card.id}`}
+              className="text-sm rounded-full bg-[#0F6E56] hover:bg-[#0d5c48] text-white px-3 py-1.5"
+            >
+              Draft Pack →
+            </Link>
+          ) : null}
+        </div>
+      </div>
+      {order ? (
+        <div className="mt-3 pt-3 border-t border-[#0F6E56]/20 flex items-center justify-between gap-3 flex-wrap">
+          <p className="text-sm text-[#6B766F]">
+            <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-[#BA7517] mr-2">
+              Draft Pack
+            </span>
+            {ORDER_STATUS_LABEL[order.status] ?? order.status}
+          </p>
+          <Link
+            href={`/upgrade/${card.id}`}
+            className="text-sm text-[#0F6E56] underline underline-offset-2 hover:no-underline"
+          >
+            {order.status === "delivered"
+              ? "Open Draft Pack →"
+              : "View status →"}
+          </Link>
+        </div>
+      ) : null}
+    </Tag>
   );
 }
 
