@@ -1,6 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&display=swap');
 @import "tailwindcss";
 
+/* Tailwind v4 does not auto-load tailwind.config.ts — without this
+   directive, semantic-token utilities like bg-teal-deep, text-ink,
+   bg-bg-card etc. silently no-op (only the @theme tokens above are
+   active). Arbitrary-value classes like bg-[#0F6E56] still work
+   regardless. This brings the JS config back online. */
+@config "../tailwind.config.ts";
+
 @plugin "tailwindcss-animate";
 @custom-variant dark (&:is(.dark *));
 

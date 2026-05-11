@@ -30,6 +30,11 @@ export function SectionEditor({
   const words =
     state.draft.trim() === "" ? 0 : state.draft.trim().split(/\s+/).length;
 
+  const saveBtnClasses =
+    "inline-flex items-center rounded-md bg-teal-deep px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-[#0a5a47] disabled:opacity-50 disabled:cursor-not-allowed";
+  const cancelBtnClasses =
+    "inline-flex items-center rounded-md border border-line bg-bg-card px-3 py-1.5 text-sm font-medium text-ink-2 hover:bg-bg-sink";
+
   return (
     <div className="not-prose">
       <header className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-line pb-3">
@@ -41,15 +46,33 @@ export function SectionEditor({
             {title}
           </h2>
         </div>
-        <span
-          className={`inline-flex items-center rounded-pill px-3 py-1 text-xs font-medium uppercase tracking-wide ${
-            isAiBaseline
-              ? "bg-bg-sink text-muted"
-              : "bg-amber-light text-amber-deep"
-          }`}
-        >
-          {isAiBaseline ? "AI baseline" : "Customer overlay"}
-        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={`inline-flex items-center rounded-pill px-3 py-1 text-xs font-medium uppercase tracking-wide ${
+              isAiBaseline
+                ? "bg-bg-sink text-muted"
+                : "bg-amber-light text-amber-deep"
+            }`}
+          >
+            {isAiBaseline ? "AI baseline" : "Customer overlay"}
+          </span>
+          <button
+            type="button"
+            onClick={cancel}
+            disabled={state.saving}
+            className={cancelBtnClasses}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={save}
+            disabled={!dirty || state.saving}
+            className={saveBtnClasses}
+          >
+            {state.saving ? "Saving…" : "Save"}
+          </button>
+        </div>
       </header>
 
       <label

@@ -103,19 +103,33 @@ export async function renderDraftPackPdfV2(
 }
 
 /** Determine the public base URL for the current Vercel deployment.
- *  Order of precedence:
- *    1. NEXT_PUBLIC_SITE_URL  (override for custom domains)
- *    2. VERCEL_URL            (auto-set by Vercel, no protocol)
- *    3. http://localhost:3000 (local dev fallback)
+ *  Preview and development deployments self-reference (VERCEL_URL) so
+ *  the PDF generator captures the SAME code + data that the customer
+ *  is looking at on this preview, not a different version on prod.
+ *  Production prefers the stable alias so signed PDFs remain
+ *  reproducible across deployments.
  */
 export function resolveBaseUrl(): string {
+  const env = process.env.VERCEL_ENV; // 'production' | 'preview' | 'development' | undefined
+
+  if (env && env !== "production") {
+    const vercel = process.env.VERCEL_URL;
+    if (vercel && vercel.trim().length > 0) {
+      return `https://${vercel.replace(/\/+$/, "")}`;
+    }
+  }
+
+  // Production (or unknown env outside Vercel): prefer the durable alias
+  // so a PDF rendered today and opened weeks later still resolves.
   const override = process.env.NEXT_PUBLIC_SITE_URL;
   if (override && override.trim().length > 0) {
     return override.replace(/\/+$/, "");
   }
+
   const vercel = process.env.VERCEL_URL;
   if (vercel && vercel.trim().length > 0) {
     return `https://${vercel.replace(/\/+$/, "")}`;
   }
+
   return "http://localhost:3000";
 }
