@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import { z } from "zod";
 import { getServiceClient } from "@/lib/supabase";
 import { getDemoPacket } from "@/lib/demo-packets";
+import {
+  buildPendingRow,
+  buildSkippedRow,
+  findPitchDeck,
+  runPitchExtraction,
+  type AiExtractedRow,
+} from "@/lib/intake/ai-extract";
 
 const uploadedDocSchema = z.object({
   filename: z.string().min(1).max(200),
@@ -92,7 +100,7 @@ export async function POST(req: NextRequest) {
     // Resume flow: update existing row in place, clear downstream, bump edit counter.
     const { data: existing, error: fetchError } = await supabase
       .from("assessments")
-      .select("id, meta")
+      .select("id, meta, ai_extracted")
       .eq("id", resume_id)
       .maybeSingle();
 
@@ -118,6 +126,23 @@ export async function POST(req: NextRequest) {
         : 0;
     nextMeta.conflict_edit_attempts = priorAttempts + 1;
 
+    // Story 2.5 Phase 2 — refresh ai_extracted state based on new uploads.
+    const pitchDeck = findPitchDeck(uploaded_docs);
+    const priorExtract = (existing.ai_extracted as AiExtractedRow | null) ?? null;
+    const sameDeckAsBefore =
+      !!pitchDeck &&
+      priorExtract?.status === "complete" &&
+      priorExtract?.source_sha256 === pitchDeck.sha256;
+
+    const nextAiExtracted: AiExtractedRow | null = pitchDeck
+      ? sameDeckAsBefore
+        ? priorExtract // keep cached extraction
+        : buildPendingRow({
+            source_sha256: pitchDeck.sha256,
+            source_filename: pitchDeck.filename,
+          })
+      : buildSkippedRow();
+
     const { error: updateError } = await supabase
       .from("assessments")
       .update({
@@ -131,6 +156,7 @@ export async function POST(req: NextRequest) {
         product_type: null,
         url_fetched_content: null,
         meta: nextMeta,
+        ai_extracted: nextAiExtracted,
         updated_at: new Date().toISOString(),
       })
       .eq("id", resume_id);
@@ -143,8 +169,33 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Fire-and-forget extraction when we have a new (or first) pitch deck.
+    if (pitchDeck && !sameDeckAsBefore) {
+      after(async () => {
+        try {
+          await runPitchExtraction({
+            assessmentId: existing.id,
+            oneLiner: one_liner,
+            pitchDeck,
+          });
+        } catch (err) {
+          console.error("[ai-extract] runPitchExtraction threw:", err);
+        }
+      });
+    }
+
     return NextResponse.json({ assessmentId: existing.id }, { status: 200 });
   }
+
+  // Story 2.5 Phase 2 — set initial ai_extracted state at insert time so
+  // the wizard sees a meaningful status from the first render.
+  const pitchDeck = findPitchDeck(uploaded_docs);
+  const initialAiExtracted: AiExtractedRow = pitchDeck
+    ? buildPendingRow({
+        source_sha256: pitchDeck.sha256,
+        source_filename: pitchDeck.filename,
+      })
+    : buildSkippedRow();
 
   const { data, error } = await supabase
     .from("assessments")
@@ -159,6 +210,7 @@ export async function POST(req: NextRequest) {
       // Demo packets pre-fill wizard answers so partners see a card in <30s
       wizard_answers: demoWizardAnswers,
       meta: demoPacket ? demoMeta : null,
+      ai_extracted: initialAiExtracted,
     })
     .select("id")
     .single();
@@ -169,6 +221,22 @@ export async function POST(req: NextRequest) {
       { error: "Could not save your submission. Please try again." },
       { status: 500 }
     );
+  }
+
+  // Fire-and-forget extraction after the response goes out.
+  if (pitchDeck) {
+    const assessmentId = data.id;
+    after(async () => {
+      try {
+        await runPitchExtraction({
+          assessmentId,
+          oneLiner: one_liner,
+          pitchDeck,
+        });
+      } catch (err) {
+        console.error("[ai-extract] runPitchExtraction threw:", err);
+      }
+    });
   }
 
   return NextResponse.json({ assessmentId: data.id }, { status: 201 });

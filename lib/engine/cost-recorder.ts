@@ -13,7 +13,12 @@
 import { getServiceClient } from "@/lib/supabase";
 import type { TokenUsage, ModelKey } from "./cost-calculator";
 
-export type CallLayer = "pre_router" | "synthesizer" | "draft_pack" | "form_fill";
+export type CallLayer =
+  | "pre_router"
+  | "synthesizer"
+  | "draft_pack"
+  | "form_fill"
+  | "pitch_extraction"; // Story 2.5 Phase 2 — pitch-deck AI extraction at intake
 
 export type RecordEngineCostInput = {
   call_layer: CallLayer;
