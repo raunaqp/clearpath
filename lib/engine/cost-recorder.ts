@@ -18,7 +18,9 @@ export type CallLayer =
   | "synthesizer"
   | "draft_pack"
   | "form_fill"
-  | "pitch_extraction"; // Story 2.5 Phase 2 — pitch-deck AI extraction at intake
+  | "pitch_extraction" // Story 2.5 Phase 2 — pitch-deck AI extraction at intake
+  | "draft_pack_v2" // Story 2.5 Phase 4b — section-NN (Sonnet 4.6, ×11 sections)
+  | "draft_pack_v2_consolidator"; // Story 2.5 Phase 4b — Section 1 executive summary (Opus 4.7)
 
 export type RecordEngineCostInput = {
   call_layer: CallLayer;
