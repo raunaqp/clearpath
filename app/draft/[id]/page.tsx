@@ -17,6 +17,7 @@ import { SectionRenderer, type RenderableSection } from "@/components/draft/Sect
 import { DraftPackTOC } from "./DraftPackTOC";
 import { DraftPackDownloadButton } from "./DraftPackDownloadButton";
 import { ValidationSummary } from "./ValidationSummary";
+import { SectionCard } from "./SectionCard";
 import { loadSourceData } from "@/lib/engine/draft-pack-v2/persist";
 import { validateDraftPackV2 } from "@/lib/engine/draft-pack-v2-validator";
 import type { SectionOutput, SectionKey, SectionCompletionStatus } from "@/lib/engine/draft-pack-v2/types";
@@ -31,6 +32,7 @@ type SectionRow = {
   section_key: string;
   title: string;
   content: string | null;
+  content_edited: string | null;
   completion_status: SectionCompletionStatus;
   word_count: number | null;
   meta: RenderableSection["meta"];
@@ -107,7 +109,9 @@ export default async function DraftPackPage({
   // Load sections + their citations.
   const { data: sectionRows } = await supabase
     .from("draft_pack_sections")
-    .select("id, section_key, title, content, completion_status, word_count, meta")
+    .select(
+      "id, section_key, title, content, content_edited, completion_status, word_count, meta"
+    )
     .eq("order_id", order.id)
     .order("section_key", { ascending: true })
     .returns<SectionRow[]>();
@@ -125,23 +129,47 @@ export default async function DraftPackPage({
     citationsBySection.set(c.section_id, arr);
   }
 
-  const renderable: RenderableSection[] = (sectionRows ?? [])
-    .map((r) => ({
-      section_key: r.section_key,
-      section_number: sectionNumberFromKey(r.section_key),
-      title: r.title,
-      content: r.content ?? "",
-      citations: (citationsBySection.get(r.id) ?? []).map((c) => ({
-        citation_id: c.citation_id,
-        source_doc: c.source_doc,
-        quote: c.quote,
-        exact_reference: c.exact_reference,
-      })),
-      completion_status: r.completion_status,
-      word_count: r.word_count,
-      meta: r.meta,
-    }))
-    .sort((a, b) => a.section_number - b.section_number);
+  // Display rule: prefer the customer overlay (content_edited) when set;
+  // otherwise the AI baseline (content). The editor's initial buffer
+  // matches whichever is current. `hasOverlay` drives the "Customer
+  // edited" badge in the reader.
+  type DraftSection = {
+    renderable: RenderableSection;
+    hasOverlay: boolean;
+    initialEditContent: string;
+  };
+  const draftSections: DraftSection[] = (sectionRows ?? [])
+    .map((r) => {
+      const hasOverlay =
+        typeof r.content_edited === "string" && r.content_edited.length > 0;
+      const displayContent = hasOverlay
+        ? (r.content_edited as string)
+        : r.content ?? "";
+      return {
+        renderable: {
+          section_key: r.section_key,
+          section_number: sectionNumberFromKey(r.section_key),
+          title: r.title,
+          content: displayContent,
+          citations: (citationsBySection.get(r.id) ?? []).map((c) => ({
+            citation_id: c.citation_id,
+            source_doc: c.source_doc,
+            quote: c.quote,
+            exact_reference: c.exact_reference,
+          })),
+          completion_status: r.completion_status,
+          word_count: r.word_count,
+          meta: r.meta,
+        },
+        hasOverlay,
+        initialEditContent: displayContent,
+      };
+    })
+    .sort(
+      (a, b) =>
+        a.renderable.section_number - b.renderable.section_number
+    );
+  const renderable: RenderableSection[] = draftSections.map((d) => d.renderable);
 
   // Empty state — paid + verified but generator hasn't populated yet.
   if (renderable.length === 0) {
@@ -324,13 +352,14 @@ export default async function DraftPackPage({
             ) : null}
 
             <div className="space-y-10 mt-8">
-              {renderable.map((s) => (
-                <article
-                  key={s.section_key}
-                  className="rounded-card bg-bg-card border border-line-soft px-6 py-6 sm:px-8 sm:py-7"
-                >
-                  <SectionRenderer section={s} />
-                </article>
+              {draftSections.map((d) => (
+                <SectionCard
+                  key={d.renderable.section_key}
+                  assessmentId={id}
+                  section={d.renderable}
+                  hasOverlay={d.hasOverlay}
+                  initialEditContent={d.initialEditContent}
+                />
               ))}
             </div>
           </div>

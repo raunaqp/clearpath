@@ -59,7 +59,9 @@ function statusVisual(status: RenderableSection["completion_status"]): StatusVis
 // Pre-process markdown to wrap [TBD] and [NEEDS INPUT: <desc>] in span
 // tags rehype-raw can render. The HTML uses inline styles so it's still
 // visible in print/PDF even if Tailwind classes aren't applied to raw HTML.
-function highlightMarkers(md: string): string {
+// Exported so the inline editor's preview pane can reuse identical
+// marker rendering.
+export function highlightMarkers(md: string): string {
   return md
     .replace(
       /\[NEEDS INPUT:\s*([^\]]+)\]/g,
