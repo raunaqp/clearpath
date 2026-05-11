@@ -18,6 +18,7 @@ import { DraftPackTOC } from "./DraftPackTOC";
 import { DraftPackDownloadButton } from "./DraftPackDownloadButton";
 import { ValidationSummary } from "./ValidationSummary";
 import { SectionCard } from "./SectionCard";
+import { EditCoordinatorProvider } from "./EditCoordinator";
 import { loadSourceData } from "@/lib/engine/draft-pack-v2/persist";
 import { validateDraftPackV2 } from "@/lib/engine/draft-pack-v2-validator";
 import type { SectionOutput, SectionKey, SectionCompletionStatus } from "@/lib/engine/draft-pack-v2/types";
@@ -351,17 +352,18 @@ export default async function DraftPackPage({
               <ValidationSummary report={validationReport} />
             ) : null}
 
-            <div className="space-y-10 mt-8">
-              {draftSections.map((d) => (
-                <SectionCard
-                  key={d.renderable.section_key}
-                  assessmentId={id}
-                  section={d.renderable}
-                  hasOverlay={d.hasOverlay}
-                  initialEditContent={d.initialEditContent}
-                />
-              ))}
-            </div>
+            <EditCoordinatorProvider assessmentId={id}>
+              <div className="space-y-10 mt-8">
+                {draftSections.map((d) => (
+                  <SectionCard
+                    key={d.renderable.section_key}
+                    section={d.renderable}
+                    hasOverlay={d.hasOverlay}
+                    initialEditContent={d.initialEditContent}
+                  />
+                ))}
+              </div>
+            </EditCoordinatorProvider>
           </div>
         </div>
       </main>
