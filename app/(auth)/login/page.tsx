@@ -28,14 +28,15 @@ function sanitizeReturnTo(raw: string | string[] | undefined): string {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ return_to?: string; error?: string }>;
+  searchParams: Promise<{ return_to?: string; error?: string; detail?: string }>;
 }) {
-  const { return_to, error } = await searchParams;
+  const { return_to, error, detail } = await searchParams;
   const returnTo = sanitizeReturnTo(return_to);
   const user = await getUser();
   if (user) redirect(returnTo);
 
-  const errorMsg = error ? ERROR_COPY[error] ?? "Something went wrong with that link." : undefined;
+  const baseMsg = error ? ERROR_COPY[error] ?? "Something went wrong with that link." : undefined;
+  const errorMsg = baseMsg && detail ? `${baseMsg} (Supabase said: "${detail}")` : baseMsg;
 
   return (
     <AuthShell

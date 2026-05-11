@@ -84,8 +84,12 @@ export async function GET(req: NextRequest) {
       token_hash: tokenHash,
     });
     if (error) {
+      const detail = encodeURIComponent(error.message ?? "");
       return NextResponse.redirect(
-        new URL(`/login?error=verify_failed&type=${otpType}`, url.origin)
+        new URL(
+          `/login?error=verify_failed&type=${otpType}&detail=${detail}`,
+          url.origin
+        )
       );
     }
     return NextResponse.redirect(new URL(destinationFor(otpType, explicitNext), url.origin));
@@ -94,7 +98,10 @@ export async function GET(req: NextRequest) {
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {
-      return NextResponse.redirect(new URL("/login?error=exchange_failed", url.origin));
+      const detail = encodeURIComponent(error.message ?? "");
+      return NextResponse.redirect(
+        new URL(`/login?error=exchange_failed&detail=${detail}`, url.origin)
+      );
     }
     return NextResponse.redirect(new URL(destinationFor(typeRaw, explicitNext), url.origin));
   }
