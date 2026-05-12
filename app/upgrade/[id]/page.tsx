@@ -98,24 +98,6 @@ export default async function UpgradePage({
             Tier 2 · ₹499 Draft Pack
           </p>
 
-        {/* Story 2.6 — Coming Soon banner. Stripe-style one-click
-            payment via Cashfree ships in Sprint 3 (Story 3.1). For
-            now the form below uses manual UPI-QR + screenshot upload
-            so we don't block the early-customer flow. */}
-        {!order ? (
-          <div className="mb-6 rounded-lg bg-[#E1F5EE] border border-[#0F6E56]/30 px-5 py-4">
-            <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-[#0F6E56] mb-1.5">
-              Coming Soon · One-click payment
-            </p>
-            <p className="text-sm text-[#0E1411] leading-relaxed">
-              Cashfree-powered checkout (credit / debit / UPI / netbanking,
-              all in one tap) lands in our next release. For now you can
-              still pay via UPI to the QR below and upload a screenshot —
-              we verify within ~30 min during business hours.
-            </p>
-          </div>
-        ) : null}
-
         {order ? (
           <StatusPanel
             initialOrder={order}
@@ -250,7 +232,14 @@ export default async function UpgradePage({
                 <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-[#0F6E56] mb-2">
                   One-click payment
                 </p>
-                <CashfreePayButton assessmentId={id} />
+                <CashfreePayButton
+                  assessmentId={id}
+                  cashfreeEnv={
+                    (process.env.CASHFREE_ENVIRONMENT ?? "TEST") === "PROD"
+                      ? "PROD"
+                      : "TEST"
+                  }
+                />
               </div>
             ) : null}
 

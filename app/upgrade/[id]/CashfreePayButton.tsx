@@ -1,24 +1,25 @@
 "use client";
 
 import { useState } from "react";
+import { load, type CashfreeMode } from "@cashfreepayments/cashfree-js";
 
 type Props = {
   assessmentId: string;
+  /** 'TEST' | 'PROD' — set on the page from process.env.CASHFREE_ENVIRONMENT
+   *  (server-side) so the SDK loads against the right Cashfree origin. */
+  cashfreeEnv: "TEST" | "PROD";
 };
 
 /**
- * Story 2.8 — "Pay ₹499 via Cashfree" button.
+ * Story 2.8 — "Pay ₹499 via Cashfree" button (SDK flow).
  *
- * Calls /api/cashfree/create-order, then redirects the browser to
- * Cashfree's hosted checkout URL. On payment completion Cashfree
- * redirects back to /api/cashfree/return → /upgrade/[id].
- *
- * Only shown when Cashfree is configured server-side (page-level
- * check). If keys are missing the create-order endpoint returns
- * 503 — caught here and surfaced as a banner so the customer
- * doesn't get a silent failure.
+ * Calls /api/cashfree/create-order to obtain a payment_session_id,
+ * then hands it to Cashfree's JS SDK which navigates to the correct
+ * hosted-checkout URL. Earlier iteration tried to construct that
+ * URL ourselves and 404'd because the pattern we guessed was an API
+ * path, not a customer-facing path.
  */
-export function CashfreePayButton({ assessmentId }: Props) {
+export function CashfreePayButton({ assessmentId, cashfreeEnv }: Props) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,14 +33,25 @@ export function CashfreePayButton({ assessmentId }: Props) {
         body: JSON.stringify({ assessment_id: assessmentId }),
       });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok || !body.checkout_url) {
+      if (!res.ok || !body.session_id) {
         throw new Error(
           body.message ?? body.error ?? `HTTP ${res.status}`
         );
       }
-      window.location.href = body.checkout_url;
+      const mode: CashfreeMode =
+        cashfreeEnv === "PROD" ? "production" : "sandbox";
+      const cashfree = await load({ mode });
+      // redirectTarget '_self' navigates the current tab; SDK handles
+      // the right URL for the SDK version.
+      await cashfree.checkout({
+        paymentSessionId: body.session_id,
+        redirectTarget: "_self",
+      });
+      // If we reach here the SDK didn't redirect — surface that.
+      setError("Cashfree did not redirect. Try again or refresh the page.");
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+    } finally {
       setPending(false);
     }
   }
@@ -55,8 +67,13 @@ export function CashfreePayButton({ assessmentId }: Props) {
         {pending ? "Redirecting…" : "Pay ₹499 with Cashfree →"}
       </button>
       <p className="text-xs text-[#6B766F]">
-        UPI · cards · netbanking — handled by Cashfree on their
-        secure page.
+        UPI · cards · netbanking — handled by Cashfree on their secure
+        page.
+        {cashfreeEnv === "TEST" ? (
+          <span className="ml-1.5 inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-mono uppercase tracking-widest bg-[#FAEEDA] text-[#633806] border border-[#BA7517]/40">
+            Sandbox · test mode
+          </span>
+        ) : null}
       </p>
       {error ? (
         <p className="text-xs text-[#993C1D]">⚠ {error}</p>
