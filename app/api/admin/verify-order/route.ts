@@ -31,11 +31,25 @@ export async function POST(req: NextRequest) {
   const supabase = getServiceClient();
   const now = new Date().toISOString();
 
-  // CAS: only flip if currently pending_verification.
+  // CAS pending_verification → generating in ONE write. Skipping the
+  // intermediate 'verified' state eliminates a race we observed in
+  // production: admin clicked Verify, then immediately clicked the
+  // legacy v1 "Generate" button, whose CAS verified→generating
+  // succeeded before the auto-trigger v2 (scheduled via after()) ever
+  // ran. v1 set status='delivered' + draft_pack_pdf_url but writes
+  // nothing to draft_pack_sections — leaving /draft/[id] empty.
+  // Result for the affected order b54a20ec-…: PDF exists, but the
+  // sectioned editor sees zero rows.
+  //
+  // By landing 'generating' in the verify response, any v1 click after
+  // that returns 409 cleanly. Status semantics shift slightly: we no
+  // longer pass through 'verified'. Existing customers in 'verified'
+  // still work — the v1 endpoint accepts that state. Sprint 3 will
+  // replace this whole chain with Cashfree-paid → generating.
   const { data, error } = await supabase
     .from("tier2_orders")
     .update({
-      status: "verified",
+      status: "generating",
       verified_at: now,
       verified_by: "admin",
       updated_at: now,
@@ -70,10 +84,15 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * Story 2.6 — runs the v2 orchestrator for an order. Status transitions:
- *   verified → generating  (CAS)
- *   generating → delivered (on success)
- *   generating → verified  (on failure, so admin can retry)
+ * Story 2.6 — runs the v2 orchestrator for an order. By the time this
+ * runs (scheduled via after() from verify-order), the calling endpoint
+ * has already landed status='generating'. We just verify that and pull
+ * assessment_id.
+ *
+ * Status transitions:
+ *   generating → delivered  (on success)
+ *   generating → failed     (on failure; admin can retry via legacy
+ *                            v1 button or by re-running the script)
  *
  * Logs "would send email" as the Sprint 3 SMTP placeholder. The
  * `email_sent_to` column on tier2_orders captures the intended
@@ -83,29 +102,22 @@ async function triggerV2GenerationForOrder(orderId: string): Promise<void> {
   const supabase = getServiceClient();
   const startedAt = Date.now();
 
-  // CAS verified → generating. If someone else already triggered this
-  // (or status moved past 'verified'), bail.
   const { data: locked, error: casErr } = await supabase
     .from("tier2_orders")
-    .update({
-      status: "generating",
-      updated_at: new Date().toISOString(),
-    })
+    .select("id, assessment_id, status")
     .eq("id", orderId)
-    .eq("status", "verified")
-    .select("id, assessment_id")
-    .maybeSingle<{ id: string; assessment_id: string }>();
+    .maybeSingle<{ id: string; assessment_id: string; status: string }>();
 
-  if (casErr) {
+  if (casErr || !locked) {
     console.error(
-      "[verify-order:auto-trigger] CAS verified→generating failed:",
-      casErr.message
+      `[verify-order:auto-trigger] could not load order ${orderId}:`,
+      casErr?.message ?? "no row"
     );
     return;
   }
-  if (!locked) {
+  if (locked.status !== "generating") {
     console.log(
-      `[verify-order:auto-trigger] order ${orderId} not in 'verified' state — skip`
+      `[verify-order:auto-trigger] order ${orderId} status=${locked.status} (expected 'generating') — skip`
     );
     return;
   }
@@ -130,16 +142,17 @@ async function triggerV2GenerationForOrder(orderId: string): Promise<void> {
     console.error(
       `[verify-order:auto-trigger] v2 gen failed: ${result.error}`
     );
-    // Revert lock so admin can retry from the orders table.
+    // Stamp the failure note but leave status='generating' so the
+    // admin's "Reset stuck order" button + the live-gen script can
+    // recover. We don't auto-revert to 'pending_verification' because
+    // payment already cleared.
     await supabase
       .from("tier2_orders")
       .update({
-        status: "verified",
         updated_at: new Date().toISOString(),
         notes: `auto-gen failed: ${result.error ?? "unknown"}`,
       })
-      .eq("id", orderId)
-      .eq("status", "generating");
+      .eq("id", orderId);
     return;
   }
 
