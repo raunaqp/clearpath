@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useEditCoordinator } from "./EditCoordinator";
 
 type Props = {
@@ -55,19 +55,25 @@ export function SectionEditor({
     if (gaps.length === 0) return;
     const next = (gapCursor + 1) % gaps.length;
     setGapCursor(next);
-    const g = gaps[next];
+    // DOM mutation (focus + setSelectionRange + scrollTop) is deferred
+    // to a useEffect below — running it synchronously here loses the
+    // selection on the controlled-input re-render that follows state.
+  }
+
+  // Apply focus/selection/scroll AFTER the React commit, so the
+  // textarea's value reconciliation doesn't blow away the selection.
+  useEffect(() => {
+    if (gapCursor < 0 || gapCursor >= gaps.length) return;
+    const g = gaps[gapCursor];
     const ta = textareaRef.current;
     if (!ta) return;
     ta.focus();
     ta.setSelectionRange(g.start, g.end);
-    // Approximate scroll-to-line so the highlighted marker is visible.
-    // Textareas don't support scrollIntoView on selections natively.
     const before = state.draft.slice(0, g.start);
     const line = before.split("\n").length - 1;
     const lh = parseFloat(getComputedStyle(ta).lineHeight) || 22;
-    const margin = 80;
-    ta.scrollTop = Math.max(0, line * lh - margin);
-  }
+    ta.scrollTop = Math.max(0, line * lh - 80);
+  }, [gapCursor, gaps, state.draft]);
 
   const saveBtnClasses =
     "inline-flex items-center rounded-md bg-[#0F6E56] px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-[#0a5a47] disabled:opacity-50 disabled:cursor-not-allowed";

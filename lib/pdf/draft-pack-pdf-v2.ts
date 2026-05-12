@@ -28,13 +28,34 @@ export type RenderPdfResult = {
 
 const PRINT_TIMEOUT_MS = 60_000;
 
-/** Resolve a Chrome executable path. In production (Vercel function) we
- *  use @sparticuz/chromium. In local dev we prefer LOCAL_CHROME_PATH
- *  (set to your local Chrome / Chromium) so devs don't have to wait for
- *  the chromium download on every cold start. */
+/** Resolve a Chrome executable path. Three paths:
+ *
+ *  1. LOCAL_CHROME_PATH — for local dev (point at your system Chrome,
+ *     keeps cold starts under a second).
+ *  2. CHROMIUM_PACK_URL — remote Brotli-packed chromium archive, the
+ *     approach @sparticuz/chromium's README recommends for Vercel. The
+ *     binary lives in `node_modules/@sparticuz/chromium/bin/` but
+ *     Vercel's output tracing on Next 16/Turbopack does NOT reliably
+ *     include it even with outputFileTracingIncludes. Passing a remote
+ *     URL bypasses bundling entirely; @sparticuz downloads + extracts
+ *     to /tmp on first call, caches for the lifetime of the function
+ *     instance.
+ *  3. Fallback to bundled bin/ (will fail on Vercel until tracing is
+ *     fixed; works locally because node_modules is present).
+ */
 async function resolveExecutablePath(): Promise<string> {
   const local = process.env.LOCAL_CHROME_PATH;
   if (local && local.trim().length > 0) return local;
+
+  const packUrl = process.env.CHROMIUM_PACK_URL;
+  if (packUrl && packUrl.trim().length > 0) {
+    return chromium.executablePath(packUrl);
+  }
+
+  // Last resort — only works if @sparticuz/chromium's bin/ was traced
+  // into the function bundle. Vercel runtime says
+  // "/var/task/node_modules/@sparticuz/chromium/bin does not exist"
+  // when this path is hit there.
   return chromium.executablePath();
 }
 

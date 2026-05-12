@@ -31,7 +31,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useRouter } from "next/navigation";
 
 type PendingAction =
   | { kind: "switch"; targetKey: string; targetInitial: string }
@@ -74,7 +73,6 @@ export function EditCoordinatorProvider({
   assessmentId: string;
   children: ReactNode;
 }) {
-  const router = useRouter();
   const [state, setState] = useState<EditState>({
     activeKey: null,
     initial: "",
@@ -165,12 +163,13 @@ export function EditCoordinatorProvider({
     // Proper UX: stamp the override map with the just-saved content
     // BEFORE closing the editor, so the section card re-renders with
     // the new content in the same React commit. No reload flash, no
-    // scroll jump. router.refresh() runs in the background to bring
-    // the server-component prop chain back in sync.
+    // scroll jump. We skip router.refresh() entirely — it was showing
+    // a top-of-page Chrome loading indicator while the server component
+    // re-rendered. The override is already correct (matches DB), so
+    // next natural navigation refresh picks up server data cleanly.
     setOverrides((o) => ({ ...o, [key]: draft }));
     close();
-    router.refresh();
-  }, [state.activeKey, state.draft, saveCore, close, router]);
+  }, [state.activeKey, state.draft, saveCore, close]);
 
   const cancel = useCallback(() => {
     if (dirty) {
@@ -194,7 +193,8 @@ export function EditCoordinatorProvider({
       return;
     }
     // Save succeeded — stamp the override map for the section we just
-    // wrote so its card re-renders with new content immediately.
+    // wrote so its card re-renders with new content immediately. Skip
+    // router.refresh() (Chrome loader bar).
     const savedKey = state.activeKey;
     const savedDraft = state.draft;
     setOverrides((o) => ({ ...o, [savedKey]: savedDraft }));
@@ -205,8 +205,7 @@ export function EditCoordinatorProvider({
       close();
     }
     setPending(null);
-    router.refresh();
-  }, [state.activeKey, state.draft, saveCore, pending, performSwitch, close, router]);
+  }, [state.activeKey, state.draft, saveCore, pending, performSwitch, close]);
 
   const modalDiscard = useCallback(() => {
     if (pending?.kind === "switch") {
