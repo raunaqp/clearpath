@@ -13,6 +13,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import { cn } from "@/lib/utils";
+import { NeedsInputField } from "@/app/draft/[id]/NeedsInputField";
 
 export type RenderableCitation = {
   citation_id: string;
@@ -78,6 +79,20 @@ export function highlightMarkers(md: string): string {
     );
 }
 
+// Phase 5.5.C — substitute filled NEEDS INPUT values inline as plain
+// text. Used for PDF/print rendering where pills aren't appropriate.
+export function applyFilledFields(
+  md: string,
+  filled: Record<string, string>
+): string {
+  return md.replace(/\[NEEDS INPUT:\s*([^\]]+)\]/g, (match, descriptor) => {
+    const key = (descriptor as string).trim();
+    return Object.prototype.hasOwnProperty.call(filled, key)
+      ? filled[key]
+      : match;
+  });
+}
+
 function escapeAttr(s: string): string {
   return s.replace(/"/g, "&quot;").replace(/&/g, "&amp;");
 }
@@ -88,16 +103,49 @@ function escapeHtml(s: string): string {
     .replace(/>/g, "&gt;");
 }
 
+export type InlineFieldsApi = {
+  assessmentId: string;
+  sectionKey: string;
+  /** descriptor → customer-saved value */
+  filled: Record<string, string>;
+  /** Called by NeedsInputField after a successful save so the parent
+   *  can mirror the change in client state (completion %, TOC). */
+  onSaved?: (descriptor: string, value: string) => void;
+};
+
 type Props = {
   section: RenderableSection;
   /** Render in PDF-friendly mode: meta panel open, no interactive chrome,
    *  print-safe colors. */
   printMode?: boolean;
+  /** If provided, NEEDS INPUT markers become interactive pills. If
+   *  absent in printMode, filled values still substitute via
+   *  applyFilledFields (call from parent). */
+  inlineFields?: InlineFieldsApi;
+  /** Phase 5.5.G — view mode hides the generation-status badge in
+   *  the section header for a cleaner read. */
+  hideStatusBadge?: boolean;
+  /** Phase 5.5.G — view mode also hides the generation-meta details. */
+  hideMetaPanel?: boolean;
 };
 
-export function SectionRenderer({ section, printMode = false }: Props) {
+export function SectionRenderer({
+  section,
+  printMode = false,
+  inlineFields,
+  hideStatusBadge = false,
+  hideMetaPanel = false,
+}: Props) {
   const sv = statusVisual(section.completion_status);
-  const processedContent = highlightMarkers(section.content);
+  // Substitute filled values inline as plain text whenever we're not
+  // rendering interactive pills (i.e. no onSaved callback). Covers
+  // both PDF/print mode and the read-only "View document" mode.
+  const interactive = !!inlineFields?.onSaved && !printMode;
+  const sourceContent =
+    inlineFields && !interactive
+      ? applyFilledFields(section.content, inlineFields.filled)
+      : section.content;
+  const processedContent = highlightMarkers(sourceContent);
   const headingId = `section-${section.section_number}`;
 
   return (
@@ -119,14 +167,16 @@ export function SectionRenderer({ section, printMode = false }: Props) {
             {section.title}
           </h2>
         </div>
-        <span
-          className={cn(
-            "inline-flex items-center rounded-pill px-3 py-1 text-xs font-medium uppercase tracking-wide",
-            sv.cls
-          )}
-        >
-          {sv.label}
-        </span>
+        {hideStatusBadge ? null : (
+          <span
+            className={cn(
+              "inline-flex items-center rounded-pill px-3 py-1 text-xs font-medium uppercase tracking-wide",
+              sv.cls
+            )}
+          >
+            {sv.label}
+          </span>
+        )}
       </header>
 
       {section.completion_status === "failed" && section.meta?.error_message ? (
@@ -139,6 +189,35 @@ export function SectionRenderer({ section, printMode = false }: Props) {
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           rehypePlugins={[rehypeRaw]}
+          components={
+            interactive && inlineFields
+              ? {
+                  // Intercept the <mark class="marker-needs-input"> nodes
+                  // that highlightMarkers emits and swap in an interactive
+                  // NeedsInputField pill. Other marks (e.g., .marker-tbd)
+                  // render normally.
+                  mark: (props) => {
+                    const cls = (props as { className?: string }).className;
+                    if (cls === "marker-needs-input") {
+                      const descriptor =
+                        (props as { "data-descriptor"?: string })[
+                          "data-descriptor"
+                        ] ?? "";
+                      return (
+                        <NeedsInputField
+                          assessmentId={inlineFields.assessmentId}
+                          sectionKey={inlineFields.sectionKey}
+                          descriptor={descriptor}
+                          initialValue={inlineFields.filled[descriptor] ?? null}
+                          onSaved={inlineFields.onSaved}
+                        />
+                      );
+                    }
+                    return <mark {...props} />;
+                  },
+                }
+              : undefined
+          }
         >
           {processedContent}
         </ReactMarkdown>
@@ -168,6 +247,7 @@ export function SectionRenderer({ section, printMode = false }: Props) {
         </div>
       ) : null}
 
+      {hideMetaPanel ? null : (
       <details
         className="mt-4 text-sm text-[#6B766F]"
         // PDF/print pass forces all <details> open via CSS, but we also
@@ -225,6 +305,7 @@ export function SectionRenderer({ section, printMode = false }: Props) {
           ) : null}
         </dl>
       </details>
+      )}
     </section>
   );
 }

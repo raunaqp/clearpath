@@ -18,6 +18,7 @@ import { DraftPackTOC } from "./DraftPackTOC";
 import { DraftPackDownloadButton } from "./DraftPackDownloadButton";
 import { ValidationSummary } from "./ValidationSummary";
 import { SectionCard } from "./SectionCard";
+import { OtherDocumentsBucket } from "./OtherDocumentsBucket";
 import { EditCoordinatorProvider } from "./EditCoordinator";
 import {
   packCompletion,
@@ -63,11 +64,12 @@ export default async function DraftPackPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ print?: string }>;
+  searchParams: Promise<{ print?: string; view?: string }>;
 }) {
   const { id } = await params;
-  const { print } = await searchParams;
+  const { print, view } = await searchParams;
   const printMode = print === "1";
+  const viewMode = !printMode && view === "document";
 
   // PDF v2 (Phase 6) bypass: Chrome headless inside the same Vercel
   // function fetches this page with an internal token in headers. The
@@ -93,7 +95,7 @@ export default async function DraftPackPage({
 
   const { data: assessment, error: aErr } = await supabase
     .from("assessments")
-    .select("id, name, email, one_liner, readiness_card")
+    .select("id, name, email, one_liner, readiness_card, meta")
     .eq("id", id)
     .maybeSingle();
 
@@ -136,6 +138,29 @@ export default async function DraftPackPage({
     citationsBySection.set(c.section_id, arr);
   }
 
+  // Phase 5.5.D — attachments per (order_id, section_key).
+  type AttachmentRow = {
+    id: string;
+    section_key: string;
+    filename: string;
+    content_type: string | null;
+    size_bytes: number;
+    doc_type: string | null;
+    notes: string | null;
+  };
+  const { data: attachmentRows } = await supabase
+    .from("draft_pack_attachments")
+    .select("id, section_key, filename, content_type, size_bytes, doc_type, notes")
+    .eq("order_id", order.id)
+    .order("uploaded_at", { ascending: true })
+    .returns<AttachmentRow[]>();
+  const attachmentsBySection = new Map<string, AttachmentRow[]>();
+  for (const a of attachmentRows ?? []) {
+    const arr = attachmentsBySection.get(a.section_key) ?? [];
+    arr.push(a);
+    attachmentsBySection.set(a.section_key, arr);
+  }
+
   // Display rule: prefer the customer overlay (content_edited) when set;
   // otherwise the AI baseline (content). The editor's initial buffer
   // matches whichever is current. `hasOverlay` drives the "Customer
@@ -147,6 +172,12 @@ export default async function DraftPackPage({
     status: SectionStatus;
     pendingCount: number;
   };
+  // Phase 5.5.C — inline-filled NEEDS INPUT values live in
+  // assessments.meta.needs_input_fields[section_key][descriptor].
+  const assessmentMeta =
+    (assessment.meta as { needs_input_fields?: Record<string, Record<string, string>> } | null) ?? {};
+  const needsInputFields = assessmentMeta.needs_input_fields ?? {};
+
   const draftSections: DraftSection[] = (sectionRows ?? [])
     .map((r) => {
       // hasOverlay = "customer saved an edit, even an empty one".
@@ -157,6 +188,7 @@ export default async function DraftPackPage({
       const displayContent = hasOverlay
         ? (r.content_edited as string)
         : r.content ?? "";
+      const sectionFilled = needsInputFields[r.section_key] ?? {};
       return {
         renderable: {
           section_key: r.section_key,
@@ -175,8 +207,8 @@ export default async function DraftPackPage({
         },
         hasOverlay,
         initialEditContent: displayContent,
-        status: sectionStatus(displayContent),
-        pendingCount: sectionPendingCount(displayContent),
+        status: sectionStatus(displayContent, sectionFilled),
+        pendingCount: sectionPendingCount(displayContent, sectionFilled),
       };
     })
     .sort(
@@ -186,7 +218,10 @@ export default async function DraftPackPage({
 
   // Pack-level completion summary for the header strip + tooltip.
   const completion = packCompletion(
-    draftSections.map((d) => d.renderable.content)
+    draftSections.map((d) => ({
+      content: d.renderable.content,
+      filled: needsInputFields[d.renderable.section_key] ?? {},
+    }))
   );
   const renderable: RenderableSection[] = draftSections.map((d) => d.renderable);
 
@@ -310,10 +345,120 @@ export default async function DraftPackPage({
                 breakInside: "avoid-page",
               }}
             >
-              <SectionRenderer section={s} printMode />
+              <SectionRenderer
+                section={s}
+                printMode
+                inlineFields={{
+                  assessmentId: id,
+                  sectionKey: s.section_key,
+                  filled: needsInputFields[s.section_key] ?? {},
+                }}
+              />
             </div>
           ))}
         </div>
+      </div>
+    );
+  }
+
+  // Phase 5.5.G — clean read-only "View document" mode. Hides TOC
+  // sidebar, completion %, Edit buttons, status dots, attachment
+  // widgets and badges. Customer sees a continuous document with a
+  // table of contents at the top + "Back to editor" affordance.
+  if (viewMode) {
+    return (
+      <div className="min-h-screen bg-[#F7F6F2] flex flex-col">
+        <GlobalHeader signedIn />
+        <main className="flex-1 px-4 sm:px-6 lg:px-10 pt-8 pb-24">
+          <div className="max-w-[820px] mx-auto">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+              <a
+                href={`/draft/${id}`}
+                className="inline-flex items-center rounded-md border border-[#D9D5C8] bg-[#FDFCF8] px-3 py-1.5 text-sm font-medium text-[#0F6E56] hover:bg-[#E1F5EE]"
+              >
+                ← Back to editor
+              </a>
+              <span className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#6B766F]">
+                View mode · read only
+              </span>
+            </div>
+
+            <header className="border-b border-[#D9D5C8] pb-6 mb-8">
+              <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517]">
+                Tier 2 · CDSCO MD-7 / MD-3 Draft Pack
+              </p>
+              <h1 className="font-serif text-4xl sm:text-5xl text-[#0E1411] mt-3 leading-tight">
+                {deviceName}
+              </h1>
+              {classLabel ? (
+                <p className="text-[#6B766F] text-base mt-2">{classLabel}</p>
+              ) : null}
+              <p className="text-[#6B766F] text-xs mt-4 font-mono">
+                Assessment {id} · Generated{" "}
+                {new Date(order.delivered_at ?? order.created_at).toLocaleString()}
+              </p>
+            </header>
+
+            <nav
+              aria-label="Table of contents"
+              className="mb-12 rounded-card bg-[#FDFCF8] border border-[#E8E4D6] px-6 py-5"
+            >
+              <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#6B766F] mb-3">
+                Contents
+              </p>
+              <ol className="space-y-1.5 text-sm">
+                {draftSections.map((d) => (
+                  <li key={d.renderable.section_key}>
+                    <a
+                      href={`#section-${d.renderable.section_number}`}
+                      className="text-[#0F6E56] hover:underline"
+                    >
+                      <span className="font-mono text-xs text-[#6B766F] mr-2">
+                        MD-7 Section{" "}
+                        {d.renderable.section_number
+                          .toString()
+                          .padStart(2, "0")}
+                      </span>
+                      <span className="text-[#0E1411]">
+                        {d.renderable.title}
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+
+            <div className="space-y-14">
+              {draftSections.map((d) => (
+                <section
+                  key={d.renderable.section_key}
+                  className="draft-view-section"
+                >
+                  <SectionRenderer
+                    section={d.renderable}
+                    hideStatusBadge
+                    hideMetaPanel
+                    inlineFields={{
+                      assessmentId: id,
+                      sectionKey: d.renderable.section_key,
+                      filled:
+                        needsInputFields[d.renderable.section_key] ?? {},
+                    }}
+                  />
+                </section>
+              ))}
+            </div>
+
+            <div className="mt-16 flex justify-center">
+              <a
+                href={`/draft/${id}`}
+                className="inline-flex items-center rounded-md border border-[#D9D5C8] bg-[#FDFCF8] px-4 py-2 text-sm font-medium text-[#0F6E56] hover:bg-[#E1F5EE]"
+              >
+                ← Back to editor
+              </a>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
@@ -351,6 +496,13 @@ export default async function DraftPackPage({
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 <DraftPackDownloadButton assessmentId={id} />
                 <a
+                  href={`/draft/${id}?view=document`}
+                  className="inline-flex items-center rounded-md border border-[#D9D5C8] bg-[#FDFCF8] px-4 py-2 text-sm font-medium text-[#0F6E56] hover:bg-[#E1F5EE]"
+                  title="Read-only clean view of the full pack"
+                >
+                  View document →
+                </a>
+                <a
                   href={`/upgrade/${id}`}
                   className="text-sm text-[#6B766F] underline underline-offset-2 hover:text-[#0E1411]"
                 >
@@ -387,11 +539,18 @@ export default async function DraftPackPage({
               <ValidationSummary report={validationReport} />
             ) : null}
 
-            <EditCoordinatorProvider assessmentId={id}>
+            <EditCoordinatorProvider
+              assessmentId={id}
+              initialNeedsInputFields={needsInputFields}
+            >
               <div className="space-y-10 mt-8">
                 {draftSections.map((d) => (
                   <SectionCard
                     key={d.renderable.section_key}
+                    assessmentId={id}
+                    attachments={
+                      attachmentsBySection.get(d.renderable.section_key) ?? []
+                    }
                     section={d.renderable}
                     hasOverlay={d.hasOverlay}
                     initialEditContent={d.initialEditContent}
@@ -399,6 +558,10 @@ export default async function DraftPackPage({
                     pendingCount={d.pendingCount}
                   />
                 ))}
+                <OtherDocumentsBucket
+                  assessmentId={id}
+                  initialAttachments={attachmentsBySection.get("other") ?? []}
+                />
               </div>
             </EditCoordinatorProvider>
           </div>

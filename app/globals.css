@@ -173,6 +173,73 @@ html, body {
   color: #0E1411;
 }
 
+/* Phase 5.5.C — inline NEEDS INPUT pill + editor. Interactive pill is
+   used in browser view mode; static .marker-needs-input still
+   appears in PDF/print mode (no JS hydration). */
+.needs-input-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px;
+  padding: 0 4px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.85em;
+  font-weight: 500;
+  line-height: 1.4;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 120ms ease, border-color 120ms ease;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.needs-input-pill:hover {
+  filter: brightness(0.97);
+}
+.needs-input-pill--filled {
+  background: #E1F5EE;
+  color: #0F6E56;
+  border-color: #0F6E56;
+}
+.needs-input-pill--unfilled {
+  background: #FAECE7;
+  color: #993C1D;
+  border-color: #993C1D;
+}
+.needs-input-pill__placeholder {
+  font-style: italic;
+}
+.needs-input-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.needs-input-edit__input {
+  display: inline-block;
+  min-width: 220px;
+  padding: 2px 6px;
+  border: 1px solid #0F6E56;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #0E1411;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.92em;
+  outline: none;
+}
+.needs-input-edit__input:focus {
+  box-shadow: 0 0 0 2px rgba(15, 110, 86, 0.25);
+}
+.needs-input-edit__saving {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.8em;
+  color: #6B766F;
+}
+.needs-input-edit__error {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.8em;
+  color: #993C1D;
+}
+
 /* [TBD] and [NEEDS INPUT: ...] markers — inline-styled so they survive
    in PDF render even if Tailwind isn't applied to raw HTML. */
 .marker-tbd,

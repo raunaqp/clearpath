@@ -16,19 +16,38 @@ export type SectionStatus = "complete" | "wip" | "empty";
 
 // Global regexes are stateful across .test() calls (.lastIndex advances).
 // Use match-based counting so behaviour is the same on every call.
-const NEEDS_INPUT_RE_G = /\[NEEDS INPUT:[^\]]*\]/g;
+const NEEDS_INPUT_RE_G = /\[NEEDS INPUT:\s*([^\]]+)\]/g;
 const TBD_RE_G = /\[TBD\]/g;
 
-export function sectionStatus(content: string | null | undefined): SectionStatus {
+export function sectionStatus(
+  content: string | null | undefined,
+  filledFields?: Record<string, string>
+): SectionStatus {
   if (!content || content.trim() === "") return "empty";
-  return sectionPendingCount(content) > 0 ? "wip" : "complete";
+  return sectionPendingCount(content, filledFields) > 0 ? "wip" : "complete";
 }
 
-export function sectionPendingCount(content: string | null | undefined): number {
+export function sectionPendingCount(
+  content: string | null | undefined,
+  filledFields?: Record<string, string>
+): number {
   if (!content) return 0;
-  const ni = content.match(NEEDS_INPUT_RE_G)?.length ?? 0;
+  const niMatches = [...content.matchAll(NEEDS_INPUT_RE_G)];
+  let niPending = niMatches.length;
+  if (filledFields) {
+    for (const m of niMatches) {
+      const descriptor = m[1]?.trim();
+      if (
+        descriptor &&
+        Object.prototype.hasOwnProperty.call(filledFields, descriptor) &&
+        filledFields[descriptor] !== ""
+      ) {
+        niPending--;
+      }
+    }
+  }
   const tbd = content.match(TBD_RE_G)?.length ?? 0;
-  return ni + tbd;
+  return niPending + tbd;
 }
 
 export type PackCompletion = {
@@ -41,20 +60,23 @@ export type PackCompletion = {
 };
 
 export function packCompletion(
-  contents: Array<string | null | undefined>
+  sections: Array<{
+    content: string | null | undefined;
+    filled?: Record<string, string>;
+  }>
 ): PackCompletion {
   let complete = 0;
   let wip = 0;
   let empty = 0;
   let totalPending = 0;
-  for (const c of contents) {
-    const s = sectionStatus(c);
+  for (const sec of sections) {
+    const s = sectionStatus(sec.content, sec.filled);
     if (s === "complete") complete++;
     else if (s === "wip") wip++;
     else empty++;
-    totalPending += sectionPendingCount(c);
+    totalPending += sectionPendingCount(sec.content, sec.filled);
   }
-  const total = contents.length;
+  const total = sections.length;
   return {
     total,
     complete,

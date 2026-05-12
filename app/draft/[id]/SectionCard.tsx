@@ -11,8 +11,13 @@ import {
   sectionStatus,
   type SectionStatus,
 } from "./completion";
+import { AttachmentZone, type Attachment } from "./AttachmentZone";
 
 type Props = {
+  assessmentId: string;
+  /** Phase 5.5.D — initial attachment list for this section, loaded
+   *  server-side from draft_pack_attachments. */
+  attachments?: Attachment[];
   section: RenderableSection;
   /** True iff the customer has an overlay (content_edited is set) per
    *  the server-loaded data. May be overridden client-side after save. */
@@ -64,13 +69,21 @@ function StatusBadge({
 }
 
 export function SectionCard({
+  assessmentId,
+  attachments,
   section,
   hasOverlay,
   initialEditContent,
   status,
   pendingCount,
 }: Props) {
-  const { state, requestEdit, overrides } = useEditCoordinator();
+  const {
+    state,
+    requestEdit,
+    overrides,
+    needsInputFields,
+    updateNeedsInputField,
+  } = useEditCoordinator();
   const isEditing = state.activeKey === section.section_key;
 
   // Client-side override takes precedence over the server prop. This
@@ -79,10 +92,20 @@ export function SectionCard({
   const override = overrides[section.section_key];
   const effectiveContent = override ?? section.content;
   const effectiveHasOverlay = override !== undefined ? true : hasOverlay;
-  const effectiveStatus: SectionStatus =
-    override !== undefined ? sectionStatus(override) : status;
+  // Live filled fields for this section drive status + pendingCount
+  // alongside the content override so the badge stays accurate while
+  // the customer fills marker after marker.
+  const filledFields = needsInputFields[section.section_key] ?? {};
+  const liveStatus: SectionStatus = sectionStatus(effectiveContent, filledFields);
+  const livePendingCount = sectionPendingCount(effectiveContent, filledFields);
+  const effectiveStatus =
+    override !== undefined || Object.keys(filledFields).length > 0
+      ? liveStatus
+      : status;
   const effectivePendingCount =
-    override !== undefined ? sectionPendingCount(override) : pendingCount;
+    override !== undefined || Object.keys(filledFields).length > 0
+      ? livePendingCount
+      : pendingCount;
   const effectiveSection: RenderableSection =
     override !== undefined ? { ...section, content: override } : section;
   // Editor opens with the freshest content we know about.
@@ -91,6 +114,13 @@ export function SectionCard({
   function startEditing() {
     requestEdit(section.section_key, editorInitialContent);
   }
+
+  // Phase 5.5.F — §6 has a special "edit predicate inputs" link
+  // that sends customers back to the Tier B wizard where they
+  // entered their predicates, plus a footer note about the Sprint 3
+  // predicate-DB upgrade. Hardcoded to "06_predicate_comparison"
+  // for now; if the section taxonomy ever changes, update here.
+  const isPredicateSection = section.section_key === "06_predicate_comparison";
 
   return (
     <article
@@ -121,15 +151,48 @@ export function SectionCard({
                 </span>
               ) : null}
             </div>
-            <button
-              type="button"
-              onClick={startEditing}
-              className="inline-flex items-center rounded-md border border-[#D9D5C8] bg-[#FDFCF8] px-3 py-1.5 text-xs font-medium text-[#2A3430] hover:bg-[#EFECE3]"
-            >
-              Edit section
-            </button>
+            <div className="flex items-center gap-2">
+              {isPredicateSection ? (
+                <a
+                  href={`/upgrade/${assessmentId}/wizard#b3`}
+                  className="inline-flex items-center rounded-md border border-[#D9D5C8] bg-[#FDFCF8] px-3 py-1.5 text-xs font-medium text-[#0F6E56] hover:bg-[#E1F5EE]"
+                  title="Edit the predicate devices you entered in the Tier B wizard"
+                >
+                  Edit predicate inputs ↗
+                </a>
+              ) : null}
+              <button
+                type="button"
+                onClick={startEditing}
+                className="inline-flex items-center rounded-md border border-[#D9D5C8] bg-[#FDFCF8] px-3 py-1.5 text-xs font-medium text-[#2A3430] hover:bg-[#EFECE3]"
+              >
+                Edit section
+              </button>
+            </div>
           </div>
-          <SectionRenderer section={effectiveSection} />
+          <SectionRenderer
+            section={effectiveSection}
+            inlineFields={{
+              assessmentId,
+              sectionKey: section.section_key,
+              filled: filledFields,
+              onSaved: (descriptor, value) =>
+                updateNeedsInputField(section.section_key, descriptor, value),
+            }}
+          />
+          {isPredicateSection ? (
+            <p className="mt-4 rounded-md bg-[#EFECE3] border border-[#E8E4D6] px-4 py-3 text-xs text-[#6B766F] leading-relaxed">
+              Searchable predicate database (FDA 510(k) + CDSCO approved
+              devices) with side-by-side attribute comparison and a
+              substantial-equivalence narrative editor — shipping in
+              Sprint 3.
+            </p>
+          ) : null}
+          <AttachmentZone
+            assessmentId={assessmentId}
+            sectionKey={section.section_key}
+            initialAttachments={attachments ?? []}
+          />
         </>
       )}
     </article>

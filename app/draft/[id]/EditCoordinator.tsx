@@ -56,6 +56,15 @@ type CoordinatorApi = {
    *  prefers this over its server prop while the background refresh
    *  catches up. Persists for the life of the page; cleared by reload. */
   overrides: Record<string, string>;
+  /** Phase 5.5.C — section_key → descriptor → filled value. Server-
+   *  hydrated initial value; inline NeedsInputField saves bump it via
+   *  updateNeedsInputField so TOC dots + completion % stay in sync. */
+  needsInputFields: Record<string, Record<string, string>>;
+  updateNeedsInputField: (
+    sectionKey: string,
+    descriptor: string,
+    value: string
+  ) => void;
 };
 
 const Ctx = createContext<CoordinatorApi | null>(null);
@@ -68,9 +77,11 @@ export function useEditCoordinator(): CoordinatorApi {
 
 export function EditCoordinatorProvider({
   assessmentId,
+  initialNeedsInputFields,
   children,
 }: {
   assessmentId: string;
+  initialNeedsInputFields?: Record<string, Record<string, string>>;
   children: ReactNode;
 }) {
   const [state, setState] = useState<EditState>({
@@ -82,6 +93,30 @@ export function EditCoordinatorProvider({
   });
   const [pending, setPending] = useState<PendingAction>(null);
   const [overrides, setOverrides] = useState<Record<string, string>>({});
+  const [needsInputFields, setNeedsInputFields] = useState<
+    Record<string, Record<string, string>>
+  >(initialNeedsInputFields ?? {});
+
+  const updateNeedsInputField = useCallback(
+    (sectionKey: string, descriptor: string, value: string) => {
+      setNeedsInputFields((prev) => {
+        const next = { ...prev };
+        const sectionMap = { ...(next[sectionKey] ?? {}) };
+        if (value === "") {
+          delete sectionMap[descriptor];
+        } else {
+          sectionMap[descriptor] = value;
+        }
+        if (Object.keys(sectionMap).length === 0) {
+          delete next[sectionKey];
+        } else {
+          next[sectionKey] = sectionMap;
+        }
+        return next;
+      });
+    },
+    []
+  );
 
   const dirty = state.activeKey !== null && state.draft !== state.initial;
 
@@ -232,8 +267,28 @@ export function EditCoordinatorProvider({
   }, [dirty]);
 
   const api = useMemo<CoordinatorApi>(
-    () => ({ state, dirty, requestEdit, setDraft, save, cancel, overrides }),
-    [state, dirty, requestEdit, setDraft, save, cancel, overrides]
+    () => ({
+      state,
+      dirty,
+      requestEdit,
+      setDraft,
+      save,
+      cancel,
+      overrides,
+      needsInputFields,
+      updateNeedsInputField,
+    }),
+    [
+      state,
+      dirty,
+      requestEdit,
+      setDraft,
+      save,
+      cancel,
+      overrides,
+      needsInputFields,
+      updateNeedsInputField,
+    ]
   );
 
   return (
