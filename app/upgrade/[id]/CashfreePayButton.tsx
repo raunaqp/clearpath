@@ -8,6 +8,10 @@ type Props = {
   /** 'TEST' | 'PROD' — set on the page from process.env.CASHFREE_ENVIRONMENT
    *  (server-side) so the SDK loads against the right Cashfree origin. */
   cashfreeEnv: "TEST" | "PROD";
+  /** Sprint 3 Story 3.1 — drives the amount + delivery channel. */
+  tierChoice: "draft_pack" | "draft_editor";
+  /** Pre-rendered label for the button. Defaults to the ₹499 copy. */
+  label?: string;
 };
 
 /**
@@ -19,9 +23,18 @@ type Props = {
  * URL ourselves and 404'd because the pattern we guessed was an API
  * path, not a customer-facing path.
  */
-export function CashfreePayButton({ assessmentId, cashfreeEnv }: Props) {
+export function CashfreePayButton({
+  assessmentId,
+  cashfreeEnv,
+  tierChoice,
+  label,
+}: Props) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const buttonLabel =
+    label ?? (tierChoice === "draft_editor"
+      ? "Pay ₹2,499 with Cashfree →"
+      : "Pay ₹499 with Cashfree →");
 
   async function start() {
     setPending(true);
@@ -30,7 +43,10 @@ export function CashfreePayButton({ assessmentId, cashfreeEnv }: Props) {
       const res = await fetch("/api/cashfree/create-order", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ assessment_id: assessmentId }),
+        body: JSON.stringify({
+          assessment_id: assessmentId,
+          tier_choice: tierChoice,
+        }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok || !body.session_id) {
@@ -64,7 +80,7 @@ export function CashfreePayButton({ assessmentId, cashfreeEnv }: Props) {
         disabled={pending}
         className="inline-flex items-center justify-center rounded-full bg-[#0F6E56] hover:bg-[#0a5a47] text-white font-medium text-[15px] px-6 py-3 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        {pending ? "Redirecting…" : "Pay ₹499 with Cashfree →"}
+        {pending ? "Redirecting…" : buttonLabel}
       </button>
       <p className="text-xs text-[#6B766F]">
         UPI · cards · netbanking — handled by Cashfree on their secure

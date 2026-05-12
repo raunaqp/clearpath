@@ -25,13 +25,15 @@ import {
   getCashfreeConfig,
 } from "@/lib/cashfree/client";
 
+import { TIER_PRICING } from "@/lib/cashfree/tiers";
+
 export const dynamic = "force-dynamic";
 
-const TIER2_AMOUNT_INR = 499;
 const REUSABLE_STATUSES = ["created", "pending_verification", "paid"] as const;
 
 const schema = z.object({
   assessment_id: z.string().uuid(),
+  tier_choice: z.enum(["draft_pack", "draft_editor"]).default("draft_pack"),
 });
 
 export async function POST(req: NextRequest) {
@@ -52,12 +54,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  // Sprint 2 closeout — Tier 2 delivery is by email, so we require a
-  // verified email at payment time. Sprint 3 makes this tier-aware
-  // (₹2,499 in-app editor skips the check). The page-level gate
-  // surfaces the same precondition with a UI affordance; this is
-  // belt-and-suspenders in case a client bypasses the page.
-  if (!user.emailConfirmedAt) {
+  const parsed = schema.safeParse(await req.json().catch(() => ({})));
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "invalid_body", issues: parsed.error.issues },
+      { status: 422 }
+    );
+  }
+
+  const tierChoice = parsed.data.tier_choice;
+  const tierConfig = TIER_PRICING[tierChoice];
+
+  // Sprint 3 Story 3.1 — email-verify gate is tier-aware. Draft Pack
+  // delivery is by email, so we require a confirmed address. The
+  // in-app Draft Editor tier doesn't need email and lets users start
+  // immediately. The page-level gate surfaces the same precondition
+  // with a UI affordance; this is belt-and-suspenders in case a
+  // client bypasses the page.
+  if (tierConfig.requiresVerifiedEmail && !user.emailConfirmedAt) {
     return NextResponse.json(
       {
         error: "email_not_verified",
@@ -65,14 +79,6 @@ export async function POST(req: NextRequest) {
           "Your Draft Pack arrives by email — please verify your address first. Check your inbox for the confirmation link sent at signup.",
       },
       { status: 412 }
-    );
-  }
-
-  const parsed = schema.safeParse(await req.json().catch(() => ({})));
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "invalid_body", issues: parsed.error.issues },
-      { status: 422 }
     );
   }
 
@@ -121,8 +127,9 @@ export async function POST(req: NextRequest) {
     .insert({
       assessment_id: assessment.id,
       status: "created",
-      amount_inr: TIER2_AMOUNT_INR,
+      amount_inr: tierConfig.amountInr,
       payment_method: "cashfree",
+      tier_choice: tierChoice,
     })
     .select("id")
     .single();
@@ -141,7 +148,7 @@ export async function POST(req: NextRequest) {
 
   const cfRes = await createOrder(cfg, {
     orderId: cashfreeOrderId,
-    amountInr: TIER2_AMOUNT_INR,
+    amountInr: tierConfig.amountInr,
     customer: {
       id: assessment.id,
       email: assessment.email,

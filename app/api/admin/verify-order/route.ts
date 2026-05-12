@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
 import { z } from "zod";
 import { getServiceClient } from "@/lib/supabase";
-import { runDraftPackV2 } from "@/lib/engine/draft-pack-v2/orchestrator";
+import { triggerV2GenerationForOrder } from "@/lib/engine/draft-pack-v2/auto-trigger";
 
 // Sprint 2 Story 2.6 — auto-trigger v2 generation when admin verifies
 // the payment. The response returns immediately (status: 'verified');
@@ -81,119 +81,4 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json({ ok: true, order_id: data.id, status: data.status });
-}
-
-/**
- * Story 2.6 — runs the v2 orchestrator for an order. By the time this
- * runs (scheduled via after() from verify-order), the calling endpoint
- * has already landed status='generating'. We just verify that and pull
- * assessment_id.
- *
- * Status transitions:
- *   generating → delivered  (on success)
- *   generating → failed     (on failure; admin can retry via legacy
- *                            v1 button or by re-running the script)
- *
- * Logs "would send email" as the Sprint 3 SMTP placeholder. The
- * `email_sent_to` column on tier2_orders captures the intended
- * recipient even when no SMTP is wired.
- */
-async function triggerV2GenerationForOrder(orderId: string): Promise<void> {
-  const supabase = getServiceClient();
-  const startedAt = Date.now();
-
-  const { data: locked, error: casErr } = await supabase
-    .from("tier2_orders")
-    .select("id, assessment_id, status")
-    .eq("id", orderId)
-    .maybeSingle<{ id: string; assessment_id: string; status: string }>();
-
-  if (casErr || !locked) {
-    console.error(
-      `[verify-order:auto-trigger] could not load order ${orderId}:`,
-      casErr?.message ?? "no row"
-    );
-    return;
-  }
-  if (locked.status !== "generating") {
-    console.log(
-      `[verify-order:auto-trigger] order ${orderId} status=${locked.status} (expected 'generating') — skip`
-    );
-    return;
-  }
-
-  console.log(
-    `[verify-order:auto-trigger] starting v2 gen for order ${orderId} (assessment ${locked.assessment_id})`
-  );
-
-  // Clear any prior sections under this order (idempotent re-run).
-  await supabase
-    .from("draft_pack_sections")
-    .delete()
-    .eq("order_id", orderId);
-
-  const result = await runDraftPackV2({
-    assessment_id: locked.assessment_id,
-    dry_run: false,
-    log: (msg) => console.log(`[verify-order:auto-trigger] ${msg}`),
-  });
-
-  if (!result.ok) {
-    console.error(
-      `[verify-order:auto-trigger] v2 gen failed: ${result.error}`
-    );
-    // Stamp the failure note but leave status='generating' so the
-    // admin's "Reset stuck order" button + the live-gen script can
-    // recover. We don't auto-revert to 'pending_verification' because
-    // payment already cleared.
-    await supabase
-      .from("tier2_orders")
-      .update({
-        updated_at: new Date().toISOString(),
-        notes: `auto-gen failed: ${result.error ?? "unknown"}`,
-      })
-      .eq("id", orderId);
-    return;
-  }
-
-  // Pull the recipient email + push to delivered.
-  const { data: order } = await supabase
-    .from("tier2_orders")
-    .select("id, assessment_id")
-    .eq("id", orderId)
-    .single();
-  const { data: assessment } = await supabase
-    .from("assessments")
-    .select("email")
-    .eq("id", order?.assessment_id ?? "")
-    .maybeSingle();
-
-  const recipient = assessment?.email ?? null;
-  const nowIso = new Date().toISOString();
-  await supabase
-    .from("tier2_orders")
-    .update({
-      status: "delivered",
-      delivered_at: nowIso,
-      updated_at: nowIso,
-      email_sent_to: recipient,
-    })
-    .eq("id", orderId)
-    .eq("status", "generating");
-
-  const durationS = ((Date.now() - startedAt) / 1000).toFixed(1);
-  console.log(
-    `[verify-order:auto-trigger] delivered in ${durationS}s · ${result.totals.sections_generated}/12 sections · $${result.totals.cost_usd.toFixed(4)}`
-  );
-
-  // Story 2.6 email placeholder — Sprint 3 wires real SMTP.
-  if (recipient) {
-    console.log(
-      `[verify-order:auto-trigger] would send email: to=${recipient} subject="Your CDSCO Draft Pack is ready"`
-    );
-  } else {
-    console.warn(
-      "[verify-order:auto-trigger] no recipient email recorded; skipping notification placeholder"
-    );
-  }
 }

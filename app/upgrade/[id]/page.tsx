@@ -6,6 +6,8 @@ import { GlobalHeader } from "@/components/layout/GlobalHeader";
 import { PaymentForm } from "./PaymentForm";
 import { CashfreePayButton } from "./CashfreePayButton";
 import { EmailVerifyGate } from "./EmailVerifyGate";
+import { TierPicker } from "./TierPicker";
+import { TIER_PRICING } from "@/lib/cashfree/tiers";
 import { isCashfreeConfigured } from "@/lib/cashfree/client";
 import { StatusPanel, type Tier2Order } from "./StatusPanel";
 import type { WizardAnswers } from "@/lib/wizard/types";
@@ -28,10 +30,19 @@ type AssessmentRow = {
 
 export default async function UpgradePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ tier?: string }>;
 }) {
   const { id } = await params;
+  const { tier: tierFromUrl } = await searchParams;
+  const selectedTier: "draft_pack" | "draft_editor" | null =
+    tierFromUrl === "draft_editor"
+      ? "draft_editor"
+      : tierFromUrl === "draft_pack"
+        ? "draft_pack"
+        : null;
 
   // Auth gate — clicking "Generate Draft Pack" requires an account (Story 2.2).
   // Risk Card flow stays anonymous; the gate kicks in here, at the
@@ -69,7 +80,7 @@ export default async function UpgradePage({
   const { data: order } = await supabase
     .from("tier2_orders")
     .select(
-      "id, status, transaction_id, payment_screenshot_url, draft_pack_pdf_url, delivered_at, created_at, email_sent_to"
+      "id, status, transaction_id, payment_screenshot_url, draft_pack_pdf_url, delivered_at, created_at, email_sent_to, tier_choice"
     )
     .eq("assessment_id", id)
     .neq("status", "failed")
@@ -232,38 +243,52 @@ export default async function UpgradePage({
               </ol>
             </div>
 
-            {/* Sprint 2 closeout — gate payment on verified email.
-                For Tier 2 (₹499) delivery is by email, so we refuse
-                to spin up an order until the address is confirmed.
-                Sprint 3 makes this tier-aware (₹2,499 editor tier
-                skips the check). */}
-            {!user.emailConfirmedAt ? (
-              <EmailVerifyGate
-                email={user.email}
-                returnTo={`/upgrade/${id}`}
-              />
-            ) : null}
+            {/* Sprint 3 Story 3.1 — tier picker. Shown when the customer
+                hasn't yet chosen a tier (no ?tier= in URL). Once they
+                click a card, the URL gains ?tier=<choice> and the
+                page server-renders the pay block tuned for that tier. */}
+            {!selectedTier ? <TierPicker assessmentId={id} /> : null}
 
-            {/* Story 2.8 — Cashfree button appears above the legacy
-                UPI-QR form when CASHFREE_APP_ID + CASHFREE_SECRET_KEY
-                are set. Both flows coexist during sandbox testing.
-                Hidden behind the verify gate so unverified customers
-                can't click through to create-order (the endpoint
-                also rejects but UX is cleaner upfront). */}
-            {isCashfreeConfigured() && user.emailConfirmedAt ? (
-              <div className="mb-6 rounded-lg bg-white border border-[#D9D5C8] px-5 py-5">
-                <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-[#0F6E56] mb-2">
-                  One-click payment
-                </p>
-                <CashfreePayButton
-                  assessmentId={id}
-                  cashfreeEnv={
-                    (process.env.CASHFREE_ENVIRONMENT ?? "TEST") === "PROD"
-                      ? "PROD"
-                      : "TEST"
-                  }
+            {selectedTier ? (
+              <>
+                <ChosenTierBanner
+                  tier={selectedTier}
+                  changeHref={`/upgrade/${id}`}
                 />
-              </div>
+
+                {/* Email-verify gate fires only for the email-delivered
+                    tier (₹499 Draft Pack). ₹2,499 Draft Editor skips
+                    it since delivery is in-app. */}
+                {TIER_PRICING[selectedTier].requiresVerifiedEmail &&
+                !user.emailConfirmedAt ? (
+                  <EmailVerifyGate
+                    email={user.email}
+                    returnTo={`/upgrade/${id}?tier=${selectedTier}`}
+                  />
+                ) : null}
+
+                {isCashfreeConfigured() &&
+                (!TIER_PRICING[selectedTier].requiresVerifiedEmail ||
+                  user.emailConfirmedAt) ? (
+                  <div className="mb-6 rounded-lg bg-white border border-[#D9D5C8] px-5 py-5">
+                    <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-[#0F6E56] mb-2">
+                      One-click payment · ₹
+                      {TIER_PRICING[selectedTier].amountInr.toLocaleString(
+                        "en-IN"
+                      )}
+                    </p>
+                    <CashfreePayButton
+                      assessmentId={id}
+                      tierChoice={selectedTier}
+                      cashfreeEnv={
+                        (process.env.CASHFREE_ENVIRONMENT ?? "TEST") === "PROD"
+                          ? "PROD"
+                          : "TEST"
+                      }
+                    />
+                  </div>
+                ) : null}
+              </>
             ) : null}
 
             <PaymentForm assessmentId={id} email={assessment.email} />
@@ -289,6 +314,37 @@ export default async function UpgradePage({
           )}
         </div>
       </main>
+    </div>
+  );
+}
+
+function ChosenTierBanner({
+  tier,
+  changeHref,
+}: {
+  tier: "draft_pack" | "draft_editor";
+  changeHref: string;
+}) {
+  const cfg = TIER_PRICING[tier];
+  return (
+    <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-white border border-[#D9D5C8] px-4 py-3">
+      <div>
+        <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-[#6B766F]">
+          You picked
+        </p>
+        <p className="text-[#0E1411] font-medium mt-0.5">
+          {cfg.label}{" "}
+          <span className="text-[#6B766F] font-normal">
+            · ₹{cfg.amountInr.toLocaleString("en-IN")} · {cfg.deliveryChannel}
+          </span>
+        </p>
+      </div>
+      <a
+        href={changeHref}
+        className="text-sm text-[#6B766F] underline underline-offset-2 hover:text-[#0E1411]"
+      >
+        Change tier
+      </a>
     </div>
   );
 }

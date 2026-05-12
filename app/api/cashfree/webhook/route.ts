@@ -22,13 +22,18 @@
  * stays manual for sandbox per the founder lock.
  */
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 import { getServiceClient } from "@/lib/supabase";
 import {
   getCashfreeConfig,
   verifyWebhookSignature,
 } from "@/lib/cashfree/client";
+import { triggerV2GenerationForOrder } from "@/lib/engine/draft-pack-v2/auto-trigger";
 
 export const dynamic = "force-dynamic";
+// Webhook returns fast (we promise Cashfree <5s). The v2 orchestrator
+// runs via after() and needs the extended window.
+export const maxDuration = 300;
 
 export async function POST(req: NextRequest) {
   const cfg = getCashfreeConfig();
@@ -101,18 +106,23 @@ export async function POST(req: NextRequest) {
   };
   if (cfPaymentId) updates.cashfree_payment_id = cfPaymentId;
 
+  let shouldAutoTrigger = false;
   if (
     eventType === "PAYMENT_SUCCESS_WEBHOOK" ||
     paymentStatus === "SUCCESS"
   ) {
-    // Transition to 'paid' if we're still in created/pending. Don't
-    // overwrite later states (verified/generating/delivered) — those
-    // came from admin or auto-trigger.
+    // Story 3.2 — collapse paid → generating in the same write so
+    // the v2 trigger can fire immediately. Skipping the intermediate
+    // 'paid' state (still used by the legacy admin verify path)
+    // eliminates the race we saw in Sprint 2. Don't overwrite later
+    // states (generating / delivered) — those came from admin or a
+    // prior webhook delivery.
     if (
       order.status === "created" ||
       order.status === "pending_verification"
     ) {
-      updates.status = "paid";
+      updates.status = "generating";
+      shouldAutoTrigger = true;
     }
   } else if (
     eventType === "PAYMENT_FAILED_WEBHOOK" ||
@@ -134,6 +144,16 @@ export async function POST(req: NextRequest) {
   console.log(
     `[cashfree/webhook] ${eventType} · order ${order.id} · ${order.status} → ${updates.status ?? order.status}`
   );
+
+  // Story 3.2 — fire v2 generation in the background once status has
+  // landed at 'generating'. after() keeps the function alive past
+  // the response so Cashfree gets its <5s ack and the ~4-minute
+  // orchestrator still runs.
+  if (shouldAutoTrigger) {
+    after(async () => {
+      await triggerV2GenerationForOrder(order.id);
+    });
+  }
 
   return NextResponse.json({ ok: true });
 }

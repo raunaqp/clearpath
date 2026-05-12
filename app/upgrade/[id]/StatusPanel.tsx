@@ -15,6 +15,8 @@ export type Tier2Order = {
   delivered_at: string | null;
   created_at: string | null;
   email_sent_to: string | null;
+  /** Sprint 3 Story 3.1 — null on legacy rows (treat as draft_pack). */
+  tier_choice: "draft_pack" | "draft_editor" | null;
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -104,6 +106,7 @@ export function StatusPanel({
             assessmentId={assessmentId}
             email={email}
             cashfreeEnv={cashfreeEnv}
+            tierChoice={order.tier_choice ?? "draft_pack"}
           />
         )}
         {order.status === "pending_verification" && (
@@ -155,10 +158,12 @@ function CreatedDetails({
   assessmentId,
   email,
   cashfreeEnv,
+  tierChoice,
 }: {
   assessmentId: string;
   email: string;
   cashfreeEnv: "TEST" | "PROD" | null;
+  tierChoice: "draft_pack" | "draft_editor";
 }) {
   return (
     <>
@@ -175,6 +180,7 @@ function CreatedDetails({
         <CashfreePayButton
           assessmentId={assessmentId}
           cashfreeEnv={cashfreeEnv}
+          tierChoice={tierChoice}
         />
       ) : (
         <p className="text-sm text-[#993C1D]">
@@ -286,6 +292,12 @@ function DeliveredDetails({
   email: string;
   draftHref: string;
 }) {
+  // Sprint 3 Story 3.4 — tier-aware delivered UX. Legacy rows
+  // (tier_choice null) get the draft_pack treatment since that
+  // was Sprint 2's only product.
+  const tier = order.tier_choice ?? "draft_pack";
+  const isEditor = tier === "draft_editor";
+
   return (
     <>
       <div className="flex flex-wrap items-center gap-3">
@@ -293,7 +305,7 @@ function DeliveredDetails({
           href={draftHref}
           className="inline-flex items-center justify-center rounded-full bg-[#0F6E56] hover:bg-[#0d5c48] text-white font-medium text-[15px] px-6 py-3 transition-colors"
         >
-          Open in browser →
+          {isEditor ? "Open Draft Editor →" : "Open in browser →"}
         </Link>
         {order.draft_pack_pdf_url ? (
           <a
@@ -306,10 +318,18 @@ function DeliveredDetails({
           </a>
         ) : null}
       </div>
-      <p className="text-sm text-[#6B766F]">
-        Also emailed to{" "}
-        <span className="font-medium text-[#0E1411]">{email}</span>.
-      </p>
+      {isEditor ? (
+        <p className="text-sm text-[#6B766F]">
+          Your Draft Editor is ready. Click above to open the inline
+          editor — sections you save persist instantly.
+        </p>
+      ) : (
+        <p className="text-sm text-[#6B766F]">
+          Emailed to{" "}
+          <span className="font-medium text-[#0E1411]">{email}</span>.
+          Open in the browser for the live editor view.
+        </p>
+      )}
       <hr className="border-t border-[#D9D5C8]" />
       <p className="text-sm text-[#0E1411]">
         Want an expert to review + refine before you file?{" "}
