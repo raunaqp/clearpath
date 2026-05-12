@@ -12,6 +12,24 @@ export default function TermsPage() {
       <GlobalHeader />
       <main className="px-4 sm:px-6 lg:px-10 pt-8 pb-24">
         <div className="max-w-[760px] mx-auto">
+          <div className="mb-6 rounded-lg bg-[#FAEEDA] border border-[#BA7517]/40 px-4 py-3">
+            <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-[#BA7517] mb-1">
+              Draft · pending legal review
+            </p>
+            <p className="text-sm text-[#633806] leading-relaxed">
+              These terms are provisional and have not yet been reviewed by
+              counsel. We&apos;ll publish the final version in our next
+              release. For questions in the meantime contact{" "}
+              <a
+                href="mailto:raunaq.pradhan@gmail.com"
+                className="underline underline-offset-2"
+              >
+                raunaq.pradhan@gmail.com
+              </a>
+              .
+            </p>
+          </div>
+
           <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517]">
             Legal
           </p>
@@ -149,10 +167,10 @@ export default function TermsPage() {
             <Clause title="12. Contact">
               For questions about these Terms, write to{" "}
               <a
-                href="mailto:legal@clearpath-medtech.com"
+                href="mailto:raunaq.pradhan@gmail.com"
                 className="text-[#0F6E56] underline underline-offset-2 hover:text-[#0a5a47]"
               >
-                legal@clearpath-medtech.com
+                raunaq.pradhan@gmail.com
               </a>
               .
             </Clause>
