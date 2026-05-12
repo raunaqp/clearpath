@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useEditCoordinator } from "./EditCoordinator";
 
 type Props = {
@@ -54,62 +54,62 @@ export function SectionEditor({
   function findNextGap() {
     if (gaps.length === 0) return;
     const next = (gapCursor + 1) % gaps.length;
+    const g = gaps[next];
     setGapCursor(next);
-    // DOM mutation (focus + setSelectionRange + scrollTop) is deferred
-    // to a useEffect below — running it synchronously here loses the
-    // selection on the controlled-input re-render that follows state.
+    // DOM ops run AFTER React's controlled-input reconciliation via
+    // requestAnimationFrame. Doing this in a useEffect on
+    // [gapCursor, state.draft] caused the editor to re-select the
+    // current gap on every keystroke — when the customer typed into
+    // the selected marker, gaps recomputed, the same gapCursor
+    // pointed at a DIFFERENT marker, focus jumped, editor felt
+    // broken. Click-handler-scoped DOM ops only fire on the actual
+    // button press.
+    requestAnimationFrame(() => scrollTextareaToMarker(g));
   }
 
-  // Apply focus/selection/scroll AFTER the React commit, so the
-  // textarea's value reconciliation doesn't blow away the selection.
-  //
-  // Scroll calculation uses a mirror <div> styled identically to the
-  // textarea — measuring offsetTop of a marker span gives us the
-  // marker's true visual top accounting for soft wraps, which the
-  // naive '\n'-split approach misses entirely on long lines.
-  useEffect(() => {
-    if (gapCursor < 0 || gapCursor >= gaps.length) return;
-    const g = gaps[gapCursor];
+  function scrollTextareaToMarker(g: { start: number; end: number }) {
     const ta = textareaRef.current;
     if (!ta) return;
     ta.focus();
     ta.setSelectionRange(g.start, g.end);
 
+    // Mirror-DOM measurement to get the marker's visual top accounting
+    // for soft wraps. `pointer-events: none` makes sure no stray hit
+    // tests during the few microseconds the node is in the DOM can
+    // intercept clicks on the actual textarea.
     const computed = window.getComputedStyle(ta);
     const mirror = document.createElement("div");
-    const props: (keyof CSSStyleDeclaration)[] = [
-      "boxSizing",
-      "borderTopWidth",
-      "borderRightWidth",
-      "borderBottomWidth",
-      "borderLeftWidth",
-      "paddingTop",
-      "paddingRight",
-      "paddingBottom",
-      "paddingLeft",
-      "fontFamily",
-      "fontSize",
-      "fontWeight",
-      "fontStyle",
-      "lineHeight",
-      "letterSpacing",
-      "tabSize",
+    const styleProps: ReadonlyArray<string> = [
+      "box-sizing",
+      "border-top-width",
+      "border-right-width",
+      "border-bottom-width",
+      "border-left-width",
+      "padding-top",
+      "padding-right",
+      "padding-bottom",
+      "padding-left",
+      "font-family",
+      "font-size",
+      "font-weight",
+      "font-style",
+      "line-height",
+      "letter-spacing",
+      "tab-size",
     ];
-    for (const p of props) {
-      const v = computed.getPropertyValue(
-        // Convert camelCase to dash-case for getPropertyValue
-        String(p).replace(/[A-Z]/g, (c) => "-" + c.toLowerCase())
-      );
-      if (v) mirror.style.setProperty(String(p as string), v);
+    for (const p of styleProps) {
+      const v = computed.getPropertyValue(p);
+      if (v) mirror.style.setProperty(p, v);
     }
     mirror.style.position = "absolute";
     mirror.style.visibility = "hidden";
+    mirror.style.pointerEvents = "none";
     mirror.style.whiteSpace = "pre-wrap";
     mirror.style.wordWrap = "break-word";
     mirror.style.width = `${ta.clientWidth}px`;
     mirror.style.height = "auto";
-    mirror.style.top = "0";
-    mirror.style.left = "0";
+    mirror.style.top = "-9999px";
+    mirror.style.left = "-9999px";
 
     mirror.textContent = state.draft.slice(0, g.start);
     const markerSpan = document.createElement("span");
@@ -120,9 +120,8 @@ export function SectionEditor({
     const markerTop = markerSpan.offsetTop;
     document.body.removeChild(mirror);
 
-    const margin = 60;
-    ta.scrollTop = Math.max(0, markerTop - margin);
-  }, [gapCursor, gaps, state.draft]);
+    ta.scrollTop = Math.max(0, markerTop - 60);
+  }
 
   const saveBtnClasses =
     "inline-flex items-center rounded-md bg-[#0F6E56] px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-[#0a5a47] disabled:opacity-50 disabled:cursor-not-allowed";
