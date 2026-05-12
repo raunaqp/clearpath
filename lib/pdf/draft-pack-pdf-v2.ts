@@ -45,17 +45,28 @@ const PRINT_TIMEOUT_MS = 60_000;
  */
 async function resolveExecutablePath(): Promise<string> {
   const local = process.env.LOCAL_CHROME_PATH;
-  if (local && local.trim().length > 0) return local;
+  if (local && local.trim().length > 0) {
+    console.log("[draft-pack-pdf-v2] using LOCAL_CHROME_PATH");
+    return local;
+  }
 
   const packUrl = process.env.CHROMIUM_PACK_URL;
   if (packUrl && packUrl.trim().length > 0) {
+    console.log(
+      "[draft-pack-pdf-v2] using CHROMIUM_PACK_URL:",
+      packUrl.slice(0, 80) + (packUrl.length > 80 ? "…" : "")
+    );
     return chromium.executablePath(packUrl);
   }
 
   // Last resort — only works if @sparticuz/chromium's bin/ was traced
   // into the function bundle. Vercel runtime says
   // "/var/task/node_modules/@sparticuz/chromium/bin does not exist"
-  // when this path is hit there.
+  // when this path is hit there. If you see that error, the
+  // CHROMIUM_PACK_URL env var is not present in the function runtime.
+  console.warn(
+    "[draft-pack-pdf-v2] no CHROMIUM_PACK_URL — falling back to bundled bin/ which doesn't exist on Vercel"
+  );
   return chromium.executablePath();
 }
 

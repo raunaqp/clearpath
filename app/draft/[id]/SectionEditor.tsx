@@ -62,6 +62,11 @@ export function SectionEditor({
 
   // Apply focus/selection/scroll AFTER the React commit, so the
   // textarea's value reconciliation doesn't blow away the selection.
+  //
+  // Scroll calculation uses a mirror <div> styled identically to the
+  // textarea — measuring offsetTop of a marker span gives us the
+  // marker's true visual top accounting for soft wraps, which the
+  // naive '\n'-split approach misses entirely on long lines.
   useEffect(() => {
     if (gapCursor < 0 || gapCursor >= gaps.length) return;
     const g = gaps[gapCursor];
@@ -69,10 +74,54 @@ export function SectionEditor({
     if (!ta) return;
     ta.focus();
     ta.setSelectionRange(g.start, g.end);
-    const before = state.draft.slice(0, g.start);
-    const line = before.split("\n").length - 1;
-    const lh = parseFloat(getComputedStyle(ta).lineHeight) || 22;
-    ta.scrollTop = Math.max(0, line * lh - 80);
+
+    const computed = window.getComputedStyle(ta);
+    const mirror = document.createElement("div");
+    const props: (keyof CSSStyleDeclaration)[] = [
+      "boxSizing",
+      "borderTopWidth",
+      "borderRightWidth",
+      "borderBottomWidth",
+      "borderLeftWidth",
+      "paddingTop",
+      "paddingRight",
+      "paddingBottom",
+      "paddingLeft",
+      "fontFamily",
+      "fontSize",
+      "fontWeight",
+      "fontStyle",
+      "lineHeight",
+      "letterSpacing",
+      "tabSize",
+    ];
+    for (const p of props) {
+      const v = computed.getPropertyValue(
+        // Convert camelCase to dash-case for getPropertyValue
+        String(p).replace(/[A-Z]/g, (c) => "-" + c.toLowerCase())
+      );
+      if (v) mirror.style.setProperty(String(p as string), v);
+    }
+    mirror.style.position = "absolute";
+    mirror.style.visibility = "hidden";
+    mirror.style.whiteSpace = "pre-wrap";
+    mirror.style.wordWrap = "break-word";
+    mirror.style.width = `${ta.clientWidth}px`;
+    mirror.style.height = "auto";
+    mirror.style.top = "0";
+    mirror.style.left = "0";
+
+    mirror.textContent = state.draft.slice(0, g.start);
+    const markerSpan = document.createElement("span");
+    markerSpan.textContent = state.draft.slice(g.start, g.end) || ".";
+    mirror.appendChild(markerSpan);
+
+    document.body.appendChild(mirror);
+    const markerTop = markerSpan.offsetTop;
+    document.body.removeChild(mirror);
+
+    const margin = 60;
+    ta.scrollTop = Math.max(0, markerTop - margin);
   }, [gapCursor, gaps, state.draft]);
 
   const saveBtnClasses =

@@ -97,6 +97,7 @@ export async function POST(req: NextRequest, ctx: Params) {
     base_url: resolveBaseUrl(),
     has_internal_print_token: !!process.env.INTERNAL_PRINT_TOKEN,
     has_bypass_secret: !!process.env.VERCEL_AUTOMATION_BYPASS_SECRET,
+    has_chromium_pack_url: !!process.env.CHROMIUM_PACK_URL,
     vercel_env: process.env.VERCEL_ENV ?? null,
     vercel_url: process.env.VERCEL_URL ?? null,
     next_public_site_url: process.env.NEXT_PUBLIC_SITE_URL ?? null,
