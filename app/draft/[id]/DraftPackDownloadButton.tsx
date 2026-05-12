@@ -18,8 +18,14 @@ export function DraftPackDownloadButton({
         method: "POST",
       });
       if (!res.ok) {
-        const body = await res.json().catch(() => ({ error: "unknown" }));
-        throw new Error(body.error ?? `HTTP ${res.status}`);
+        const body = await res.json().catch(() => ({}));
+        // Surface the actual server message (was masked behind the
+        // short error code, so the founder couldn't tell what failed
+        // without trawling Vercel logs).
+        const msg = body.message
+          ? `${body.error ?? "error"}: ${body.message}`
+          : body.error ?? `HTTP ${res.status}`;
+        throw new Error(msg);
       }
       const { url } = await res.json();
       if (typeof url !== "string") throw new Error("no url in response");

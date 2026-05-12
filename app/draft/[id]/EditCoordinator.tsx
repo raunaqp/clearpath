@@ -53,6 +53,10 @@ type CoordinatorApi = {
   setDraft: (value: string) => void;
   save: () => Promise<void>;
   cancel: () => void;
+  /** Client-side overlay map: section_key → just-saved content. SectionCard
+   *  prefers this over its server prop while the background refresh
+   *  catches up. Persists for the life of the page; cleared by reload. */
+  overrides: Record<string, string>;
 };
 
 const Ctx = createContext<CoordinatorApi | null>(null);
@@ -79,6 +83,7 @@ export function EditCoordinatorProvider({
     error: null,
   });
   const [pending, setPending] = useState<PendingAction>(null);
+  const [overrides, setOverrides] = useState<Record<string, string>>({});
 
   const dirty = state.activeKey !== null && state.draft !== state.initial;
 
@@ -149,18 +154,23 @@ export function EditCoordinatorProvider({
 
   const save = useCallback(async () => {
     if (!state.activeKey) return;
+    const key = state.activeKey;
+    const draft = state.draft;
     setState((s) => ({ ...s, saving: true, error: null }));
-    const result = await saveCore(state.activeKey, state.draft);
+    const result = await saveCore(key, draft);
     if (!result.ok) {
       setState((s) => ({ ...s, saving: false, error: result.message }));
       return;
     }
-    // Full reload — router.refresh() raced with the editor close()
-    // and customers saw a flash of AI baseline before the new content
-    // landed. location.reload() eliminates the race entirely; the
-    // server-component re-render is guaranteed before any paint.
-    window.location.reload();
-  }, [state.activeKey, state.draft, saveCore]);
+    // Proper UX: stamp the override map with the just-saved content
+    // BEFORE closing the editor, so the section card re-renders with
+    // the new content in the same React commit. No reload flash, no
+    // scroll jump. router.refresh() runs in the background to bring
+    // the server-component prop chain back in sync.
+    setOverrides((o) => ({ ...o, [key]: draft }));
+    close();
+    router.refresh();
+  }, [state.activeKey, state.draft, saveCore, close, router]);
 
   const cancel = useCallback(() => {
     if (dirty) {
@@ -183,22 +193,20 @@ export function EditCoordinatorProvider({
       setPending(null); // keep editor open with the error
       return;
     }
-    // Save succeeded; resolve pending action.
+    // Save succeeded — stamp the override map for the section we just
+    // wrote so its card re-renders with new content immediately.
+    const savedKey = state.activeKey;
+    const savedDraft = state.draft;
+    setOverrides((o) => ({ ...o, [savedKey]: savedDraft }));
+
     if (pending?.kind === "switch") {
-      // Section X is saved, immediately open Section Y in edit mode.
-      // Editor stays mounted, so no "stale flash" — router.refresh
-      // brings the rest of the page up to date in the background.
       performSwitch(pending.targetKey, pending.targetInitial);
-      setPending(null);
-      router.refresh();
     } else {
-      // "cancel" kind — closing the editor. Reload eliminates the
-      // briefly-visible AI baseline for the section that was being
-      // closed. Same fix as save().
-      setPending(null);
-      window.location.reload();
+      close();
     }
-  }, [state.activeKey, state.draft, saveCore, pending, performSwitch, router]);
+    setPending(null);
+    router.refresh();
+  }, [state.activeKey, state.draft, saveCore, pending, performSwitch, close, router]);
 
   const modalDiscard = useCallback(() => {
     if (pending?.kind === "switch") {
@@ -225,8 +233,8 @@ export function EditCoordinatorProvider({
   }, [dirty]);
 
   const api = useMemo<CoordinatorApi>(
-    () => ({ state, dirty, requestEdit, setDraft, save, cancel }),
-    [state, dirty, requestEdit, setDraft, save, cancel]
+    () => ({ state, dirty, requestEdit, setDraft, save, cancel, overrides }),
+    [state, dirty, requestEdit, setDraft, save, cancel, overrides]
   );
 
   return (

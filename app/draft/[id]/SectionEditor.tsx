@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useRef, useState } from "react";
 import { useEditCoordinator } from "./EditCoordinator";
 
 type Props = {
@@ -9,6 +10,8 @@ type Props = {
   isAiBaseline: boolean;
 };
 
+const GAP_RE = /\[NEEDS INPUT:[^\]]*\]|\[TBD\]/g;
+
 /**
  * Sprint 2 Story 2.5 Phase 5.5.B (revised) — plain-textarea editor.
  *
@@ -17,6 +20,9 @@ type Props = {
  * lives in EditCoordinator so only one section can be open at a
  * time and a modal fires on cross-section navigation with unsaved
  * changes.
+ *
+ * Find-next-gap button cycles the cursor through [NEEDS INPUT: …]
+ * and [TBD] markers so the customer can fill them without scanning.
  */
 export function SectionEditor({
   sectionKey,
@@ -25,15 +31,50 @@ export function SectionEditor({
   isAiBaseline,
 }: Props) {
   const { state, dirty, setDraft, save, cancel } = useEditCoordinator();
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [gapCursor, setGapCursor] = useState<number>(-1);
+
+  // All gap positions in the current draft. Recomputed every keystroke.
+  const gaps = useMemo(() => {
+    const out: Array<{ start: number; end: number }> = [];
+    if (!state.draft) return out;
+    GAP_RE.lastIndex = 0;
+    let m;
+    while ((m = GAP_RE.exec(state.draft)) !== null) {
+      out.push({ start: m.index, end: m.index + m[0].length });
+    }
+    return out;
+  }, [state.draft]);
+
   if (state.activeKey !== sectionKey) return null;
 
   const words =
     state.draft.trim() === "" ? 0 : state.draft.trim().split(/\s+/).length;
 
+  function findNextGap() {
+    if (gaps.length === 0) return;
+    const next = (gapCursor + 1) % gaps.length;
+    setGapCursor(next);
+    const g = gaps[next];
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.focus();
+    ta.setSelectionRange(g.start, g.end);
+    // Approximate scroll-to-line so the highlighted marker is visible.
+    // Textareas don't support scrollIntoView on selections natively.
+    const before = state.draft.slice(0, g.start);
+    const line = before.split("\n").length - 1;
+    const lh = parseFloat(getComputedStyle(ta).lineHeight) || 22;
+    const margin = 80;
+    ta.scrollTop = Math.max(0, line * lh - margin);
+  }
+
   const saveBtnClasses =
     "inline-flex items-center rounded-md bg-[#0F6E56] px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-[#0a5a47] disabled:opacity-50 disabled:cursor-not-allowed";
   const cancelBtnClasses =
     "inline-flex items-center rounded-md border border-[#D9D5C8] bg-[#FDFCF8] px-3 py-1.5 text-sm font-medium text-[#2A3430] hover:bg-[#EFECE3]";
+  const gapBtnClasses =
+    "inline-flex items-center rounded-md border border-[#BA7517]/40 bg-[#FAEEDA] px-3 py-1.5 text-sm font-medium text-[#633806] hover:bg-[#F5E2BC] disabled:opacity-50 disabled:cursor-not-allowed";
 
   return (
     <div className="not-prose">
@@ -58,6 +99,24 @@ export function SectionEditor({
           </span>
           <button
             type="button"
+            onClick={findNextGap}
+            disabled={gaps.length === 0}
+            className={gapBtnClasses}
+            title={
+              gaps.length === 0
+                ? "No [NEEDS INPUT] or [TBD] markers in this section"
+                : "Jump cursor to the next gap marker"
+            }
+          >
+            Find next gap{" "}
+            {gaps.length > 0
+              ? gapCursor >= 0
+                ? `(${gapCursor + 1}/${gaps.length})`
+                : `(${gaps.length})`
+              : "(0)"}
+          </button>
+          <button
+            type="button"
             onClick={cancel}
             disabled={state.saving}
             className={cancelBtnClasses}
@@ -75,19 +134,17 @@ export function SectionEditor({
         </div>
       </header>
 
-      <label
-        htmlFor={`editor-${sectionKey}`}
-        className="sr-only"
-      >
+      <label htmlFor={`editor-${sectionKey}`} className="sr-only">
         Section markdown
       </label>
       <textarea
+        ref={textareaRef}
         id={`editor-${sectionKey}`}
         value={state.draft}
         onChange={(e) => setDraft(e.target.value)}
         spellCheck
         autoFocus
-        className="w-full min-h-[520px] resize-y rounded-md border border-[#D9D5C8] bg-[#FDFCF8] px-4 py-3 font-mono text-[13.5px] leading-relaxed text-[#2A3430] focus:outline-none focus:ring-2 focus:ring-teal-deep/40"
+        className="w-full min-h-[520px] resize-y rounded-md border border-[#D9D5C8] bg-[#FDFCF8] px-4 py-3 font-mono text-[13.5px] leading-relaxed text-[#2A3430] focus:outline-none focus:ring-2 focus:ring-[#0F6E56]/40"
       />
 
       <p className="mt-2 text-xs text-[#6B766F] leading-relaxed">
@@ -102,6 +159,9 @@ export function SectionEditor({
       <p className="mt-1 font-mono text-[11px] text-[#6B766F]">
         {words.toLocaleString()} words
         {dirty ? " · unsaved changes" : ""}
+        {gaps.length > 0
+          ? ` · ${gaps.length} gap${gaps.length === 1 ? "" : "s"} remaining`
+          : ""}
       </p>
 
       {state.error ? (

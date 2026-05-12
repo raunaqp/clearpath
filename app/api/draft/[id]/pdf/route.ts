@@ -91,19 +91,42 @@ export async function POST(req: NextRequest, ctx: Params) {
     );
   }
 
-  // Render.
+  // Render. Surface env presence in the response so the founder can
+  // see which configuration cell is missing without trawling logs.
+  const envSummary = {
+    base_url: resolveBaseUrl(),
+    has_internal_print_token: !!process.env.INTERNAL_PRINT_TOKEN,
+    has_bypass_secret: !!process.env.VERCEL_AUTOMATION_BYPASS_SECRET,
+    vercel_env: process.env.VERCEL_ENV ?? null,
+    vercel_url: process.env.VERCEL_URL ?? null,
+    next_public_site_url: process.env.NEXT_PUBLIC_SITE_URL ?? null,
+  };
+
   let pdf: Uint8Array;
   let durationMs: number;
   try {
-    const baseUrl = resolveBaseUrl();
-    const r = await renderDraftPackPdfV2({ assessmentId: id, baseUrl });
+    const r = await renderDraftPackPdfV2({
+      assessmentId: id,
+      baseUrl: envSummary.base_url,
+    });
     pdf = r.pdf;
     durationMs = r.durationMs;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error("[draft-pack-pdf-v2] render failed:", msg);
+    const name = err instanceof Error ? err.name : "Error";
+    const stack = err instanceof Error ? err.stack : null;
+    console.error(
+      "[draft-pack-pdf-v2] render failed:",
+      JSON.stringify({ name, msg, env: envSummary })
+    );
+    if (stack) console.error(stack);
     return NextResponse.json(
-      { error: "render_failed", message: msg },
+      {
+        error: "render_failed",
+        message: msg,
+        error_name: name,
+        env: envSummary,
+      },
       { status: 500 }
     );
   }

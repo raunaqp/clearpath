@@ -255,11 +255,6 @@ export default async function DraftPackPage({
     validationReport = null;
   }
 
-  const totalCost = renderable.reduce(
-    (acc, r) => acc + (r.meta?.llm_cost_usd ?? 0),
-    0
-  );
-
   // Heading for the dossier — pulls from readiness_card if available.
   const card = assessment.readiness_card as {
     classification?: { cdsco_class?: string; class_qualifier?: string | null };
@@ -329,7 +324,7 @@ export default async function DraftPackPage({
       <main className="flex-1 px-4 sm:px-6 lg:px-8 pt-8 pb-24">
         <div className="max-w-content mx-auto grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8">
           <aside className="hidden lg:block">
-            <div className="sticky top-24">
+            <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pr-2">
               <DraftPackTOC
                 sections={draftSections.map((d) => ({
                   number: d.renderable.section_number,
@@ -384,9 +379,6 @@ export default async function DraftPackPage({
                   {completion.complete}/{completion.total} sections ·{" "}
                   {completion.totalPending} item
                   {completion.totalPending === 1 ? "" : "s"} pending
-                </span>
-                <span className="text-xs text-[#6B766F] font-mono">
-                  ${totalCost.toFixed(2)} generation cost
                 </span>
               </div>
             </header>
