@@ -17,6 +17,8 @@ export type Tier2Order = {
 };
 
 const STATUS_LABEL: Record<string, string> = {
+  created: "Awaiting payment",
+  paid: "Payment received",
   pending_verification: "Pending payment verification",
   verified: "Payment verified",
   generating: "Generating your Draft Pack",
@@ -25,6 +27,8 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_TINT: Record<string, { bg: string; fg: string }> = {
+  created: { bg: "#FAEEDA", fg: "#BA7517" },
+  paid: { bg: "#E1F5EE", fg: "#0F6E56" },
   pending_verification: { bg: "#FAEEDA", fg: "#BA7517" },
   verified: { bg: "#E1F5EE", fg: "#0F6E56" },
   generating: { bg: "#E1F5EE", fg: "#0F6E56" },
@@ -115,6 +119,10 @@ export function StatusPanel({
 
 function headline(status: string): string {
   switch (status) {
+    case "created":
+      return "We're holding your order. Complete payment to start.";
+    case "paid":
+      return "Payment received. We're verifying it now.";
     case "pending_verification":
       return "Got it. Your Draft Pack is being prepared.";
     case "verified":
