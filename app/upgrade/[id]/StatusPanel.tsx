@@ -17,6 +17,8 @@ export type Tier2Order = {
 };
 
 const STATUS_LABEL: Record<string, string> = {
+  created: "Awaiting payment",
+  paid: "Payment received",
   pending_verification: "Pending payment verification",
   verified: "Payment verified",
   generating: "Generating your Draft Pack",
@@ -25,6 +27,8 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_TINT: Record<string, { bg: string; fg: string }> = {
+  created: { bg: "#FAEEDA", fg: "#BA7517" },
+  paid: { bg: "#E1F5EE", fg: "#0F6E56" },
   pending_verification: { bg: "#FAEEDA", fg: "#BA7517" },
   verified: { bg: "#E1F5EE", fg: "#0F6E56" },
   generating: { bg: "#E1F5EE", fg: "#0F6E56" },
@@ -43,6 +47,7 @@ export function StatusPanel({
   email: string;
   cardHref: string;
 }) {
+  const draftHref = `/draft/${assessmentId}`;
   const [order, setOrder] = useState<Tier2Order>(initialOrder);
   const isTerminal = order.status === "delivered" || order.status === "failed";
 
@@ -92,10 +97,10 @@ export function StatusPanel({
           <PendingDetails order={order} email={email} />
         )}
         {(order.status === "verified" || order.status === "generating") && (
-          <GeneratingDetails email={email} />
+          <GeneratingDetails email={email} draftHref={draftHref} />
         )}
         {order.status === "delivered" && (
-          <DeliveredDetails order={order} email={email} />
+          <DeliveredDetails order={order} email={email} draftHref={draftHref} />
         )}
         {order.status === "failed" && <FailedDetails order={order} />}
       </div>
@@ -114,6 +119,10 @@ export function StatusPanel({
 
 function headline(status: string): string {
   switch (status) {
+    case "created":
+      return "We're holding your order. Complete payment to start.";
+    case "paid":
+      return "Payment received. We're verifying it now.";
     case "pending_verification":
       return "Got it. Your Draft Pack is being prepared.";
     case "verified":
@@ -180,7 +189,13 @@ function PendingDetails({
   );
 }
 
-function GeneratingDetails({ email }: { email: string }) {
+function GeneratingDetails({
+  email,
+  draftHref,
+}: {
+  email: string;
+  draftHref: string;
+}) {
   return (
     <>
       <p className="text-[#0E1411] text-base">
@@ -198,6 +213,12 @@ function GeneratingDetails({ email }: { email: string }) {
         />
         Working on it…
       </div>
+      <Link
+        href={draftHref}
+        className="inline-flex items-center text-sm text-[#0F6E56] underline underline-offset-2 hover:text-[#0d5c48]"
+      >
+        Open the reader →
+      </Link>
     </>
   );
 }
@@ -205,26 +226,32 @@ function GeneratingDetails({ email }: { email: string }) {
 function DeliveredDetails({
   order,
   email,
+  draftHref,
 }: {
   order: Tier2Order;
   email: string;
+  draftHref: string;
 }) {
   return (
     <>
-      {order.draft_pack_pdf_url ? (
-        <a
-          href={order.draft_pack_pdf_url}
-          target="_blank"
-          rel="noopener noreferrer"
+      <div className="flex flex-wrap items-center gap-3">
+        <Link
+          href={draftHref}
           className="inline-flex items-center justify-center rounded-full bg-[#0F6E56] hover:bg-[#0d5c48] text-white font-medium text-[15px] px-6 py-3 transition-colors"
         >
-          Download PDF →
-        </a>
-      ) : (
-        <p className="text-sm text-[#993C1D]">
-          PDF link missing. Please email founder@clearpath.in.
-        </p>
-      )}
+          Open in browser →
+        </Link>
+        {order.draft_pack_pdf_url ? (
+          <a
+            href={order.draft_pack_pdf_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center rounded-full bg-white hover:bg-[#F7F6F2] border border-[#0F6E56] text-[#0F6E56] font-medium text-[15px] px-5 py-3 transition-colors"
+          >
+            Download PDF
+          </a>
+        ) : null}
+      </div>
       <p className="text-sm text-[#6B766F]">
         Also emailed to{" "}
         <span className="font-medium text-[#0E1411]">{email}</span>.

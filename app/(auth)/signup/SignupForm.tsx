@@ -45,6 +45,34 @@ export function SignupForm({ returnTo }: { returnTo: string }) {
           Used to sign back in. We don&apos;t share it.
         </p>
       </div>
+      <label className="flex items-start gap-2.5 text-sm text-[#2A3430] leading-relaxed">
+        <input
+          type="checkbox"
+          name="accept_terms"
+          required
+          className="mt-1 h-4 w-4 rounded border-[#D9D5C8] text-[#0F6E56] focus:ring-[#0F6E56]"
+        />
+        <span>
+          I agree to the{" "}
+          <Link
+            href="/terms"
+            target="_blank"
+            className="text-[#0F6E56] underline underline-offset-2 hover:no-underline"
+          >
+            Terms of Use
+          </Link>{" "}
+          and{" "}
+          <Link
+            href="/privacy"
+            target="_blank"
+            className="text-[#0F6E56] underline underline-offset-2 hover:no-underline"
+          >
+            Privacy Policy
+          </Link>
+          . I understand ClearPath drafts CDSCO submission content for me to
+          review — it is not regulatory advice.
+        </span>
+      </label>
       <AuthError message={state?.error} />
       <AuthSubmit pending={pending}>Create account →</AuthSubmit>
       <p className="text-sm text-[#6B766F] text-center pt-2">

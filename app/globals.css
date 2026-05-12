@@ -1,6 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&display=swap');
 @import "tailwindcss";
 
+/* Tailwind v4 does not auto-load tailwind.config.ts — without this
+   directive, semantic-token utilities like bg-teal-deep, text-ink,
+   bg-bg-card etc. silently no-op (only the @theme tokens above are
+   active). Arbitrary-value classes like bg-[#0F6E56] still work
+   regardless. This brings the JS config back online. */
+@config "../tailwind.config.ts";
+
 @plugin "tailwindcss-animate";
 @custom-variant dark (&:is(.dark *));
 
@@ -87,3 +94,224 @@ html, body {
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-thumb { background: #D9D5C8; border-radius: 8px; }
 ::-webkit-scrollbar-thumb:hover { background: #6B766F; }
+
+/* ----- Draft pack section renderer ----- */
+
+/* Prevent long unbroken text (URLs, hashes, table cells) from pushing
+   the section card wider than its grid track. The min-w-0 on the
+   right column lets it shrink; overflow-wrap lets text inside wrap. */
+.draft-prose {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.draft-prose h1,
+.draft-prose h2 { display: none; } /* parent renders the heading */
+
+.draft-prose h3 {
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #0E1411;
+  margin: 1.25rem 0 0.5rem;
+}
+.draft-prose h4 {
+  font-family: 'Source Serif 4', Georgia, serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2A3430;
+  margin: 1rem 0 0.4rem;
+}
+.draft-prose p {
+  margin: 0 0 0.85rem;
+}
+.draft-prose strong { color: #0E1411; font-weight: 600; }
+.draft-prose em { font-style: italic; }
+.draft-prose ul,
+.draft-prose ol {
+  margin: 0 0 0.85rem 1.4rem;
+  padding: 0;
+}
+.draft-prose ul { list-style: disc; }
+.draft-prose ol { list-style: decimal; }
+.draft-prose li { margin: 0.15rem 0; }
+.draft-prose a {
+  color: #0F6E56;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.draft-prose blockquote {
+  border-left: 3px solid #D9D5C8;
+  padding-left: 0.8rem;
+  margin: 0.5rem 0 0.85rem;
+  color: #2A3430;
+}
+.draft-prose code {
+  background: #EFECE3;
+  border-radius: 3px;
+  padding: 0 0.2rem;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.92em;
+}
+.draft-prose pre {
+  background: #EFECE3;
+  border-radius: 6px;
+  padding: 0.7rem 0.9rem;
+  overflow-x: auto;
+  font-size: 0.92em;
+  margin: 0.5rem 0 0.85rem;
+}
+.draft-prose pre code { background: transparent; padding: 0; }
+/* Wide markdown tables scroll horizontally inside their wrapper
+   (the components.table override in SectionRenderer.tsx). Width:100%
+   is for the common case where the table fits naturally. */
+.draft-prose .draft-table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  margin: 0.5rem 0 0.85rem;
+}
+.draft-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92em;
+  margin: 0;
+}
+.draft-prose th,
+.draft-prose td {
+  border: 1px solid #D9D5C8;
+  padding: 0.45rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+.draft-prose th {
+  background: #EFECE3;
+  font-weight: 600;
+  color: #0E1411;
+}
+
+/* Phase 5.5.C — inline NEEDS INPUT pill + editor. Interactive pill is
+   used in browser view mode; static .marker-needs-input still
+   appears in PDF/print mode (no JS hydration). */
+.needs-input-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 4px;
+  padding: 0 4px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.85em;
+  font-weight: 500;
+  line-height: 1.4;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 120ms ease, border-color 120ms ease;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.needs-input-pill:hover {
+  filter: brightness(0.97);
+}
+.needs-input-pill--filled {
+  background: #E1F5EE;
+  color: #0F6E56;
+  border-color: #0F6E56;
+}
+.needs-input-pill--unfilled {
+  background: #FAECE7;
+  color: #993C1D;
+  border-color: #993C1D;
+}
+.needs-input-pill__placeholder {
+  font-style: italic;
+}
+.needs-input-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.needs-input-edit__input {
+  display: inline-block;
+  min-width: 220px;
+  padding: 2px 6px;
+  border: 1px solid #0F6E56;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #0E1411;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.92em;
+  outline: none;
+}
+.needs-input-edit__input:focus {
+  box-shadow: 0 0 0 2px rgba(15, 110, 86, 0.25);
+}
+.needs-input-edit__saving {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.8em;
+  color: #6B766F;
+}
+.needs-input-edit__error {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.8em;
+  color: #993C1D;
+}
+
+/* [TBD] and [NEEDS INPUT: ...] markers — inline-styled so they survive
+   in PDF render even if Tailwind isn't applied to raw HTML. */
+.marker-tbd,
+mark.marker-tbd {
+  background: #FAEEDA;
+  color: #633806;
+  border: 1px solid #BA7517;
+  border-radius: 3px;
+  padding: 0 4px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.85em;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.marker-needs-input,
+mark.marker-needs-input {
+  background: #FAECE7;
+  color: #993C1D;
+  border: 1px solid #993C1D;
+  border-radius: 3px;
+  padding: 0 4px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.85em;
+  font-weight: 500;
+}
+
+/* Print mode: force all <details> open, drop interactive chrome. */
+@media print {
+  .draft-section details { display: block; }
+  .draft-section details > summary { display: none; }
+  .draft-section details[open] > summary { display: none; }
+  .draft-section { page-break-inside: avoid; page-break-after: always; }
+  .draft-section:last-of-type { page-break-after: auto; }
+}
+
+/* draft-section--print: same effects, but JS-applied for the PDF route's
+   server-rendered "print=1" mode, so the renderer doesn't depend on
+   the @media print rule firing inside Chrome headless. */
+.draft-section--print details { display: block; }
+.draft-section--print details > summary { display: none; }
+.draft-section--print {
+  page-break-inside: avoid;
+  break-inside: avoid-page;
+  page-break-after: always !important;
+  break-after: page !important;
+  padding-top: 0.5rem;
+}
+.draft-section--print:last-of-type {
+  page-break-after: auto !important;
+  break-after: auto !important;
+}
+/* Slightly larger type for print so the dossier reads as a 25+ page
+   document rather than a too-dense 8-page wall of text. */
+.draft-section--print .draft-prose {
+  font-size: 11pt;
+  line-height: 1.55;
+}
+.draft-section--print .draft-prose h3 { font-size: 13pt; }
+.draft-section--print .draft-prose h4 { font-size: 11.5pt; }
