@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getUser } from "@/lib/auth/session";
 import { getServiceClient } from "@/lib/supabase";
 import { LogoutButton } from "./LogoutButton";
+import { UnverifiedEmailBanner } from "./UnverifiedEmailBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -100,6 +101,9 @@ export default async function DashboardPage() {
 
       <main className="flex-1 px-4 sm:px-6 lg:px-8 pt-8 lg:pt-12 pb-12">
         <div className="max-w-4xl mx-auto">
+          {!user.emailConfirmedAt ? (
+            <UnverifiedEmailBanner email={user.email} />
+          ) : null}
           <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-3">
             Your account
           </p>

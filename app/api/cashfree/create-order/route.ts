@@ -52,6 +52,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
+  // Sprint 2 closeout — Tier 2 delivery is by email, so we require a
+  // verified email at payment time. Sprint 3 makes this tier-aware
+  // (₹2,499 in-app editor skips the check). The page-level gate
+  // surfaces the same precondition with a UI affordance; this is
+  // belt-and-suspenders in case a client bypasses the page.
+  if (!user.emailConfirmedAt) {
+    return NextResponse.json(
+      {
+        error: "email_not_verified",
+        message:
+          "Your Draft Pack arrives by email — please verify your address first. Check your inbox for the confirmation link sent at signup.",
+      },
+      { status: 412 }
+    );
+  }
+
   const parsed = schema.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) {
     return NextResponse.json(

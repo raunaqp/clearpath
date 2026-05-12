@@ -5,6 +5,7 @@ import { UpgradePageViewTracker } from "@/components/upgrade/UpgradePageViewTrac
 import { GlobalHeader } from "@/components/layout/GlobalHeader";
 import { PaymentForm } from "./PaymentForm";
 import { CashfreePayButton } from "./CashfreePayButton";
+import { EmailVerifyGate } from "./EmailVerifyGate";
 import { isCashfreeConfigured } from "@/lib/cashfree/client";
 import { StatusPanel, type Tier2Order } from "./StatusPanel";
 import type { WizardAnswers } from "@/lib/wizard/types";
@@ -231,10 +232,25 @@ export default async function UpgradePage({
               </ol>
             </div>
 
+            {/* Sprint 2 closeout — gate payment on verified email.
+                For Tier 2 (₹499) delivery is by email, so we refuse
+                to spin up an order until the address is confirmed.
+                Sprint 3 makes this tier-aware (₹2,499 editor tier
+                skips the check). */}
+            {!user.emailConfirmedAt ? (
+              <EmailVerifyGate
+                email={user.email}
+                returnTo={`/upgrade/${id}`}
+              />
+            ) : null}
+
             {/* Story 2.8 — Cashfree button appears above the legacy
                 UPI-QR form when CASHFREE_APP_ID + CASHFREE_SECRET_KEY
-                are set. Both flows coexist during sandbox testing. */}
-            {isCashfreeConfigured() ? (
+                are set. Both flows coexist during sandbox testing.
+                Hidden behind the verify gate so unverified customers
+                can't click through to create-order (the endpoint
+                also rejects but UX is cleaner upfront). */}
+            {isCashfreeConfigured() && user.emailConfirmedAt ? (
               <div className="mb-6 rounded-lg bg-white border border-[#D9D5C8] px-5 py-5">
                 <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-[#0F6E56] mb-2">
                   One-click payment

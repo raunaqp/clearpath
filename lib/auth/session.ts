@@ -5,6 +5,10 @@ import { getServerSupabase, isAuthConfigured } from "./supabase-server";
 export type AuthedUser = {
   id: string;
   email: string;
+  /** Sprint 2 closeout — drives the tier-aware verification gate
+   *  on /upgrade/[id]. Null when the user hasn't clicked the
+   *  Supabase confirmation link yet. */
+  emailConfirmedAt: string | null;
 };
 
 // If auth isn't configured (env var missing in a deploy), return null instead
@@ -15,5 +19,9 @@ export const getUser = cache(async (): Promise<AuthedUser | null> => {
   const supabase = await getServerSupabase();
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user || !data.user.email) return null;
-  return { id: data.user.id, email: data.user.email };
+  return {
+    id: data.user.id,
+    email: data.user.email,
+    emailConfirmedAt: data.user.email_confirmed_at ?? null,
+  };
 });
