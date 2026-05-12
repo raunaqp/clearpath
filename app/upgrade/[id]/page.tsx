@@ -104,6 +104,13 @@ export default async function UpgradePage({
             assessmentId={id}
             email={assessment.email}
             cardHref={cardHref}
+            cashfreeEnv={
+              isCashfreeConfigured()
+                ? (process.env.CASHFREE_ENVIRONMENT ?? "TEST") === "PROD"
+                  ? "PROD"
+                  : "TEST"
+                : null
+            }
           />
         ) : (
           <>

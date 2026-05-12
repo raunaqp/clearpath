@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { CashfreePayButton } from "./CashfreePayButton";
 
 const POLL_INTERVAL_MS = 30_000;
 
@@ -41,11 +42,16 @@ export function StatusPanel({
   assessmentId,
   email,
   cardHref,
+  cashfreeEnv,
 }: {
   initialOrder: Tier2Order;
   assessmentId: string;
   email: string;
   cardHref: string;
+  /** Null when Cashfree isn't configured server-side — UPI-QR is the
+   *  only path. Otherwise the env mode for the SDK so a customer in
+   *  'created' state can retry payment. */
+  cashfreeEnv: "TEST" | "PROD" | null;
 }) {
   const draftHref = `/draft/${assessmentId}`;
   const [order, setOrder] = useState<Tier2Order>(initialOrder);
@@ -93,6 +99,13 @@ export function StatusPanel({
       </div>
 
       <div className="rounded-xl bg-white border border-[#D9D5C8] p-5 sm:p-6 space-y-4">
+        {order.status === "created" && (
+          <CreatedDetails
+            assessmentId={assessmentId}
+            email={email}
+            cashfreeEnv={cashfreeEnv}
+          />
+        )}
         {order.status === "pending_verification" && (
           <PendingDetails order={order} email={email} />
         )}
@@ -136,6 +149,47 @@ function headline(status: string): string {
     default:
       return "Your order is being processed.";
   }
+}
+
+function CreatedDetails({
+  assessmentId,
+  email,
+  cashfreeEnv,
+}: {
+  assessmentId: string;
+  email: string;
+  cashfreeEnv: "TEST" | "PROD" | null;
+}) {
+  return (
+    <>
+      <p className="text-[#0E1411] text-base">
+        Your order is on hold until payment goes through. Tap the button
+        below to complete payment via Cashfree.
+      </p>
+      <p className="text-sm text-[#6B766F]">
+        We&apos;ll email confirmation to{" "}
+        <span className="font-medium text-[#0E1411]">{email}</span> once
+        the payment lands.
+      </p>
+      {cashfreeEnv ? (
+        <CashfreePayButton
+          assessmentId={assessmentId}
+          cashfreeEnv={cashfreeEnv}
+        />
+      ) : (
+        <p className="text-sm text-[#993C1D]">
+          Cashfree is currently not configured. Email{" "}
+          <a
+            href="mailto:raunaq.pradhan@gmail.com"
+            className="text-[#0F6E56] underline underline-offset-2 hover:text-[#0a5a47]"
+          >
+            raunaq.pradhan@gmail.com
+          </a>{" "}
+          and we&apos;ll process your order via the manual UPI flow.
+        </p>
+      )}
+    </>
+  );
 }
 
 function PendingDetails({
