@@ -467,8 +467,8 @@ export default async function DraftPackPage({
     <div className="min-h-screen bg-[#F7F6F2] flex flex-col">
       <GlobalHeader signedIn />
       <main className="flex-1 px-4 sm:px-6 lg:px-8 pt-8 pb-24">
-        <div className="max-w-content mx-auto grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8">
-          <aside className="hidden lg:block">
+        <div className="max-w-content mx-auto grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] gap-8">
+          <aside className="hidden lg:block min-w-0">
             <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pr-2">
               <DraftPackTOC
                 sections={draftSections.map((d) => ({
@@ -481,7 +481,7 @@ export default async function DraftPackPage({
             </div>
           </aside>
 
-          <div>
+          <div className="min-w-0">
             <header className="mb-6">
               <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517]">
                 Tier 2 · CDSCO MD-7 / MD-3 Draft Pack

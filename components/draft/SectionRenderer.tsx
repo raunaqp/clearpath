@@ -189,8 +189,17 @@ export function SectionRenderer({
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           rehypePlugins={[rehypeRaw]}
-          components={
-            interactive && inlineFields
+          components={{
+            // Wide markdown tables (e.g. §7 Labelling) overflow the
+            // section card and push the whole grid column past the
+            // viewport. Wrap every <table> in a horizontally-scrollable
+            // container so the overflow stays INSIDE the card.
+            table: (props) => (
+              <div className="draft-table-scroll">
+                <table {...props} />
+              </div>
+            ),
+            ...(interactive && inlineFields
               ? {
                   // Intercept the <mark class="marker-needs-input"> nodes
                   // that highlightMarkers emits and swap in an interactive
@@ -216,8 +225,8 @@ export function SectionRenderer({
                     return <mark {...props} />;
                   },
                 }
-              : undefined
-          }
+              : {}),
+          }}
         >
           {processedContent}
         </ReactMarkdown>
