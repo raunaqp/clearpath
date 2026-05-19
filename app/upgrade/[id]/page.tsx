@@ -7,6 +7,7 @@ import { PaymentForm } from "./PaymentForm";
 import { CashfreePayButton } from "./CashfreePayButton";
 import { EmailVerifyGate } from "./EmailVerifyGate";
 import { TierPicker } from "./TierPicker";
+import { TierIntentSync } from "./TierIntentSync";
 import { TIER_PRICING } from "@/lib/cashfree/tiers";
 import { isCashfreeConfigured } from "@/lib/cashfree/client";
 import { StatusPanel, type Tier2Order } from "./StatusPanel";
@@ -106,9 +107,10 @@ export default async function UpgradePage({
       <main className="flex-1 px-4 sm:px-6 lg:px-8 pt-8 lg:pt-12 pb-12">
         <UpgradePageViewTracker assessmentId={id} />
         <div className="max-w-3xl mx-auto">
-          <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-3">
-            Tier 2 · ₹499 Draft Pack
-          </p>
+          <TierEyebrow
+            selectedTier={selectedTier}
+            orderTier={order?.tier_choice ?? null}
+          />
 
         {order ? (
           <StatusPanel
@@ -126,6 +128,7 @@ export default async function UpgradePage({
           />
         ) : (
           <>
+            <TierIntentSync currentTier={selectedTier} />
             <h1 className="font-serif text-[clamp(28px,3.6vw,36px)] leading-tight text-[#0E1411] mb-3">
               Drafted for your product, not a generic template.
             </h1>
@@ -253,7 +256,7 @@ export default async function UpgradePage({
               <>
                 <ChosenTierBanner
                   tier={selectedTier}
-                  changeHref={`/upgrade/${id}`}
+                  changeHref={`/upgrade/${id}?change=1`}
                 />
 
                 {/* Email-verify gate fires only for the email-delivered
@@ -291,7 +294,10 @@ export default async function UpgradePage({
               </>
             ) : null}
 
-            <PaymentForm assessmentId={id} email={assessment.email} />
+            <PaymentForm
+              email={assessment.email}
+              tier={selectedTier ?? undefined}
+            />
 
             <div className="mt-8 flex flex-col sm:flex-row sm:items-center sm:gap-6 gap-3">
               <a
@@ -315,6 +321,27 @@ export default async function UpgradePage({
         </div>
       </main>
     </div>
+  );
+}
+
+function TierEyebrow({
+  selectedTier,
+  orderTier,
+}: {
+  selectedTier: "draft_pack" | "draft_editor" | null;
+  orderTier: "draft_pack" | "draft_editor" | null;
+}) {
+  // Order tier wins if present (post-click state). Otherwise the
+  // selection from the URL drives the eyebrow. With neither, fall back
+  // to a generic "Tier 2" label so we never lie about price.
+  const tier = orderTier ?? selectedTier;
+  const cfg = tier ? TIER_PRICING[tier] : null;
+  return (
+    <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-3">
+      {cfg
+        ? `Tier 2 · ₹${cfg.amountInr.toLocaleString("en-IN")} ${cfg.label}`
+        : "Tier 2"}
+    </p>
   );
 }
 
