@@ -1,5 +1,18 @@
 import { z } from "zod";
 
+// Sprint 3 Phase 2a — persona gate at the start of the Tier 1 wizard.
+// Decides which downstream questions, document matrix, and Draft Pack
+// section set to use. Values land in wizard_answers.persona (chosen
+// over meta.persona so the synthesizer sees it for free via the
+// existing wizard_answers pass-through).
+//
+// Migration backlog (Sprint 4 if SQL filtering is needed): promote to
+// an assessments.persona column. For now, JSON storage is sufficient.
+export type Persona =
+  | "manufacturer_samd"
+  | "clinical_investigation_researcher"
+  | "manufacturer_hardware";
+
 export type ClinicalState = "critical" | "serious" | "non_serious" | "varies";
 export type InfoSignificance = "informs_only" | "drives" | "diagnoses_treats";
 export type UserType = "hcps" | "patients" | "both" | "admin";
@@ -70,6 +83,9 @@ export type CybersecurityPosture = {
 };
 
 export type WizardAnswers = {
+  // Tier 1 persona gate (Sprint 3 Phase 2a) — set before Q1.
+  persona?: Persona;
+
   // Tier A — current 7-Q Risk Card wizard
   q1?: ClinicalState;
   q2?: InfoSignificance;
@@ -95,6 +111,12 @@ export type WizardAnswers = {
   c1_software_lifecycle_model?: SoftwareLifecycleModel;
   c2_cybersecurity_posture?: CybersecurityPosture;
 };
+
+export const PersonaSchema = z.enum([
+  "manufacturer_samd",
+  "clinical_investigation_researcher",
+  "manufacturer_hardware",
+]);
 
 export const ClinicalStateSchema = z.enum([
   "critical",
@@ -152,7 +174,10 @@ export const WizardAnswersSchema = z.object({
   q7: CommercialStageSchema,
 });
 
-export const WizardAnswersPartialSchema = WizardAnswersSchema.partial();
+export const WizardAnswersPartialSchema = WizardAnswersSchema.partial().extend({
+  // Phase 2a — persona may be saved on its own from the pre-Q1 gate.
+  persona: PersonaSchema.optional(),
+});
 
 // Tier B schemas (Sprint 2 Story 2.5 Phase 3)
 

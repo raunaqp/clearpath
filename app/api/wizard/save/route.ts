@@ -8,7 +8,10 @@ import {
 
 const bodySchema = z.object({
   assessment_id: z.string().uuid(),
-  step: z.number().int().min(1).max(7),
+  // Step 0 is reserved for the Phase 2a persona gate; 1–7 are the
+  // Tier A questions. The value is only used to scope analytics
+  // upstream — persistence is decoupled and writes through `answer`.
+  step: z.number().int().min(0).max(7),
   answer: WizardAnswersPartialSchema,
 });
 

@@ -2,12 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 // Next.js 16 renamed `middleware` → `proxy`. Functionality is the same.
-// This file does two unrelated jobs:
+// This file does three jobs:
 //
 // 1. Basic Auth gate for /admin/* and /api/admin/* (legacy, single shared
 //    password in ADMIN_PASSWORD).
 // 2. Supabase session refresh + auth redirect for /dashboard/*
 //    (customer auth — Story 2.2).
+// 3. Supabase session refresh (no redirect) for user-facing routes that
+//    call getUser() inside Server Components — /c, /upgrade, /draft, etc.
+//    Without this, an expired access token can't be refreshed (Server
+//    Components can't write cookies), and the page renders signed-out
+//    even though the refresh token in the browser is still valid.
 //
 // Webhook endpoints (/api/webhooks/* — Story 2.8) are intentionally NOT
 // matched here, so Cashfree can hit them unauthenticated.
@@ -60,6 +65,41 @@ function handleAdmin(req: NextRequest): NextResponse {
   return NextResponse.next();
 }
 
+async function handleSessionRefresh(req: NextRequest): Promise<NextResponse> {
+  // Refreshes the Supabase access token (if needed) and writes rotated
+  // cookies into the response. No redirect — anonymous users pass through
+  // unchanged. Used on routes like /c/<token> where getUser() runs in a
+  // Server Component and can't write cookies itself.
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    return NextResponse.next({ request: req });
+  }
+  const res = NextResponse.next({ request: req });
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return req.cookies.getAll();
+        },
+        setAll(toSet) {
+          for (const { name, value, options } of toSet) {
+            res.cookies.set(name, value, options);
+          }
+        },
+      },
+    }
+  );
+  // getUser() validates the access token with Supabase and triggers a
+  // refresh write if expired. We don't care about the result here — just
+  // the side effect on response cookies.
+  await supabase.auth.getUser();
+  return res;
+}
+
 async function handleCustomerAuth(req: NextRequest): Promise<NextResponse> {
   // Defense in depth: if env is missing on this deploy, redirect to /login
   // (which renders without Supabase). Avoids 500'ing the whole route.
@@ -108,9 +148,23 @@ export async function proxy(req: NextRequest): Promise<NextResponse> {
   if (path.startsWith("/dashboard")) {
     return handleCustomerAuth(req);
   }
-  return NextResponse.next();
+  // Refresh-only on user-facing routes that call getUser() in Server
+  // Components but allow anonymous access.
+  return handleSessionRefresh(req);
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/admin/:path*", "/dashboard/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/api/admin/:path*",
+    "/dashboard/:path*",
+    "/c/:path*",
+    "/upgrade/:path*",
+    "/draft/:path*",
+    "/assess/:path*",
+    "/wizard/:path*",
+    "/concierge/:path*",
+    "/concierge",
+    "/start",
+  ],
 };

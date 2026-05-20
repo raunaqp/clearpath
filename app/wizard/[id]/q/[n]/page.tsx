@@ -215,6 +215,14 @@ export default async function WizardStepPage({
   if (data.status === "draft") redirect(`/assess/${id}`);
   if (data.status === "rejected") redirect(`/declined/${id}`);
 
+  // Phase 2a — persona gate. If the customer hasn't picked a persona
+  // yet, force them through /persona before any Tier 1 question. The
+  // gate is a one-time lock (it self-redirects to /q/1 if persona is
+  // already set), so this is safe on resume too.
+  if (!data.wizard_answers?.persona) {
+    redirect(`/wizard/${id}/persona`);
+  }
+
   const meta = data.meta ?? {};
   const productDisplayName = displayName(data.one_liner);
   const pdfCount = Array.isArray(data.uploaded_docs)

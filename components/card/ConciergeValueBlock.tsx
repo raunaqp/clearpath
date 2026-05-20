@@ -24,8 +24,7 @@ export function ConciergeValueBlock() {
         coordination and CDSCO submission alongside you — typically in{" "}
         <span className="font-medium">weeks</span>, where a traditional
         regulatory consultant would take{" "}
-        <span className="font-medium">6–12 months</span> for the same
-        scope. ₹50K covers 12 months of ongoing review and revisions.
+        <span className="font-medium">6–12 months</span> for the same scope.
       </p>
       <p className="text-sm text-[#0E1411] leading-relaxed mt-2">
         Every Concierge filing is reviewed by a former CDSCO regulator,
