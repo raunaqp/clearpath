@@ -135,8 +135,8 @@ export function DocumentCompletenessBlock({
       )}
 
       <p className="text-[10px] text-[#6B766F] leading-relaxed mt-2 italic">
-        Estimated from your uploads + readiness signals. Tier 2 (₹499) verifies
-        content of each document against CDSCO requirements.
+        Estimated from your uploads + readiness signals. The Draft Pack
+        verifies content of each document against CDSCO requirements.
       </p>
     </div>
   );

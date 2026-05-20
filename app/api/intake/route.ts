@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
 import { z } from "zod";
 import { getServiceClient } from "@/lib/supabase";
+import { getUser } from "@/lib/auth/session";
 import { getDemoPacket } from "@/lib/demo-packets";
 import {
   buildPendingRow,
@@ -84,7 +85,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: first.message }, { status: 422 });
   }
 
-  const { name, email, mobile, one_liner, url, uploaded_docs, resume_id, demo_packet_id } = parsed.data;
+  const { name, mobile, one_liner, url, uploaded_docs, resume_id, demo_packet_id } = parsed.data;
+  // Sprint 3 Phase 1.5 — authed users must intake under their session
+  // email. The dashboard joins assessments → user by email, so any
+  // drift here loses the row from /dashboard. Override silently;
+  // the prefilled form already shows the right value.
+  const authed = await getUser();
+  const email = authed?.email ?? parsed.data.email;
 
   const supabase = getServiceClient();
 

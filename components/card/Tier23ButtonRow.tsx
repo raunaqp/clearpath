@@ -5,17 +5,18 @@ import { useRouter } from "next/navigation";
 import posthog from "posthog-js";
 
 /**
- * Two equal-hierarchy CTAs side-by-side. Tier 2 (Draft Pack, ₹499) and
- * Tier 3 (Concierge, ₹50K/12 months) are now presented as parallel
- * decision paths rather than primary + secondary. Replaces the previous
- * Tier2CTABlock + Tier3SecondaryLink pair on the Readiness Card.
+ * Sprint 3 Phase 1.5 — primary + alternative CTAs at the bottom of
+ * the Readiness Card. Pricing was pulled off this surface: the
+ * Draft Pack vs Draft Editor choice now happens on /upgrade/[id]
+ * (the tier picker), and the consultation path is an interest-signal
+ * lead capture with no number shown.
  *
  * Mobile: stacked, full-width. sm+: side-by-side, equal width via flex-1.
  */
 export function Tier23ButtonRow({ assessmentId }: { assessmentId: string }) {
   const router = useRouter();
 
-  function handleTier2() {
+  function handleGenerate() {
     try {
       posthog.capture("tier2_cta_clicked", { source: "card_bottom" });
     } catch {
@@ -24,7 +25,7 @@ export function Tier23ButtonRow({ assessmentId }: { assessmentId: string }) {
     router.push(`/upgrade/${assessmentId}`);
   }
 
-  function handleTier3() {
+  function handleConsult() {
     try {
       posthog.capture("tier3_cta_clicked", {
         source: "card_bottom",
@@ -44,23 +45,24 @@ export function Tier23ButtonRow({ assessmentId }: { assessmentId: string }) {
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <button
           type="button"
-          onClick={handleTier2}
+          onClick={handleGenerate}
           className="flex-1 inline-flex items-center justify-center rounded-full bg-[#0F6E56] hover:bg-[#0d5c48] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0F6E56]/30 focus-visible:ring-offset-2 text-white font-medium text-[15px] px-6 py-3 transition-colors"
         >
-          Get the Draft Pack — ₹499 →
+          Generate my documents now →
         </button>
         <Link
           href={`/concierge?source=card&assessment_id=${assessmentId}`}
-          onClick={handleTier3}
+          onClick={handleConsult}
           className="flex-1 inline-flex items-center justify-center rounded-full bg-[#993C1D] hover:bg-[#7d3018] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#993C1D]/30 focus-visible:ring-offset-2 text-white font-medium text-[15px] px-6 py-3 transition-colors"
         >
-          Concierge — ₹50K / 12 months →
+          Seek expert consultation →
         </Link>
       </div>
       <p className="text-xs text-[#6B766F] mt-3 leading-relaxed">
-        Draft Pack: 10 minutes, emailed. Concierge: our team handles document
-        generation and submission alongside you — typically in weeks, where a
-        traditional regulatory consultant would take 6–12 months.
+        Generate: AI-drafted CDSCO sections you can review and ship —
+        Draft Pack or in-app Draft Editor, pricing on the next page.
+        Consultation: tell us about your filing and we&apos;ll match you
+        with an Indian regulatory expert.
       </p>
     </section>
   );

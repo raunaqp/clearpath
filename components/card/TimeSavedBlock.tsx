@@ -40,10 +40,10 @@ export function TimeSavedBlock({
       <p className="text-sm text-[#0E1411] leading-relaxed">
         Drafting {missingCount} CDSCO {docWord} typically takes{" "}
         <span className="font-medium">8–12 weeks with a consultant</span> at
-        roughly <span className="font-medium">₹3–5L</span>. Tier 2 produces a
-        starter draft for each in <span className="font-medium">about 10 minutes</span>{" "}
-        for <span className="font-medium">₹499</span> — review and edit instead
-        of writing from scratch.
+        roughly <span className="font-medium">₹3–5L</span>. ClearPath
+        produces a starter draft for each in{" "}
+        <span className="font-medium">about 10 minutes</span> — review and
+        edit instead of writing from scratch.
       </p>
     </div>
   );

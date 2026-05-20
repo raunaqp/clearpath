@@ -4,7 +4,8 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import posthog from "posthog-js";
-import { GlobalHeader } from "@/components/layout/GlobalHeader";
+import { GlobalHeaderView } from "@/components/layout/GlobalHeaderView";
+import { getBrowserSupabase } from "@/lib/auth/supabase-browser";
 import { JourneyProgress } from "@/components/layout/JourneyProgress";
 import { DemoPacketBar } from "@/components/landing/DemoPacketBar";
 import { type DemoPacket } from "@/lib/demo-packets";
@@ -100,6 +101,10 @@ function StartPageInner() {
   const [fileError, setFileError] = useState("");
   const [prefillLoading, setPrefillLoading] = useState<boolean>(!!resumeId);
   const [prefillError, setPrefillError] = useState("");
+  // Sprint 3 Phase 1.5 — signed-in users must intake with their auth
+  // email so the dashboard (which keys assessments by email) can find
+  // them. Null = no session detected. Empty = checked, no session.
+  const [authedEmail, setAuthedEmail] = useState<string | null>(null);
 
   // Per-field errors + whether the field has been blurred at least once.
   const [errors, setErrors] = useState<IntakeErrors>({});
@@ -153,6 +158,32 @@ function StartPageInner() {
     try {
       posthog.capture("intake_form_started", { resume: !!resumeId });
     } catch {}
+  }, [resumeId]);
+
+  // Sprint 3 Phase 1.5 — detect signed-in session client-side. When
+  // present, prefill the email field (unless the user is editing a
+  // saved resume, which has its own prefill source). The dashboard
+  // matches assessments to users by email, so allowing a logged-in
+  // user to type a different address here would lose the assessment
+  // from /dashboard view.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await getBrowserSupabase().auth.getUser();
+        if (cancelled) return;
+        const sessionEmail = data.user?.email ?? "";
+        setAuthedEmail(sessionEmail);
+        if (sessionEmail && !resumeId) {
+          setEmail((prev) => (prev ? prev : sessionEmail));
+        }
+      } catch {
+        // auth call failed; treat as anonymous
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [resumeId]);
 
   // Prefill from existing assessment when ?resume={id} is present.
@@ -484,7 +515,7 @@ function StartPageInner() {
 
   return (
     <div className="min-h-screen bg-[#F7F6F2] flex flex-col">
-      <GlobalHeader />
+      <GlobalHeaderView signedIn={!!authedEmail} />
       <main className="flex-1 px-4 sm:px-6 lg:px-8 pt-8 lg:pt-12 pb-12">
         <div className="w-full max-w-3xl mx-auto">
           {resumeId && !prefillError && (
