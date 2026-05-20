@@ -24,8 +24,8 @@ export default async function SignupPage({
   return (
     <AuthShell
       eyebrow="Create an account"
-      title="Save your work and unlock the Draft Pack."
-      intro="One account holds your Readiness Cards and any Draft Packs you generate. Free to create."
+      title="Save your work and unlock paid tiers."
+      intro="One account holds your Readiness Cards, Readiness Reports, and any Submission Workspaces you open. Free to create."
     >
       <SignupForm returnTo={returnTo} />
     </AuthShell>

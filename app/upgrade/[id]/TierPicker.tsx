@@ -21,30 +21,30 @@ export function TierPicker({ assessmentId, selected }: Props) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
       <TierCard
-        title="Draft Pack"
+        title="Regulatory Readiness Report"
         price="₹499"
         deliveredVia="Emailed to you"
         bullets={[
-          "12 CDSCO MD-7 / MD-3 sections, AI-generated against your wizard answers",
-          "Reviewed by an Indian regulatory expert before delivery",
-          "PDF link in your inbox within 2 hours (worst-case 6)",
+          "4–6 page founder-facing report: pathway, gaps, timeline + cost, reviewer insights, smart examples",
+          "Tailored to your assessment — Indian-context cost bands, your class, your data sensitivity",
+          "PDF link in your inbox within a few minutes",
         ]}
-        ctaLabel="Continue with Draft Pack →"
+        ctaLabel="Continue with Readiness Report →"
         ctaHref={`/upgrade/${assessmentId}?tier=draft_pack`}
         selected={selected === "draft_pack"}
         accent="amber"
       />
       <TierCard
-        title="Draft Editor"
+        title="Submission Workspace"
         price="₹2,499"
         deliveredVia="In-app editor"
         bullets={[
-          "Everything in Draft Pack, plus:",
-          "Inline section editor with [NEEDS INPUT] pills + revision history",
+          "Everything in the Readiness Report, plus:",
+          "Full 12-section CDSCO MD-7 / MD-3 draft, inline section editor with [NEEDS INPUT] pills",
           "Per-section attachments (test reports, label artwork, study protocols)",
           "Re-render PDF anytime · cleaner View mode for regulator review",
         ]}
-        ctaLabel="Continue with Draft Editor →"
+        ctaLabel="Continue with Submission Workspace →"
         ctaHref={`/upgrade/${assessmentId}?tier=draft_editor`}
         selected={selected === "draft_editor"}
         accent="teal"

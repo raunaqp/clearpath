@@ -92,9 +92,9 @@ export function PersonaGate({ assessmentId }: { assessmentId: string }) {
       </h1>
       <p className="text-[#6B766F] text-sm sm:text-base mb-7 leading-relaxed">
         Pick the one that matches your goal. We&apos;ll tune the rest of the
-        wizard, the gap analysis, and the Draft Pack to your path. You can&apos;t
-        change this later for this assessment — start a new one if you pick the
-        wrong path.
+        wizard, the gap analysis, and your Readiness Report to your path. You
+        can&apos;t change this later for this assessment — start a new one if
+        you pick the wrong path.
       </p>
 
       <div className="space-y-3 mb-6">

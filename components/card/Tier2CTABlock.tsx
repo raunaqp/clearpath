@@ -19,7 +19,7 @@ export function Tier2CTABlock({ assessmentId }: { assessmentId: string }) {
   return (
     <section className="mt-6">
       <h2 className="font-serif text-2xl text-[#0E1411] mb-5">
-        Ready to file? Get your Draft Pack — ₹499
+        Ready to plan your filing? Get your Readiness Report — ₹499
       </h2>
 
       <div className="flex flex-col items-start gap-2">
@@ -28,7 +28,7 @@ export function Tier2CTABlock({ assessmentId }: { assessmentId: string }) {
           onClick={handleClick}
           className="inline-flex items-center justify-center rounded-full bg-[#0F6E56] hover:bg-[#0d5c48] text-white font-medium text-[15px] px-6 py-3 transition-colors"
         >
-          Get the Draft Pack — ₹499 →
+          Get the Readiness Report — ₹499 →
         </button>
         <p className="text-xs text-[#6B766F]">
           10 minutes. Emailed to you. Replaces ₹50K-3L of consultant work.

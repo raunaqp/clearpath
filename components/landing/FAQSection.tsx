@@ -23,17 +23,17 @@ const faqs = [
   {
     question: "What happens after I pay ₹499?",
     answer:
-      "Your Regulatory Draft Pack is generated and emailed within ~10 minutes. It includes structured content for every CDSCO form section, relevant forms to download, and a pathway + timeline. You paste our content into the forms — or hand it to a consultant.",
+      "Your Regulatory Readiness Report is generated and emailed within a few minutes. The 4–6 page founder-facing PDF covers your likely CDSCO class, pathway and forms, prioritised readiness gaps with effort + cost ranges, a phased timeline, reviewer insights, and annotated good-vs-bad wording snippets. The Submission Workspace (₹2,499) is where you actually draft each section once you're ready to execute.",
   },
   {
-    question: "What's in the ₹50K Submission Concierge?",
+    question: "What's in the Human Concierge?",
     answer:
-      "Document refinement by Indian regulatory experts, classification re-validation, QMS checklist guidance (ISO 13485), clinical validation plan review, and 1 iteration — delivered as a 12-month engagement. Join the waitlist — we're onboarding the first cohort now.",
+      "Document refinement by Indian regulatory experts, classification re-validation, QMS checklist guidance (ISO 13485), clinical validation plan review, and 1 iteration — delivered as a 12-month engagement. Pricing is set per case based on scope; request a consultation and we'll send a quote.",
   },
   {
     question: "Is my data safe?",
     answer:
-      "Your submission is used only to generate your Readiness Card and Draft Pack. Uploaded files are stored encrypted and deleted after 90 days. We never share your data. ClearPath is built to DPDP Act 2023 standards.",
+      "Your submission is used only to generate your Readiness Card, Readiness Report, and Submission Workspace content. Uploaded files are stored encrypted and deleted after 90 days. We never share your data. ClearPath is built to DPDP Act 2023 standards.",
   },
   {
     question: "Will my uploaded documents stay private?",
@@ -43,7 +43,7 @@ const faqs = [
   {
     question: "Do you file the application for me?",
     answer:
-      "No. ClearPath generates submission-ready content. You or your consultant file it with CDSCO. The ₹50K Concierge tier includes expert review and guidance, but the founder or their team remains the applicant.",
+      "No. ClearPath generates submission-ready content. You or your consultant file it with CDSCO. The Human Concierge tier includes expert review and guidance, but the founder or their team remains the applicant.",
   },
   {
     question: "What if my product isn't a medical device at all?",
@@ -58,7 +58,7 @@ const faqs = [
   {
     question: "Can I get a refund?",
     answer:
-      "If your Draft Pack isn't delivered within 24 hours of payment, you get a full refund automatically. No questions asked.",
+      "If your Readiness Report isn't delivered within 24 hours of payment, you get a full refund automatically. No questions asked.",
   },
   {
     question: "Who's behind ClearPath?",

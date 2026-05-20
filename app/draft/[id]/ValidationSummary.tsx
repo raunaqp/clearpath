@@ -48,7 +48,7 @@ export function ValidationSummary({ report }: { report: ValidationReport }) {
       ) : null}
       {!hasAny ? (
         <div className="sm:col-span-3 rounded-card border border-[#0F6E56]/30 bg-[#E1F5EE] px-4 py-3 text-sm text-[#0F6E56]">
-          No critical findings. Draft Pack passes all 10 cross-section
+          No critical findings. Submission Workspace passes all 10 cross-section
           invariants.
         </div>
       ) : null}

@@ -244,10 +244,10 @@ export default async function DraftPackPage({
         <main className="flex-1 px-4 sm:px-6 lg:px-8 pt-16 pb-24">
           <div className="max-w-2xl mx-auto text-center">
             <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-3">
-              Tier 2 · Draft Pack
+              Tier 2 · Submission Workspace
             </p>
             <h1 className="font-serif text-3xl text-[#0E1411] leading-tight mb-4">
-              Your Draft Pack is being prepared
+              Your Submission Workspace is being prepared
             </h1>
             <p className="text-[#6B766F] text-base leading-relaxed mb-8">
               Payment is verified. Generation runs against your wizard answers,
@@ -332,7 +332,7 @@ export default async function DraftPackPage({
           }}
         >
           <p style={{ fontFamily: "var(--font-geist-mono), monospace", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "#BA7517", margin: 0 }}>
-            Tier 2 · CDSCO MD-7 / MD-3 Draft Pack
+            Tier 2 · Submission Workspace · MD-7 / MD-3
           </p>
           <h1 style={{ fontFamily: "'Source Serif 4', Georgia, serif", fontSize: "30px", color: "#0E1411", margin: "8px 0 0" }}>
             {deviceName}
@@ -396,7 +396,7 @@ export default async function DraftPackPage({
 
             <header className="border-b border-[#D9D5C8] pb-6 mb-8">
               <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517]">
-                Tier 2 · CDSCO MD-7 / MD-3 Draft Pack
+                Tier 2 · Submission Workspace · MD-7 / MD-3
               </p>
               <h1 className="font-serif text-4xl sm:text-5xl text-[#0E1411] mt-3 leading-tight">
                 {deviceName}
@@ -495,7 +495,7 @@ export default async function DraftPackPage({
           <div className="min-w-0">
             <header className="mb-6">
               <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517]">
-                Tier 2 · CDSCO MD-7 / MD-3 Draft Pack
+                Tier 2 · Submission Workspace · MD-7 / MD-3
               </p>
               <h1 className="font-serif text-3xl sm:text-4xl text-[#0E1411] mt-2 leading-tight">
                 {deviceName}

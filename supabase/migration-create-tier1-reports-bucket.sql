@@ -1,0 +1,17 @@
+-- Phase 1.6 — bucket `tier1_reports` must be created MANUALLY in the
+-- Supabase dashboard before the first ₹499 Regulatory Readiness Report
+-- can be delivered.
+--
+-- Settings to apply when creating:
+--   Name:                tier1_reports
+--   Public:              false
+--   File size limit:     5 MB
+--   Allowed MIME types:  application/pdf
+--
+-- Object path convention: `<order_id>/report.pdf`. The signed URL is
+-- recorded on `tier2_orders.draft_pack_pdf_url` (semantic reuse — same
+-- column points to the v2 PDF for Tier 2 customers).
+--
+-- This file is intentionally a comment-only marker so we have a record
+-- of the manual step in version control alongside the rest of the
+-- feature's migrations. There is no SQL to run here.

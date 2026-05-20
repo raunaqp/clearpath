@@ -41,7 +41,7 @@ const tierLocations: Record<string, string> = {
 };
 const tierTexts: Record<string, string> = {
   free: "Start free →",
-  draft_pack: "Get draft pack →",
+  draft_pack: "Get the report →",
   concierge: "Join waitlist →",
 };
 
@@ -78,7 +78,8 @@ export default function PricingSection() {
             Priced so a founder decides,<br className="hidden sm:block" /> not a procurement team.
           </h2>
           <p className="mt-4 text-[#6B766F] text-base md:text-lg max-w-xl mx-auto">
-            A free card to know where you stand. ₹499 for a draft. ₹50,000 when you&apos;re ready to file.
+            A free card to know where you stand. ₹499 for a founder-facing readiness report.
+            Talk to us when you&apos;re ready to file.
           </p>
         </div>
 
@@ -121,18 +122,18 @@ export default function PricingSection() {
               Stage 2 · Most popular
             </span>
             <h3 className="font-serif text-2xl text-[#0E1411]">
-              Regulatory Draft Pack
+              Regulatory Readiness Report
             </h3>
             <p className="italic text-[#6B766F] text-sm mt-1">
-              Delivered in ~10 minutes
+              Delivered in minutes
             </p>
             <BulletList
               items={[
-                "Structured application draft",
-                "Section-wise content (intended use, risk, clinical context)",
-                "Checklist mapped to CDSCO submission structure",
-                "Relevant CDSCO forms (MD-12, MD-9 etc.)",
-                "Pathway + realistic timeline",
+                "Likely CDSCO class, pathway, and forms",
+                "Prioritised readiness gaps with effort + cost ranges",
+                "Phased timeline with realistic Indian-startup bands",
+                "What reviewers will likely look for",
+                "Good-vs-bad wording snippets to avoid common mistakes",
               ]}
             />
             <div className="mt-auto pt-6">
@@ -142,7 +143,7 @@ export default function PricingSection() {
                 onClick={() => trackCta("draft_pack")}
                 className="block text-center bg-[#0F6E56] text-white font-medium text-sm px-5 py-3 rounded-full hover:bg-[#0d5c48] transition-colors"
               >
-                Get draft pack →
+                Get the report →
               </Link>
             </div>
           </div>
@@ -153,7 +154,7 @@ export default function PricingSection() {
               Stage 3 · Waitlist
             </span>
             <h3 className="font-serif text-2xl text-[#0E1411]">
-              Submission Concierge
+              Human Concierge
             </h3>
             <p className="italic text-[#6B766F] text-sm mt-1">
               Expert-reviewed · 12-month engagement
@@ -168,13 +169,13 @@ export default function PricingSection() {
               ]}
             />
             <div className="mt-auto pt-6">
-              <p className="text-[28px] font-serif text-[#0E1411] mb-3">₹50,000</p>
+              <p className="text-[28px] font-serif text-[#0E1411] mb-3">Talk to us</p>
               <Link
                 href="/concierge"
                 onClick={() => trackCta("concierge")}
                 className="block text-center bg-[#FAECE7] text-[#993C1D] font-medium text-sm px-5 py-3 rounded-full hover:bg-[#f5d5cb] transition-colors"
               >
-                Join waitlist →
+                Request a consultation →
               </Link>
             </div>
           </div>

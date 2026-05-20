@@ -34,7 +34,7 @@ export function TimeSavedBlock({
     <div className="mb-5 rounded-lg bg-[#FAF8F2] border border-[#D9D5C8] px-4 py-3">
       <div className="flex items-baseline gap-2 mb-1.5">
         <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-[#0F6E56]">
-          Time saved with Draft Pack
+          Time saved with the Submission Workspace
         </span>
       </div>
       <p className="text-sm text-[#0E1411] leading-relaxed">

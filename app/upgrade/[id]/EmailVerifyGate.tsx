@@ -51,7 +51,7 @@ export function EmailVerifyGate({ email, returnTo }: Props) {
         Verify your email
       </p>
       <p className="text-sm text-[#0E1411] leading-relaxed">
-        Your Draft Pack will be emailed to{" "}
+        Your Regulatory Readiness Report will be emailed to{" "}
         <span className="font-medium">{email}</span>. Click the link in
         your inbox (sent at signup) to confirm the address before paying.
       </p>

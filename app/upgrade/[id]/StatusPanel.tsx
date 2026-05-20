@@ -24,10 +24,18 @@ const STATUS_LABEL: Record<string, string> = {
   paid: "Payment received",
   pending_verification: "Pending payment verification",
   verified: "Payment verified",
-  generating: "Generating your Draft Pack",
+  generating: "Generating",
   delivered: "Delivered",
   failed: "Verification failed",
 };
+
+// Phase 1.6 — customer-facing product names per tier. DB enum stays
+// 'draft_pack' / 'draft_editor'; only the visible labels rename.
+function productName(tier: "draft_pack" | "draft_editor"): string {
+  return tier === "draft_editor"
+    ? "Submission Workspace"
+    : "Regulatory Readiness Report";
+}
 
 const STATUS_TINT: Record<string, { bg: string; fg: string }> = {
   created: { bg: "#FAEEDA", fg: "#BA7517" },
@@ -86,11 +94,12 @@ export function StatusPanel({
   }, [isTerminal, assessmentId, order.status, order.id]);
 
   const tint = STATUS_TINT[order.status] ?? STATUS_TINT.pending_verification;
+  const tier = order.tier_choice ?? "draft_pack";
 
   return (
     <section>
       <h1 className="font-serif text-[clamp(28px,3.6vw,36px)] leading-tight text-[#0E1411] mb-3">
-        {headline(order.status)}
+        {headline(order.status, tier)}
       </h1>
 
       <div
@@ -113,7 +122,11 @@ export function StatusPanel({
           <PendingDetails order={order} email={email} />
         )}
         {(order.status === "verified" || order.status === "generating") && (
-          <GeneratingDetails email={email} draftHref={draftHref} />
+          <GeneratingDetails
+            email={email}
+            draftHref={draftHref}
+            tier={tier}
+          />
         )}
         {order.status === "delivered" && (
           <DeliveredDetails order={order} email={email} draftHref={draftHref} />
@@ -133,20 +146,24 @@ export function StatusPanel({
   );
 }
 
-function headline(status: string): string {
+function headline(
+  status: string,
+  tier: "draft_pack" | "draft_editor"
+): string {
+  const name = productName(tier);
   switch (status) {
     case "created":
       return "We're holding your order. Complete payment to start.";
     case "paid":
       return "Payment received. We're verifying it now.";
     case "pending_verification":
-      return "Got it. Your Draft Pack is being prepared.";
+      return `Got it. Your ${name} is being prepared.`;
     case "verified":
-      return "Payment verified. Generating your Draft Pack now…";
+      return `Payment verified. Generating your ${name} now…`;
     case "generating":
-      return "Generating your Draft Pack…";
+      return `Generating your ${name}…`;
     case "delivered":
-      return "Your Draft Pack is ready.";
+      return `Your ${name} is ready.`;
     case "failed":
       return "There was an issue with your payment verification.";
     default:
@@ -252,19 +269,27 @@ function PendingDetails({
 function GeneratingDetails({
   email,
   draftHref,
+  tier,
 }: {
   email: string;
   draftHref: string;
+  tier: "draft_pack" | "draft_editor";
 }) {
+  const name = productName(tier);
   return (
     <>
       <p className="text-[#0E1411] text-base">
-        Your CDSCO Draft Pack is being generated.
+        Your {name} is being generated.
       </p>
       <p className="text-sm text-[#6B766F]">
-        This usually takes 2–3 minutes once started. You can leave this page —
-        we&apos;ll email the finished pack to{" "}
-        <span className="font-medium text-[#0E1411]">{email}</span>.
+        {tier === "draft_editor"
+          ? "This usually takes a few minutes once started. You can leave this page — we'll notify you when the workspace is ready."
+          : "This usually takes under a minute once started. You can leave this page — we'll email the finished report to "}
+        {tier === "draft_pack" ? (
+          <>
+            <span className="font-medium text-[#0E1411]">{email}</span>.
+          </>
+        ) : null}
       </p>
       <div className="flex items-center gap-2 text-sm text-[#6B766F]">
         <span
@@ -273,12 +298,14 @@ function GeneratingDetails({
         />
         Working on it…
       </div>
-      <Link
-        href={draftHref}
-        className="inline-flex items-center text-sm text-[#0F6E56] underline underline-offset-2 hover:text-[#0d5c48]"
-      >
-        Open the reader →
-      </Link>
+      {tier === "draft_editor" ? (
+        <Link
+          href={draftHref}
+          className="inline-flex items-center text-sm text-[#0F6E56] underline underline-offset-2 hover:text-[#0d5c48]"
+        >
+          Open the workspace →
+        </Link>
+      ) : null}
     </>
   );
 }
@@ -292,42 +319,51 @@ function DeliveredDetails({
   email: string;
   draftHref: string;
 }) {
-  // Sprint 3 Story 3.4 — tier-aware delivered UX. Legacy rows
-  // (tier_choice null) get the draft_pack treatment since that
-  // was Sprint 2's only product.
+  // Phase 1.6 — tier-aware delivered UX.
+  // draft_editor → editor link (the Submission Workspace) primary CTA.
+  // draft_pack   → "Emailed to {email}" + Download Report only; the
+  //                editor is intentionally NOT linked. The /draft/[id]
+  //                route is also guarded server-side so a direct URL
+  //                hit bounces back here.
   const tier = order.tier_choice ?? "draft_pack";
   const isEditor = tier === "draft_editor";
 
   return (
     <>
       <div className="flex flex-wrap items-center gap-3">
-        <Link
-          href={draftHref}
-          className="inline-flex items-center justify-center rounded-full bg-[#0F6E56] hover:bg-[#0d5c48] text-white font-medium text-[15px] px-6 py-3 transition-colors"
-        >
-          {isEditor ? "Open Draft Editor →" : "Open in browser →"}
-        </Link>
+        {isEditor ? (
+          <Link
+            href={draftHref}
+            className="inline-flex items-center justify-center rounded-full bg-[#0F6E56] hover:bg-[#0d5c48] text-white font-medium text-[15px] px-6 py-3 transition-colors"
+          >
+            Open Submission Workspace →
+          </Link>
+        ) : null}
         {order.draft_pack_pdf_url ? (
           <a
             href={order.draft_pack_pdf_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center rounded-full bg-white hover:bg-[#F7F6F2] border border-[#0F6E56] text-[#0F6E56] font-medium text-[15px] px-5 py-3 transition-colors"
+            className={
+              isEditor
+                ? "inline-flex items-center justify-center rounded-full bg-white hover:bg-[#F7F6F2] border border-[#0F6E56] text-[#0F6E56] font-medium text-[15px] px-5 py-3 transition-colors"
+                : "inline-flex items-center justify-center rounded-full bg-[#0F6E56] hover:bg-[#0d5c48] text-white font-medium text-[15px] px-6 py-3 transition-colors"
+            }
           >
-            Download PDF
+            {isEditor ? "Download PDF" : "Download Report"}
           </a>
         ) : null}
       </div>
       {isEditor ? (
         <p className="text-sm text-[#6B766F]">
-          Your Draft Editor is ready. Click above to open the inline
-          editor — sections you save persist instantly.
+          Your Submission Workspace is ready. Open it to edit each
+          section inline — saves persist instantly.
         </p>
       ) : (
         <p className="text-sm text-[#6B766F]">
           Emailed to{" "}
           <span className="font-medium text-[#0E1411]">{email}</span>.
-          Open in the browser for the live editor view.
+          Download the 4–6 page report — it's yours to keep.
         </p>
       )}
       <hr className="border-t border-[#D9D5C8]" />
@@ -337,7 +373,7 @@ function DeliveredDetails({
           href="/concierge"
           className="text-[#0F6E56] underline underline-offset-2 hover:text-[#0d5c48]"
         >
-          Submission Concierge · ₹50,000 for 12 months →
+          Human Concierge — talk to us →
         </Link>
       </p>
     </>

@@ -59,8 +59,8 @@ export function Tier23ButtonRow({ assessmentId }: { assessmentId: string }) {
         </Link>
       </div>
       <p className="text-xs text-[#6B766F] mt-3 leading-relaxed">
-        Generate: AI-drafted CDSCO sections you can review and ship —
-        Draft Pack or in-app Draft Editor, pricing on the next page.
+        Generate: a 4–6 page Readiness Report or the full
+        Submission Workspace — pricing on the next page.
         Consultation: tell us about your filing and we&apos;ll match you
         with an Indian regulatory expert.
       </p>

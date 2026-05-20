@@ -8,8 +8,9 @@ const steps = [
   { label: "Land", sub: "clearpath.in" },
   { label: "Describe", sub: "one-liner + URL" },
   { label: "Readiness Card", sub: "5 minutes", badge: "FREE", badgeColor: "bg-[#E1F5EE] text-[#0F6E56]" },
-  { label: "Draft Pack", sub: "10 minutes", badge: "₹499", badgeColor: "bg-[#FAEEDA] text-[#BA7517]" },
-  { label: "Concierge", sub: "12-month engagement", badge: "₹50K", badgeColor: "bg-[#FAECE7] text-[#993C1D]" },
+  { label: "Readiness Report", sub: "Minutes", badge: "₹499", badgeColor: "bg-[#FAEEDA] text-[#BA7517]" },
+  { label: "Submission Workspace", sub: "Editable sections", badge: "₹2,499", badgeColor: "bg-[#E1F5EE] text-[#0F6E56]" },
+  { label: "Human Concierge", sub: "12-month engagement", badge: "Talk to us", badgeColor: "bg-[#FAECE7] text-[#993C1D]" },
   { label: "Submit to CDSCO", sub: "to CDSCO" },
 ];
 

@@ -13,11 +13,11 @@ import type { CompletenessResult } from "@/lib/completeness/types";
  *   • Uploaded — strong evidence (filename + doc_type matched)
  *   • Claimed — signal supplement from wizard answers (dim === 2)
  *
- * The component shows both counts so the founder isn't misled. Tier 2
- * Draft Pack (₹499) verifies claimed items against actual content.
+ * The component shows both counts so the founder isn't misled. The
+ * Submission Workspace (₹2,499) verifies claimed items against actual content.
  *
  * Source of truth: lib/completeness/checklist.ts — same registry the
- * Draft Pack uses, so card and pack always agree on what's needed.
+ * Submission Workspace uses, so card and pack always agree on what's needed.
  */
 export function DocumentCompletenessBlock({
   result,
@@ -121,7 +121,7 @@ export function DocumentCompletenessBlock({
             ))}
             {missingOverflow > 0 && (
               <li className="italic">
-                …and {missingOverflow} more — Draft Pack lists all + provides
+                …and {missingOverflow} more — the Submission Workspace lists all + provides
                 templates
               </li>
             )}
@@ -129,13 +129,13 @@ export function DocumentCompletenessBlock({
         </div>
       ) : (
         <p className="text-xs text-[#3B6D11] leading-relaxed">
-          All required documents in place. Draft Pack verifies field-level
+          All required documents in place. The Submission Workspace verifies field-level
           completeness against CDSCO standards.
         </p>
       )}
 
       <p className="text-[10px] text-[#6B766F] leading-relaxed mt-2 italic">
-        Estimated from your uploads + readiness signals. The Draft Pack
+        Estimated from your uploads + readiness signals. The Submission Workspace
         verifies content of each document against CDSCO requirements.
       </p>
     </div>

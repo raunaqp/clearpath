@@ -65,18 +65,18 @@ export async function POST(req: NextRequest) {
   const tierChoice = parsed.data.tier_choice;
   const tierConfig = TIER_PRICING[tierChoice];
 
-  // Sprint 3 Story 3.1 — email-verify gate is tier-aware. Draft Pack
-  // delivery is by email, so we require a confirmed address. The
-  // in-app Draft Editor tier doesn't need email and lets users start
-  // immediately. The page-level gate surfaces the same precondition
-  // with a UI affordance; this is belt-and-suspenders in case a
-  // client bypasses the page.
+  // Phase 1.6 — email-verify gate is tier-aware. The Regulatory
+  // Readiness Report (₹499) delivers by email, so we require a
+  // confirmed address. The Submission Workspace (₹2,499) delivers
+  // in-app and skips the gate. Page-level UX surfaces the same
+  // precondition; this is belt-and-suspenders for clients that
+  // bypass the page.
   if (tierConfig.requiresVerifiedEmail && !user.emailConfirmedAt) {
     return NextResponse.json(
       {
         error: "email_not_verified",
         message:
-          "Your Draft Pack arrives by email — please verify your address first. Check your inbox for the confirmation link sent at signup.",
+          "Your Regulatory Readiness Report arrives by email — please verify your address first. Check your inbox for the confirmation link sent at signup.",
       },
       { status: 412 }
     );

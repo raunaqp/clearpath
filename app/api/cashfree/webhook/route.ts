@@ -28,7 +28,7 @@ import {
   getCashfreeConfig,
   verifyWebhookSignature,
 } from "@/lib/cashfree/client";
-import { triggerV2GenerationForOrder } from "@/lib/engine/draft-pack-v2/auto-trigger";
+import { dispatchGenerationForOrder } from "@/lib/engine/trigger-dispatch";
 
 export const dynamic = "force-dynamic";
 // Webhook returns fast (we promise Cashfree <5s). The v2 orchestrator
@@ -145,13 +145,14 @@ export async function POST(req: NextRequest) {
     `[cashfree/webhook] ${eventType} · order ${order.id} · ${order.status} → ${updates.status ?? order.status}`
   );
 
-  // Story 3.2 — fire v2 generation in the background once status has
-  // landed at 'generating'. after() keeps the function alive past
-  // the response so Cashfree gets its <5s ack and the ~4-minute
-  // orchestrator still runs.
+  // Story 3.2 + Phase 1.6 — fire tier-aware generation in the
+  // background once status has landed at 'generating'. after() keeps
+  // the function alive past the response so Cashfree gets its <5s ack
+  // and the orchestrator (v2: ~4 min, Tier 1: ~30s) still runs.
+  // dispatchGenerationForOrder branches on tier_choice internally.
   if (shouldAutoTrigger) {
     after(async () => {
-      await triggerV2GenerationForOrder(order.id);
+      await dispatchGenerationForOrder(order.id);
     });
   }
 

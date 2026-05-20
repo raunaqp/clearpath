@@ -40,7 +40,7 @@ export function DPDPGapBlock({
       </h2>
 
       <p className="text-sm text-[#0E1411] leading-relaxed mb-2">
-        We&apos;re building a DPDP-first Draft Pack for products at scale.
+        We&apos;re building a DPDP-first Submission Workspace for products at scale.
       </p>
       <p className="text-xs text-[#6B766F] leading-relaxed mb-4">
         Email pre-filled from intake.

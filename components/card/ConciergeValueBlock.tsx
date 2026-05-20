@@ -2,10 +2,10 @@
  * Concierge value prop block — sits below the Time-saved block, above
  * the Tier 2/3 button row.
  *
- * Purpose: re-frame the ₹50K concierge as a clear escalation from the
- * ₹499 Draft Pack. Tier 2 = "we draft it, you review and submit."
- * Tier 3 = "our team handles document generation and helps you push it
- * through CDSCO."
+ * Purpose: re-frame the Human Concierge as a clear escalation from the
+ * paid AI tiers. Tier 2 (Submission Workspace) = "we draft it, you
+ * review and submit." Tier 3 (Human Concierge) = "our team handles
+ * document generation and helps you push it through CDSCO."
  *
  * Honest framing — 'alongside,' not 'for you'. We're not promising
  * zero-touch regulatory submission. The founder is still on the

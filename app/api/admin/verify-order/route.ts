@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
 import { z } from "zod";
 import { getServiceClient } from "@/lib/supabase";
-import { triggerV2GenerationForOrder } from "@/lib/engine/draft-pack-v2/auto-trigger";
+import { dispatchGenerationForOrder } from "@/lib/engine/trigger-dispatch";
 
 // Sprint 2 Story 2.6 — auto-trigger v2 generation when admin verifies
 // the payment. The response returns immediately (status: 'verified');
@@ -73,11 +73,12 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Auto-trigger Phase 5.5 v2 generation in the background. The admin
-  // response returns immediately. Fluid Compute keeps the function
-  // alive past the response to run after()-scheduled work.
+  // Phase 1.6 — tier-aware generation dispatcher. Branches on
+  // tier_choice: draft_pack → Tier 1 Readiness Report, draft_editor
+  // → v2 Draft Pack. Admin response returns immediately; Fluid
+  // Compute keeps the function alive past the response.
   after(async () => {
-    await triggerV2GenerationForOrder(data.id);
+    await dispatchGenerationForOrder(data.id);
   });
 
   return NextResponse.json({ ok: true, order_id: data.id, status: data.status });

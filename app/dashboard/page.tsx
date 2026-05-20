@@ -24,6 +24,8 @@ type OrderRow = {
   assessment_id: string;
   draft_pack_pdf_url: string | null;
   delivered_at: string | null;
+  /** Phase 1.6 — null on legacy rows (treat as 'draft_pack' per migration 016). */
+  tier_choice: "draft_pack" | "draft_editor" | null;
 };
 
 const ORDER_STATUS_LABEL: Record<string, string> = {
@@ -68,7 +70,7 @@ export default async function DashboardPage() {
   const ordersRes = assessmentIds.length
     ? await supabase
         .from("tier2_orders")
-        .select("id, created_at, status, assessment_id, draft_pack_pdf_url, delivered_at")
+        .select("id, created_at, status, assessment_id, draft_pack_pdf_url, delivered_at, tier_choice")
         .in("assessment_id", assessmentIds)
         .order("created_at", { ascending: false })
     : { data: [] };
@@ -235,7 +237,7 @@ function CardRow({
               href={`/upgrade/${card.id}`}
               className="text-sm rounded-full bg-[#0F6E56] hover:bg-[#0d5c48] text-white px-3 py-1.5"
             >
-              Draft Pack →
+              Upgrade →
             </Link>
           ) : null}
         </div>
@@ -244,7 +246,9 @@ function CardRow({
         <div className="mt-3 pt-3 border-t border-[#0F6E56]/20 flex items-center justify-between gap-3 flex-wrap">
           <p className="text-sm text-[#6B766F]">
             <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-[#BA7517] mr-2">
-              Draft Pack
+              {order.tier_choice === "draft_editor"
+                ? "Submission Workspace"
+                : "Readiness Report"}
             </span>
             {ORDER_STATUS_LABEL[order.status] ?? order.status}
           </p>
@@ -253,7 +257,9 @@ function CardRow({
             className="text-sm text-[#0F6E56] underline underline-offset-2 hover:no-underline"
           >
             {order.status === "delivered"
-              ? "Open Draft Pack →"
+              ? order.tier_choice === "draft_editor"
+                ? "Open Workspace →"
+                : "Download Report →"
               : "View status →"}
           </Link>
         </div>

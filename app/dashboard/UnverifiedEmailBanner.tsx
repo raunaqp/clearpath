@@ -51,7 +51,7 @@ export function UnverifiedEmailBanner({ email }: Props) {
         <p className="text-sm text-[#0E1411] leading-relaxed">
           We sent a confirmation link to{" "}
           <span className="font-medium">{email}</span>. Verify before
-          paying so we can email your Draft Pack to that address.
+          paying so we can email your Regulatory Readiness Report to that address.
         </p>
       </div>
       <div className="flex items-center gap-2">

@@ -140,7 +140,7 @@ export async function triggerV2GenerationForOrder(
 
   if (recipient) {
     console.log(
-      `[v2-auto-trigger] would send email: to=${recipient} subject="Your CDSCO Draft Pack is ready"`
+      `[v2-auto-trigger] would send email: to=${recipient} subject="Your ClearPath Submission Workspace is ready"`
     );
   } else {
     console.warn(

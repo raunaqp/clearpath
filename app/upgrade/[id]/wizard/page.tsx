@@ -203,7 +203,7 @@ export default async function TierBWizardPage({
       <main className="flex-1 px-4 sm:px-6 lg:px-8 pt-8 lg:pt-12 pb-12">
         <div className="max-w-3xl mx-auto">
           <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-3">
-            Tier 2 · Draft Pack intake
+            Tier 2 · Submission Workspace intake
           </p>
           <h1 className="font-serif text-[clamp(28px,3.6vw,36px)] leading-tight text-[#0E1411] mb-3">
             A few more details so we can draft the right document.

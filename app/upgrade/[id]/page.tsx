@@ -130,12 +130,13 @@ export default async function UpgradePage({
           <>
             <TierIntentSync currentTier={selectedTier} />
             <h1 className="font-serif text-[clamp(28px,3.6vw,36px)] leading-tight text-[#0E1411] mb-3">
-              Drafted for your product, not a generic template.
+              Built for your product, not a generic template.
             </h1>
             <p className="text-[#6B766F] text-base leading-relaxed mb-8">
-              An Indian regulatory expert reviews and ships a 20+ page CDSCO-aligned
-              Draft Pack tailored to your wizard answers and uploaded
-              documents. Most deliveries within 2 hours, worst case 6.
+              Two paid tiers, calibrated to your assessment: a 4–6 page
+              Regulatory Readiness Report (₹499, emailed) or the full
+              Submission Workspace (₹2,499, in-app editor + 12-section
+              draft). Pick the one that matches where you are today.
             </p>
 
             {/* Time-saved hook — anchors the ₹499 against what a consultant
@@ -200,14 +201,15 @@ export default async function UpgradePage({
                 What ₹499 doesn&apos;t include
               </p>
               <p className="text-sm text-[#0E1411] leading-relaxed">
-                The Draft Pack gives you the <span className="italic">narrative</span>{" "}
-                content for each CDSCO section. The blank forms come back
-                blank — you (or your regulatory team) fill in company-specific
-                fields like CIN, manufacturing site, ISO 13485 certificate
-                number, signatory.{" "}
-                <span className="font-medium">Concierge (₹50K, 12 months)</span>{" "}
-                is where our team works alongside you to populate those fields,
-                cross-check against the Draft Pack narrative, and push the
+                The Submission Workspace gives you the{" "}
+                <span className="italic">narrative</span> content for each
+                CDSCO section. The blank forms come back blank — you (or
+                your regulatory team) fill in company-specific fields like
+                CIN, manufacturing site, ISO 13485 certificate number,
+                signatory.{" "}
+                <span className="font-medium">Human Concierge</span> is
+                where our team works alongside you to populate those fields,
+                cross-check against the workspace narrative, and push the
                 submission through CDSCO.
               </p>
               <p className="text-sm text-[#0E1411] leading-relaxed mt-2">
@@ -237,7 +239,7 @@ export default async function UpgradePage({
                 </li>
                 <li className="flex gap-3">
                   <span className="font-mono text-[11px] text-[#0F6E56] font-bold mt-0.5">03</span>
-                  <span>Draft Pack generation runs against your wizard answers, uploads, and Risk Card. Reviewed by an Indian regulatory expert before delivery.</span>
+                  <span>Generation runs against your wizard answers, uploads, and Readiness Card. Reviewed by an Indian regulatory expert before delivery.</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="font-mono text-[11px] text-[#0F6E56] font-bold mt-0.5">04</span>
@@ -260,8 +262,8 @@ export default async function UpgradePage({
                 />
 
                 {/* Email-verify gate fires only for the email-delivered
-                    tier (₹499 Draft Pack). ₹2,499 Draft Editor skips
-                    it since delivery is in-app. */}
+                    tier (₹499 Readiness Report). ₹2,499 Submission
+                    Workspace skips it since delivery is in-app. */}
                 {TIER_PRICING[selectedTier].requiresVerifiedEmail &&
                 !user.emailConfirmedAt ? (
                   <EmailVerifyGate

@@ -42,7 +42,7 @@ export default async function LoginPage({
     <AuthShell
       eyebrow="Welcome back"
       title="Sign in to ClearPath."
-      intro="Your Readiness Cards and Draft Packs in one place."
+      intro="Your Readiness Cards, Reports, and Workspaces in one place."
     >
       {errorMsg ? (
         <div className="mb-4">
