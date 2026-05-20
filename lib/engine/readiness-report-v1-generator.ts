@@ -277,7 +277,13 @@ function buildReviewerContext(
     novel_or_predicate: card.classification.novel_or_predicate,
     recommended_path: card.recommended_path,
     data_sensitivity: deriveDataSensitivity(card, wiz),
-    abdm_in_scope: card.regulations.abdm.verdict !== "not_applicable",
+    // Phase 1.6 polish — only flag ABDM as "in scope" when the
+    // synthesizer concluded the integration is actually required.
+    // Conditional / optional / for-procurement should NOT surface
+    // "ABDM integration in scope" in the scorecard triggers, and
+    // the abdm_interoperability reviewer priority should stay
+    // dormant in those cases.
+    abdm_in_scope: card.regulations.abdm.verdict === "required",
     use_environment_home: wiz.b2_use_environment === "home",
     drives_or_diagnoses:
       wiz.q2 === "drives" || wiz.q2 === "diagnoses_treats",
@@ -367,13 +373,25 @@ function buildClassLabel(
 function inferConfidence(
   card: ReadinessCard
 ): "high" | "medium" | "low" {
-  // Confidence proxy: band quality and presence of an unresolved conflict.
+  // Phase 1.6 polish — confidence is about CLASSIFICATION certainty,
+  // not preparedness. A clearly Class-C device with readiness 0/10
+  // should still surface "High confidence" in the scorecard because
+  // we are sure what it is — not sure they are ready to file.
+  //
+  //   low    — class isn't set yet, or qualifier is marked "unclear"
+  //   medium — class is set but the intake had a contradiction we had
+  //            to resolve, or the device sits in the Oct-2025 SaMD
+  //            draft territory where the rule itself is in flux
+  //   high   — class set, qualifier specific, no draft-gap, no conflict
+  //
+  // Readiness band is deliberately ignored here; the scorecard surfaces
+  // readiness as its own block.
+  const cls = card.classification;
+  if (cls.cdsco_class === null) return "low";
+  if (cls.class_qualifier === "unclear") return "low";
   if (card.meta.conflict_resolved) return "medium";
-  if (card.readiness.band === "green" || card.readiness.band === "green_plus") {
-    return "high";
-  }
-  if (card.readiness.band === "red") return "low";
-  return "medium";
+  if (card.post_2025_samd_gap) return "medium";
+  return "high";
 }
 
 function inferComplexity(
@@ -695,6 +713,9 @@ interface CallOpusJsonResult<T> {
   cost: number;
 }
 
+/** Issue one Opus message with overload-aware retry + JSON-validation retry.
+ *  - Transient overload / 5xx → exponential backoff (up to 4 attempts).
+ *  - JSON parse / schema fail  → retry once with STRICT_SUFFIX. */
 async function callOpusJson<T>(
   input: CallOpusJsonInput<T>
 ): Promise<CallOpusJsonResult<T>> {
@@ -710,18 +731,45 @@ async function callOpusJson<T>(
   for (let attempt = 1; attempt <= 2; attempt++) {
     const systemText =
       input.systemPrompt + (attempt === 2 ? STRICT_SUFFIX : "");
-    const response = await input.client.messages.create({
-      model: MODEL,
-      max_tokens: input.maxTokens,
-      system: [
-        {
-          type: "text",
-          text: systemText,
-          cache_control: { type: "ephemeral" },
-        },
-      ],
-      messages: [{ role: "user", content: input.userPrompt }],
-    });
+    let response: Anthropic.Message | null = null;
+
+    // Overload-aware retry with exponential backoff. Anthropic 529
+    // (overloaded) and 5xx are transient; the SDK's built-in retries
+    // sometimes give up before the back-end recovers, so we layer
+    // one more round of explicit backoff on top.
+    const TRANSIENT_RETRY_DELAYS_MS = [500, 1500, 4000, 9000];
+    let lastApiErr: unknown = null;
+    for (let i = 0; i <= TRANSIENT_RETRY_DELAYS_MS.length; i++) {
+      try {
+        response = await input.client.messages.create({
+          model: MODEL,
+          max_tokens: input.maxTokens,
+          system: [
+            {
+              type: "text",
+              text: systemText,
+              cache_control: { type: "ephemeral" },
+            },
+          ],
+          messages: [{ role: "user", content: input.userPrompt }],
+        });
+        break;
+      } catch (err) {
+        lastApiErr = err;
+        if (!isTransientApiError(err) || i === TRANSIENT_RETRY_DELAYS_MS.length) {
+          throw err;
+        }
+        const delay = TRANSIENT_RETRY_DELAYS_MS[i];
+        console.warn(
+          `[readiness-report ${input.label}] transient API error, retry ${i + 1} in ${delay}ms`
+        );
+        await new Promise((r) => setTimeout(r, delay));
+      }
+    }
+    if (!response) {
+      throw lastApiErr ?? new Error("readiness-report: no API response");
+    }
+
     const usage = usageFrom(response);
     accUsage = {
       input_tokens: accUsage.input_tokens + usage.input_tokens,
@@ -747,6 +795,18 @@ async function callOpusJson<T>(
   );
 }
 
+function isTransientApiError(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const e = err as { status?: number; type?: string };
+  if (typeof e.status === "number") {
+    if (e.status === 408 || e.status === 429) return true;
+    if (e.status === 529) return true;
+    if (e.status >= 500 && e.status < 600) return true;
+  }
+  if (e.type === "overloaded_error" || e.type === "rate_limit_error") return true;
+  return false;
+}
+
 function formatProductLine(
   input: ReadinessReportInput,
   card: ReadinessCard
@@ -763,7 +823,7 @@ function formatProductLine(
 // ─────────────────────────────────────────────────────────────
 
 const PathwayCallSchema = z.object({
-  why_this_class_applies: z.string().min(80).max(800),
+  why_this_class_applies: z.string().min(80).max(1500),
 });
 
 async function callPathwayNarrative(
@@ -827,7 +887,7 @@ const GapWhyCallSchema = z.object({
     .array(
       z.object({
         key: z.string(),
-        why_it_matters: z.string().min(40).max(450),
+        why_it_matters: z.string().min(40).max(1500),
       })
     )
     .min(1),
@@ -899,7 +959,7 @@ const ReviewerInsightsCallSchema = z.object({
     .array(
       z.object({
         key: z.string(),
-        what_reviewers_look_for: z.string().min(60).max(450),
+        what_reviewers_look_for: z.string().min(60).max(1500),
       })
     )
     .min(1),
@@ -966,7 +1026,7 @@ const SmartExampleAnnotationsSchema = z.object({
     .array(
       z.object({
         key: z.string(),
-        why_this_is_safer: z.string().min(60).max(450),
+        why_this_is_safer: z.string().min(60).max(1500),
       })
     )
     .min(1),
