@@ -398,7 +398,7 @@ export function ConciergeForm({
               Sending your request…
             </>
           ) : (
-            "Request concierge review →"
+            "Request a consultation →"
           )}
         </button>
 
