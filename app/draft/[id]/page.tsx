@@ -104,7 +104,7 @@ export default async function DraftPackPage({
   // E4 gate — only paid+verified customers get the reader.
   const { data: order } = await supabase
     .from("tier2_orders")
-    .select("id, status, created_at, delivered_at, draft_pack_pdf_url")
+    .select("id, status, created_at, delivered_at, draft_pack_pdf_url, tier_choice")
     .eq("assessment_id", id)
     .neq("status", "failed")
     .order("created_at", { ascending: false })
@@ -112,6 +112,17 @@ export default async function DraftPackPage({
     .maybeSingle();
 
   if (!order || !READABLE_ORDER_STATUSES.includes(order.status as (typeof READABLE_ORDER_STATUSES)[number])) {
+    redirect(`/upgrade/${id}`);
+  }
+
+  // Phase 1.6 tier guard — the editor (this page) is the Submission
+  // Workspace, available only to draft_editor (₹2,499) customers.
+  // draft_pack (₹499) customers receive a PDF Regulatory Readiness
+  // Report by email and never reach this route. Legacy rows back-filled
+  // to 'draft_pack' by migration 016 are intentionally locked out.
+  // The internal-print bypass keeps trusted server-side PDF renders
+  // unaffected.
+  if (!isInternalPrint && (order.tier_choice ?? "draft_pack") !== "draft_editor") {
     redirect(`/upgrade/${id}`);
   }
 
