@@ -53,13 +53,13 @@ export function renderDraftPackEmail(data: DraftPackEmailData): RenderedEmail {
     ? `- CDSCO_Forms.zip — blank forms (MD-5, MD-9, MD-12, MD-14, MD-20)`
     : `- CDSCO blank forms — link inside the guide (zip attachment coming in v2)`;
 
-  const subject = `Your CDSCO Draft Pack for ${data.product_name} is ready`;
+  const subject = `Your Submission Workspace for ${data.product_name} is ready`;
 
   const banner = data.include_resend_banner ? RESEND_BANNER_TEXT : null;
 
   const deliveryLine = data.pdf_url
-    ? `Your Regulatory Draft Pack for ${data.product_name} is ready. Download: ${data.pdf_url}`
-    : `Your Regulatory Draft Pack for ${data.product_name} is attached.`;
+    ? `Your Submission Workspace for ${data.product_name} is ready. Download: ${data.pdf_url}`
+    : `Your Submission Workspace for ${data.product_name} is attached.`;
 
   const text = [
     banner ? banner + "\n" : null,
@@ -68,7 +68,7 @@ export function renderDraftPackEmail(data: DraftPackEmailData): RenderedEmail {
     deliveryLine,
     ``,
     `Inside:`,
-    `- ${data.product_name}_DraftPack.pdf — drafted content for each CDSCO submission section`,
+    `- ${data.product_name}_SubmissionWorkspace.pdf — drafted content for each CDSCO submission section`,
     formsLine,
     `- SubmissionGuide.pdf — which form goes where`,
     ``,
@@ -103,7 +103,7 @@ export function renderDraftPackEmail(data: DraftPackEmailData): RenderedEmail {
   const downloadButtonHtml = data.pdf_url
     ? `<tr>
               <td style="padding:8px 32px 0 32px;">
-                <a href="${escape(data.pdf_url)}" style="display:inline-block;background:${TEAL_DEEP};color:#FFFFFF;text-decoration:none;font-size:14px;font-weight:600;padding:10px 18px;border-radius:6px;">Download your Draft Pack →</a>
+                <a href="${escape(data.pdf_url)}" style="display:inline-block;background:${TEAL_DEEP};color:#FFFFFF;text-decoration:none;font-size:14px;font-weight:600;padding:10px 18px;border-radius:6px;">Download your Submission Workspace →</a>
                 <div style="font-size:11px;color:${TEXT_MUTED};margin-top:6px;">Link valid for 90 days. Bookmark or save the PDF locally.</div>
               </td>
             </tr>`
@@ -130,11 +130,11 @@ export function renderDraftPackEmail(data: DraftPackEmailData): RenderedEmail {
             <tr>
               <td style="padding:24px 32px 8px 32px;">
                 <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;color:${TEAL_DEEP};margin:0 0 12px 0;line-height:1.25;">
-                  Your Draft Pack for ${escape(data.product_name)} is ready
+                  Your Submission Workspace for ${escape(data.product_name)} is ready
                 </h1>
                 <p style="font-size:15px;line-height:1.55;margin:0 0 16px 0;">Hi ${escape(data.name)},</p>
                 <p style="font-size:15px;line-height:1.55;margin:0 0 16px 0;">
-                  ${data.pdf_url ? `Your Regulatory Draft Pack for <strong>${escape(data.product_name)}</strong> is ready to download.` : `Your Regulatory Draft Pack for <strong>${escape(data.product_name)}</strong> is attached.`}
+                  ${data.pdf_url ? `Your Submission Workspace for <strong>${escape(data.product_name)}</strong> is ready to download.` : `Your Submission Workspace for <strong>${escape(data.product_name)}</strong> is attached.`}
                 </p>
               </td>
             </tr>
@@ -143,7 +143,7 @@ export function renderDraftPackEmail(data: DraftPackEmailData): RenderedEmail {
               <td style="padding:16px 32px 0 32px;">
                 <div style="border-left:3px solid ${AMBER};padding:12px 14px;background:${BG_WARM};font-size:14px;line-height:1.6;">
                   <strong style="display:block;margin-bottom:6px;">Inside</strong>
-                  • ${escape(data.product_name)}_DraftPack.pdf — drafted content for each CDSCO submission section<br />
+                  • ${escape(data.product_name)}_SubmissionWorkspace.pdf — drafted content for each CDSCO submission section<br />
                   • ${data.forms_zip_available ? `CDSCO_Forms.zip — blank forms (MD-5, MD-9, MD-12, MD-14, MD-20)` : `CDSCO blank forms — link inside the guide (zip attachment coming in v2)`}<br />
                   • SubmissionGuide.pdf — which form goes where
                 </div>

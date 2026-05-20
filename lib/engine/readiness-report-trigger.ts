@@ -135,6 +135,34 @@ export async function triggerReadinessReportForOrder(
     return;
   }
 
+  // ── Persist generator JSON ──────────────────────────────
+  // Stored alongside the PDF so the customer-facing "Regenerate PDF"
+  // CTA on the StatusPanel can re-render without re-calling Opus.
+  // Source of truth for regenerate; failure here aborts the order
+  // before we render anything, since regenerate would be impossible.
+  const jsonPath = `${orderId}/report.json`;
+  const { error: jsonErr } = await supabase.storage
+    .from(TIER1_REPORTS_BUCKET)
+    .upload(jsonPath, Buffer.from(JSON.stringify(report)), {
+      contentType: "application/json",
+      upsert: true,
+    });
+  if (jsonErr) {
+    const bucketMissing = /bucket.*not.*found|bucket.*does.*not/i.test(
+      jsonErr.message ?? ""
+    );
+    console.error(
+      `[tier1-trigger] report.json upload failed for ${orderId}: ${jsonErr.message}`
+    );
+    await stampFailure(
+      orderId,
+      bucketMissing
+        ? "storage_bucket_missing_tier1_reports"
+        : `storage_json_upload_failed: ${jsonErr.message}`
+    );
+    return;
+  }
+
   // ── Render PDF ──────────────────────────────────────────
   let pdfBytes: Buffer;
   try {
