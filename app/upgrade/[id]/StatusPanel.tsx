@@ -18,7 +18,25 @@ export type Tier2Order = {
   email_sent_to: string | null;
   /** Sprint 3 Story 3.1 — null on legacy rows (treat as draft_pack). */
   tier_choice: "draft_pack" | "draft_editor" | null;
+  /** Sprint 3 Phase 1.6 — used to disambiguate which kind of failure
+   *  hit when status='failed'. Prefixes used by writers:
+   *   - "Cashfree payment failed (..."  → payment-verification failure
+   *   - "tier1-gen failed: ..."          → Tier 1 generator failure
+   *   - "auto-gen failed: ..." etc.      → Tier 2 generator failure
+   */
+  notes: string | null;
 };
+
+type FailureKind = "payment" | "generation" | "unknown";
+
+function failureKind(notes: string | null): FailureKind {
+  if (!notes) return "unknown";
+  if (notes.startsWith("Cashfree payment")) return "payment";
+  if (notes.startsWith("tier1-gen failed") || notes.startsWith("auto-gen")) {
+    return "generation";
+  }
+  return "unknown";
+}
 
 const STATUS_LABEL: Record<string, string> = {
   created: "Awaiting payment",
@@ -100,7 +118,7 @@ export function StatusPanel({
   return (
     <section>
       <h1 className="font-serif text-[clamp(28px,3.6vw,36px)] leading-tight text-[#0E1411] mb-3">
-        {headline(order.status, tier)}
+        {headline(order.status, tier, failureKind(order.notes))}
       </h1>
 
       <div
@@ -150,7 +168,8 @@ export function StatusPanel({
 
 function headline(
   status: string,
-  tier: "draft_pack" | "draft_editor"
+  tier: "draft_pack" | "draft_editor",
+  kind: FailureKind
 ): string {
   const name = productName(tier);
   switch (status) {
@@ -167,7 +186,13 @@ function headline(
     case "delivered":
       return `Your ${name} is ready.`;
     case "failed":
-      return "There was an issue with your payment verification.";
+      if (kind === "generation") {
+        return `We hit a snag generating your ${name}.`;
+      }
+      if (kind === "payment") {
+        return "There was an issue with your payment verification.";
+      }
+      return "Your order didn't complete.";
     default:
       return "Your order is being processed.";
   }

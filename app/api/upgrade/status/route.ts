@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   const { data, error } = await supabase
     .from("tier2_orders")
     .select(
-      "id, status, transaction_id, payment_screenshot_url, draft_pack_pdf_url, delivered_at, created_at, email_sent_to"
+      "id, status, transaction_id, payment_screenshot_url, draft_pack_pdf_url, delivered_at, created_at, email_sent_to, tier_choice, notes"
     )
     .eq("assessment_id", parsed.data)
     .order("created_at", { ascending: false })

@@ -81,7 +81,7 @@ export default async function UpgradePage({
   const { data: order } = await supabase
     .from("tier2_orders")
     .select(
-      "id, status, transaction_id, payment_screenshot_url, draft_pack_pdf_url, delivered_at, created_at, email_sent_to, tier_choice"
+      "id, status, transaction_id, payment_screenshot_url, draft_pack_pdf_url, delivered_at, created_at, email_sent_to, tier_choice, notes"
     )
     .eq("assessment_id", id)
     .neq("status", "failed")
