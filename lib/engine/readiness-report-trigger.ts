@@ -248,12 +248,16 @@ export async function triggerReadinessReportForOrder(
 }
 
 async function stampFailure(orderId: string, note: string): Promise<void> {
+  // CAS to 'failed' only from 'generating' — never reverse a delivered
+  // order, and never re-flip an already-failed one.
   const supabase = getServiceClient();
   await supabase
     .from("tier2_orders")
     .update({
+      status: "failed",
       updated_at: new Date().toISOString(),
       notes: `tier1-gen failed: ${note}`,
     })
-    .eq("id", orderId);
+    .eq("id", orderId)
+    .eq("status", "generating");
 }

@@ -744,6 +744,7 @@ async function callOpusJson<T>(
         response = await input.client.messages.create({
           model: MODEL,
           max_tokens: input.maxTokens,
+          temperature: 0,
           system: [
             {
               type: "text",
@@ -786,6 +787,26 @@ async function callOpusJson<T>(
       return { value, usage: accUsage, cost: accCost };
     } catch (err) {
       lastErr = err;
+      // Phase 1.6 hotfix — surface enough detail to diagnose the
+      // exact failure mode (truncation vs inter-element prose vs
+      // malformed string). stop_reason='max_tokens' is the smoking
+      // gun for truncation. Raw text is truncated to 4 KB to keep
+      // Vercel function logs readable.
+      const raw = extractText(response);
+      const head = raw.slice(0, 4000);
+      const tail = raw.length > 4000 ? `\n...[truncated ${raw.length - 4000} chars]` : "";
+      console.error(
+        `[readiness-report ${input.label}] attempt ${attempt} parse failed`,
+        {
+          stop_reason: response.stop_reason,
+          output_tokens: response.usage.output_tokens,
+          max_tokens: input.maxTokens,
+          raw_length: raw.length,
+          error:
+            err instanceof Error ? err.message : String(err),
+          raw_preview: head + tail,
+        }
+      );
     }
   }
   throw new Error(
