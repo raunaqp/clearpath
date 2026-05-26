@@ -55,11 +55,9 @@ import type { WizardAnswers } from "@/lib/wizard/types";
 
 const MODEL: ModelKey = "claude-opus-4-7";
 const MAX_TOKENS_PATHWAY = 800;
-const MAX_TOKENS_GAPS = 1200;
-const MAX_TOKENS_INSIGHTS = 1200;
+const MAX_TOKENS_GAPS = 1500;
+const MAX_TOKENS_INSIGHTS = 1800;
 const MAX_TOKENS_EXAMPLES = 1000;
-const STRICT_SUFFIX =
-  "\n\nReturn STRICT JSON ONLY. No preamble. No trailing text.";
 
 const SHARED_TONE_RULES = `
 - Tone: premium SaaS-onboarding, founder-friendly, calm, concise. Stripe Atlas / ClearTax / Mercury feel.
@@ -678,17 +676,6 @@ function buildBottlenecks(
 // LLM helpers
 // ─────────────────────────────────────────────────────────────
 
-function extractText(response: Anthropic.Message): string {
-  const first = response.content[0];
-  return first && first.type === "text" ? first.text : "";
-}
-
-function stripFences(text: string): string {
-  const stripped = text.replace(/```json\s*|```/g, "").trim();
-  const match = stripped.match(/\{[\s\S]*\}/);
-  return match ? match[0] : stripped;
-}
-
 function usageFrom(response: Anthropic.Message): TokenUsage {
   return {
     input_tokens: response.usage.input_tokens,
@@ -698,122 +685,120 @@ function usageFrom(response: Anthropic.Message): TokenUsage {
   };
 }
 
-interface CallOpusJsonInput<T> {
+interface CallOpusToolInput<T> {
   client: Anthropic;
   label: string;
   systemPrompt: string;
   userPrompt: string;
+  toolName: string;
+  toolDescription: string;
+  inputSchema: Anthropic.Tool.InputSchema;
   schema: z.ZodType<T>;
   maxTokens: number;
 }
 
-interface CallOpusJsonResult<T> {
+interface CallOpusToolResult<T> {
   value: T;
   usage: TokenUsage;
   cost: number;
 }
 
-/** Issue one Opus message with overload-aware retry + JSON-validation retry.
+/** Issue one Opus tool-use call.
+ *
+ *  Anthropic's tool-use returns the model's output as the `input` field
+ *  of a tool_use content block — guaranteed to match the declared
+ *  input_schema. No fence-stripping, no JSON.parse, no parse-retry.
+ *
  *  - Transient overload / 5xx → exponential backoff (up to 4 attempts).
- *  - JSON parse / schema fail  → retry once with STRICT_SUFFIX. */
-async function callOpusJson<T>(
-  input: CallOpusJsonInput<T>
-): Promise<CallOpusJsonResult<T>> {
-  let accUsage: TokenUsage = {
-    input_tokens: 0,
-    cache_read: 0,
-    cache_write: 0,
-    output_tokens: 0,
-  };
-  let accCost = 0;
-  let lastErr: unknown = null;
+ *  - stop_reason='max_tokens'  → hard fail with diagnostic. A truncated
+ *    tool_use input is worse than a clear error because partial data
+ *    could otherwise ship to a paying customer.
+ *  - Zod re-validation is a belt-and-braces sanity check; the schema
+ *    matches input_schema, so it should be a no-op. */
+async function callOpusTool<T>(
+  input: CallOpusToolInput<T>
+): Promise<CallOpusToolResult<T>> {
+  let response: Anthropic.Message | null = null;
 
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    const systemText =
-      input.systemPrompt + (attempt === 2 ? STRICT_SUFFIX : "");
-    let response: Anthropic.Message | null = null;
-
-    // Overload-aware retry with exponential backoff. Anthropic 529
-    // (overloaded) and 5xx are transient; the SDK's built-in retries
-    // sometimes give up before the back-end recovers, so we layer
-    // one more round of explicit backoff on top.
-    const TRANSIENT_RETRY_DELAYS_MS = [500, 1500, 4000, 9000];
-    let lastApiErr: unknown = null;
-    for (let i = 0; i <= TRANSIENT_RETRY_DELAYS_MS.length; i++) {
-      try {
-        response = await input.client.messages.create({
-          model: MODEL,
-          max_tokens: input.maxTokens,
-          temperature: 0,
-          system: [
-            {
-              type: "text",
-              text: systemText,
-              cache_control: { type: "ephemeral" },
-            },
-          ],
-          messages: [{ role: "user", content: input.userPrompt }],
-        });
-        break;
-      } catch (err) {
-        lastApiErr = err;
-        if (!isTransientApiError(err) || i === TRANSIENT_RETRY_DELAYS_MS.length) {
-          throw err;
-        }
-        const delay = TRANSIENT_RETRY_DELAYS_MS[i];
-        console.warn(
-          `[readiness-report ${input.label}] transient API error, retry ${i + 1} in ${delay}ms`
-        );
-        await new Promise((r) => setTimeout(r, delay));
-      }
-    }
-    if (!response) {
-      throw lastApiErr ?? new Error("readiness-report: no API response");
-    }
-
-    const usage = usageFrom(response);
-    accUsage = {
-      input_tokens: accUsage.input_tokens + usage.input_tokens,
-      cache_read: accUsage.cache_read + usage.cache_read,
-      cache_write: accUsage.cache_write + usage.cache_write,
-      output_tokens: accUsage.output_tokens + usage.output_tokens,
-    };
-    accCost += calculateCallCost(MODEL, usage);
+  const TRANSIENT_RETRY_DELAYS_MS = [500, 1500, 4000, 9000];
+  let lastApiErr: unknown = null;
+  for (let i = 0; i <= TRANSIENT_RETRY_DELAYS_MS.length; i++) {
     try {
-      const raw = extractText(response);
-      const cleaned = stripFences(raw);
-      const parsed: unknown = JSON.parse(cleaned);
-      const value = input.schema.parse(parsed);
-      return { value, usage: accUsage, cost: accCost };
+      response = await input.client.messages.create({
+        model: MODEL,
+        max_tokens: input.maxTokens,
+        // Note: `temperature` is deprecated for claude-opus-4-7 and the
+        // API returns 400 if it's set. The newer Opus models are tuned
+        // for low variance by default — no override needed.
+        system: [
+          {
+            type: "text",
+            text: input.systemPrompt,
+            cache_control: { type: "ephemeral" },
+          },
+        ],
+        tools: [
+          {
+            name: input.toolName,
+            description: input.toolDescription,
+            input_schema: input.inputSchema,
+          },
+        ],
+        tool_choice: { type: "tool", name: input.toolName },
+        messages: [{ role: "user", content: input.userPrompt }],
+      });
+      break;
     } catch (err) {
-      lastErr = err;
-      // Phase 1.6 hotfix — surface enough detail to diagnose the
-      // exact failure mode (truncation vs inter-element prose vs
-      // malformed string). stop_reason='max_tokens' is the smoking
-      // gun for truncation. Raw text is truncated to 4 KB to keep
-      // Vercel function logs readable.
-      const raw = extractText(response);
-      const head = raw.slice(0, 4000);
-      const tail = raw.length > 4000 ? `\n...[truncated ${raw.length - 4000} chars]` : "";
-      console.error(
-        `[readiness-report ${input.label}] attempt ${attempt} parse failed`,
-        {
-          stop_reason: response.stop_reason,
-          output_tokens: response.usage.output_tokens,
-          max_tokens: input.maxTokens,
-          raw_length: raw.length,
-          error:
-            err instanceof Error ? err.message : String(err),
-          raw_preview: head + tail,
-        }
+      lastApiErr = err;
+      if (!isTransientApiError(err) || i === TRANSIENT_RETRY_DELAYS_MS.length) {
+        throw err;
+      }
+      const delay = TRANSIENT_RETRY_DELAYS_MS[i];
+      console.warn(
+        `[readiness-report ${input.label}] transient API error, retry ${i + 1} in ${delay}ms`
       );
+      await new Promise((r) => setTimeout(r, delay));
     }
   }
-  throw new Error(
-    `readiness-report ${input.label}: JSON/schema validation failed after retry: ${
-      lastErr instanceof Error ? lastErr.message : String(lastErr)
-    }`
+  if (!response) {
+    throw lastApiErr ?? new Error("readiness-report: no API response");
+  }
+
+  const usage = usageFrom(response);
+  const cost = calculateCallCost(MODEL, usage);
+
+  if (response.stop_reason === "max_tokens") {
+    throw new Error(
+      `readiness-report ${input.label}: max_tokens (${input.maxTokens}) hit — output truncated. output_tokens=${response.usage.output_tokens}. Raise the cap for this call.`
+    );
+  }
+
+  const toolBlock = response.content.find(
+    (b): b is Anthropic.ToolUseBlock => b.type === "tool_use"
   );
+  if (!toolBlock || toolBlock.name !== input.toolName) {
+    throw new Error(
+      `readiness-report ${input.label}: model did not invoke tool '${input.toolName}' (stop_reason=${response.stop_reason})`
+    );
+  }
+
+  const parsed = input.schema.safeParse(toolBlock.input);
+  if (!parsed.success) {
+    console.error(
+      `[readiness-report ${input.label}] tool_use input failed Zod sanity check`,
+      {
+        stop_reason: response.stop_reason,
+        output_tokens: response.usage.output_tokens,
+        zod_error: parsed.error.message,
+        tool_input_preview:
+          JSON.stringify(toolBlock.input).slice(0, 2000),
+      }
+    );
+    throw new Error(
+      `readiness-report ${input.label}: tool_use input failed schema: ${parsed.error.message}`
+    );
+  }
+  return { value: parsed.data, usage, cost };
 }
 
 function isTransientApiError(err: unknown): boolean {
@@ -847,6 +832,20 @@ const PathwayCallSchema = z.object({
   why_this_class_applies: z.string().min(80).max(1500),
 });
 
+const PATHWAY_INPUT_SCHEMA: Anthropic.Tool.InputSchema = {
+  type: "object",
+  properties: {
+    why_this_class_applies: {
+      type: "string",
+      minLength: 80,
+      maxLength: 1500,
+      description:
+        "Single paragraph, 90–180 words, plain English, soft framing ('likely', 'may'), ends by naming the form pathway.",
+    },
+  },
+  required: ["why_this_class_applies"],
+};
+
 async function callPathwayNarrative(
   client: Anthropic,
   args: {
@@ -868,7 +867,7 @@ The paragraph answers: "Why does this likely class apply to THIS product?" It mu
 - End by naming the form pathway (e.g., "MD-7 via the Central Licensing Authority") in one short sentence.
 - Avoid restating the full step sequence — that's a separate table.
 
-Output STRICT JSON: { "why_this_class_applies": "..." }
+Call the \`emit_pathway_narrative\` tool with the paragraph as \`why_this_class_applies\`.
 `.trim();
 
   const userPrompt = [
@@ -884,11 +883,15 @@ Output STRICT JSON: { "why_this_class_applies": "..." }
     "Write the paragraph now.",
   ].join("\n");
 
-  const result = await callOpusJson({
+  const result = await callOpusTool({
     client,
     label: "pathway",
     systemPrompt,
     userPrompt,
+    toolName: "emit_pathway_narrative",
+    toolDescription:
+      "Emit the 'why this class likely applies' paragraph for Section 2 of the Readiness Report.",
+    inputSchema: PATHWAY_INPUT_SCHEMA,
     schema: PathwayCallSchema,
     maxTokens: MAX_TOKENS_PATHWAY,
   });
@@ -914,6 +917,35 @@ const GapWhyCallSchema = z.object({
     .min(1),
 });
 
+const GAP_WHY_INPUT_SCHEMA: Anthropic.Tool.InputSchema = {
+  type: "object",
+  properties: {
+    rows: {
+      type: "array",
+      minItems: 1,
+      description: "One row per input gap, same 'key' values; do not invent new keys.",
+      items: {
+        type: "object",
+        properties: {
+          key: {
+            type: "string",
+            description: "Verbatim lookup key from the input list.",
+          },
+          why_it_matters: {
+            type: "string",
+            minLength: 40,
+            maxLength: 1500,
+            description:
+              "One continuous paragraph, no line breaks. Founder-friendly sentence(s) on what reviewers expect and what happens if the gap is not closed.",
+          },
+        },
+        required: ["key", "why_it_matters"],
+      },
+    },
+  },
+  required: ["rows"],
+};
+
 async function callGapWhyItMatters(
   client: Anthropic,
   args: {
@@ -933,15 +965,7 @@ For each gap below, return ONE softened, founder-friendly sentence (or two short
 Avoid: "nonconformity", "regulatory noncompliance", "conformance obligations".
 Use: "Reviewers will likely expect…", "Without this, submission may be delayed…", "Typically requested before…".
 
-Output STRICT JSON:
-{
-  "rows": [
-    { "key": "<lookupKey>", "why_it_matters": "..." },
-    ...
-  ]
-}
-
-Return one row per input gap, with the same "key" values. Do not invent new keys.
+Call the \`emit_gap_why_rows\` tool. Return one row per input gap with the same "key" values; do not invent new keys.
 `.trim();
 
   const userPrompt = [
@@ -955,11 +979,15 @@ Return one row per input gap, with the same "key" values. Do not invent new keys
     ),
   ].join("\n");
 
-  const result = await callOpusJson({
+  const result = await callOpusTool({
     client,
     label: "gap_why",
     systemPrompt,
     userPrompt,
+    toolName: "emit_gap_why_rows",
+    toolDescription:
+      "Emit the per-gap 'why it matters' rows for Section 3 (Readiness Gap Analysis).",
+    inputSchema: GAP_WHY_INPUT_SCHEMA,
     schema: GapWhyCallSchema,
     maxTokens: MAX_TOKENS_GAPS,
   });
@@ -986,6 +1014,35 @@ const ReviewerInsightsCallSchema = z.object({
     .min(1),
 });
 
+const REVIEWER_INSIGHTS_INPUT_SCHEMA: Anthropic.Tool.InputSchema = {
+  type: "object",
+  properties: {
+    rows: {
+      type: "array",
+      minItems: 1,
+      description: "One row per input reviewer priority, same 'key' values; do not invent new keys.",
+      items: {
+        type: "object",
+        properties: {
+          key: {
+            type: "string",
+            description: "Verbatim key from the input list.",
+          },
+          what_reviewers_look_for: {
+            type: "string",
+            minLength: 60,
+            maxLength: 1500,
+            description:
+              "One continuous paragraph, 60–110 words, no line breaks. Soft framing throughout ('likely', 'may'). Tailor to product specifics.",
+          },
+        },
+        required: ["key", "what_reviewers_look_for"],
+      },
+    },
+  },
+  required: ["rows"],
+};
+
 async function callReviewerInsights(
   client: Anthropic,
   args: {
@@ -1002,15 +1059,7 @@ ${SHARED_TONE_RULES}
 
 For each reviewer priority below, return ONE softened, product-tailored paragraph (60–110 words) explaining what CDSCO reviewers typically expect to see. Tailor the seed phrase to the product specifics — name the indication / patient population / data type when relevant.
 
-Output STRICT JSON:
-{
-  "rows": [
-    { "key": "<key>", "what_reviewers_look_for": "..." },
-    ...
-  ]
-}
-
-Return one row per input priority, with the same "key" values. Do not invent new keys.
+Call the \`emit_reviewer_insights_rows\` tool. Return one row per input priority with the same "key" values; do not invent new keys.
 `.trim();
 
   const userPrompt = [
@@ -1023,11 +1072,15 @@ Return one row per input priority, with the same "key" values. Do not invent new
     ),
   ].join("\n");
 
-  const result = await callOpusJson({
+  const result = await callOpusTool({
     client,
     label: "reviewer_insights",
     systemPrompt,
     userPrompt,
+    toolName: "emit_reviewer_insights_rows",
+    toolDescription:
+      "Emit the per-priority 'what reviewers will likely look for' rows for Section 5 (Reviewer Insights).",
+    inputSchema: REVIEWER_INSIGHTS_INPUT_SCHEMA,
     schema: ReviewerInsightsCallSchema,
     maxTokens: MAX_TOKENS_INSIGHTS,
   });
@@ -1052,6 +1105,35 @@ const SmartExampleAnnotationsSchema = z.object({
     )
     .min(1),
 });
+
+const SMART_EXAMPLES_INPUT_SCHEMA: Anthropic.Tool.InputSchema = {
+  type: "object",
+  properties: {
+    rows: {
+      type: "array",
+      minItems: 1,
+      description: "One row per input example pair, same 'key' values; do not invent new keys.",
+      items: {
+        type: "object",
+        properties: {
+          key: {
+            type: "string",
+            description: "Verbatim key from the input list.",
+          },
+          why_this_is_safer: {
+            type: "string",
+            minLength: 60,
+            maxLength: 1500,
+            description:
+              "One continuous paragraph, 60–110 words, no line breaks. Explains why the good wording is regulator-defensible and why the bad wording invites questions.",
+          },
+        },
+        required: ["key", "why_this_is_safer"],
+      },
+    },
+  },
+  required: ["rows"],
+};
 
 async function callSmartExamples(
   client: Anthropic,
@@ -1078,15 +1160,7 @@ For each example pair (good + bad snippet) below, return ONE softened annotation
 
 Boundary: the snippet pairs themselves are static. You annotate, not rewrite, the snippets.
 
-Output STRICT JSON:
-{
-  "rows": [
-    { "key": "<key>", "why_this_is_safer": "..." },
-    ...
-  ]
-}
-
-Return one row per input example, with the same "key" values. Do not invent new keys.
+Call the \`emit_smart_examples_rows\` tool. Return one row per input example with the same "key" values; do not invent new keys.
 `.trim();
 
   const userPrompt = [
@@ -1100,11 +1174,15 @@ Return one row per input example, with the same "key" values. Do not invent new 
     ),
   ].join("\n");
 
-  const result = await callOpusJson({
+  const result = await callOpusTool({
     client,
     label: "smart_examples",
     systemPrompt,
     userPrompt,
+    toolName: "emit_smart_examples_rows",
+    toolDescription:
+      "Emit the per-example 'why this wording is safer' annotations for Section 6 (Smart Examples).",
+    inputSchema: SMART_EXAMPLES_INPUT_SCHEMA,
     schema: SmartExampleAnnotationsSchema,
     maxTokens: MAX_TOKENS_EXAMPLES,
   });
