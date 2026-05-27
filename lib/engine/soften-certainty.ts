@@ -44,9 +44,16 @@ export function softenCertainty(text: string): string {
     out = out.replace(re, (matched) => matchLeadingCase(matched, soft));
   }
   // Replace Unicode arrow glyphs that the built-in @react-pdf/renderer
-  // Helvetica font cannot render (would otherwise show as broken apostrophes
-  // in the PDF). LLMs occasionally use them despite prompt guidance.
-  out = out.replace(/[←→⇐⇒⟶]/g, " / ");
+  // Helvetica font cannot render (they appeared as missing-glyph tofu
+  // boxes ⬚ in the deployed Tier 2 PDFs and as broken apostrophes
+  // in the Tier 1 PDFs). The ASCII " -> " preserves the directional
+  // sequence semantics that arrows carried in the source templates
+  // (e.g. "MD-26 -> MD-27 -> MD-7" reads as an ordered pathway).
+  // LLMs occasionally still emit arrows despite prompt guidance.
+  out = out.replace(/[→⇒⟶]/g, " -> ");
+  out = out.replace(/[←⇐]/g, " <- ");
+  // Collapse stray double-spaces produced when an arrow sat next to a space.
+  out = out.replace(/ {2,}/g, " ");
   return out;
 }
 

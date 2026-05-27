@@ -114,13 +114,9 @@ export async function generateReadinessReport(
   // ── Pre-select dynamic content ──────────────────────────
   const gapRowSeeds = buildGapRowSeeds(card);
   const reviewerPrioritySeeds = selectReviewerPriorities(ctx, 5);
-  // Pick 2, not 3 — the third example reliably orphans onto a near-empty
-  // page because react-pdf's wrap={false} block-sizing over-reserves
-  // for the longest good-snippet (ISO 14971 hazard chain, 8 lines).
-  // Tier 2 (Submission Workspace) can carry the full set if needed.
   const smartExampleSeeds = selectSmartExamples(
     { cdsco_class: ctx.cdsco_class, ai_ml_flag: ctx.ai_ml_flag },
-    2
+    3
   );
 
   // ── 4 LLM calls in parallel ─────────────────────────────
@@ -1164,13 +1160,13 @@ const SMART_EXAMPLES_INPUT_SCHEMA: Anthropic.Tool.InputSchema = {
           },
           why_this_is_safer: {
             type: "string",
-            minLength: 50,
-            // Hard cap ~75 words × ~7 chars + buffer so all 3 examples
-            // (each with static good/bad pair + LLM annotation) fit on
-            // one page instead of orphaning the 3rd to a near-empty next.
-            maxLength: 550,
+            minLength: 45,
+            // Tightened to fit 3 examples on one Section 6 page (the
+            // 3rd has an 8-line ISO 14971 good-snippet that forces a
+            // taller block).
+            maxLength: 450,
             description:
-              "One continuous paragraph, 50–75 words, no line breaks. Explains why the good wording is regulator-defensible and why the bad wording invites questions.",
+              "One continuous paragraph, 40–60 words, no line breaks. Explains why the good wording is regulator-defensible and why the bad wording invites questions.",
           },
         },
         required: ["key", "why_this_is_safer"],
@@ -1201,9 +1197,9 @@ You write the "Why this wording is safer" annotation in Section 6 (Smart Example
 
 ${SHARED_TONE_RULES}
 
-For each example pair (good + bad snippet) below, return ONE softened annotation (50–75 words, hard cap) explaining why the good wording is regulator-defensible and why the bad wording typically invites questions or stricter classification. Tailor to product specifics where relevant; otherwise stay close to the seed.
+For each example pair (good + bad snippet) below, return ONE softened annotation (40–60 words, hard cap) explaining why the good wording is regulator-defensible and why the bad wording typically invites questions or stricter classification. Tailor to product specifics where relevant; otherwise stay close to the seed.
 
-Stay tight: 50–75 words. Under 75 is non-negotiable for layout reasons.
+Stay tight: 40–60 words. Under 60 is non-negotiable for layout reasons.
 
 Boundary: the snippet pairs themselves are static. You annotate, not rewrite, the snippets.
 

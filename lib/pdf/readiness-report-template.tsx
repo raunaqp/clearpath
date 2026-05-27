@@ -179,12 +179,12 @@ const styles = StyleSheet.create({
     fontFamily: "Times-Bold",
     fontSize: 18,
     color: TEXT_DARK,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   sectionDeck: {
     fontSize: 10,
     color: TEXT_MUTED,
-    marginBottom: 14,
+    marginBottom: 10,
   },
 
   // hero title (page 1)
@@ -518,12 +518,12 @@ const styles = StyleSheet.create({
 
   // smart examples
   exampleBlock: {
-    marginBottom: 10,
+    marginBottom: 5,
   },
   exampleHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 6,
+    marginBottom: 3,
   },
   exampleCategory: {
     fontSize: 8,
@@ -547,8 +547,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   examplePaneInner: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
+    paddingVertical: 5,
+    paddingHorizontal: 9,
     borderRadius: 5,
     borderWidth: 1,
   },
@@ -566,15 +566,15 @@ const styles = StyleSheet.create({
   paneBody: {
     fontSize: 9,
     color: TEXT_DARK,
-    lineHeight: 1.35,
+    lineHeight: 1.25,
   },
   exampleAnnotation: {
     backgroundColor: TEAL_LIGHT,
     borderLeftColor: TEAL_DEEP,
     borderLeftWidth: 3,
-    paddingVertical: 6,
+    paddingVertical: 5,
     paddingHorizontal: 10,
-    marginTop: 4,
+    marginTop: 3,
     borderRadius: 4,
   },
   exampleAnnotationLabel: {
@@ -588,7 +588,7 @@ const styles = StyleSheet.create({
   exampleAnnotationBody: {
     fontSize: 9.5,
     color: TEXT_DARK,
-    lineHeight: 1.4,
+    lineHeight: 1.35,
   },
 
   // generic helpers
