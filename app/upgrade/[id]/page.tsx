@@ -358,8 +358,8 @@ function TierEyebrow({
   return (
     <p className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#BA7517] mb-3">
       {cfg
-        ? `Tier 2 · ₹${cfg.amountInr.toLocaleString("en-IN")} ${cfg.label}`
-        : "Tier 2"}
+        ? `${cfg.tierLabel} · ₹${cfg.amountInr.toLocaleString("en-IN")} ${cfg.label}`
+        : "Upgrade"}
     </p>
   );
 }

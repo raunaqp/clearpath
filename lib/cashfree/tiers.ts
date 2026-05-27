@@ -20,6 +20,11 @@ export type TierConfig = {
   requiresVerifiedEmail: boolean;
   /** Customer-facing label. */
   label: string;
+  /** Tier number for eyebrows / chips. The DB enum draft_pack is
+   *  the ₹499 Tier 1 Readiness Report; draft_editor is the ₹2,499
+   *  Tier 2 Submission Workspace. Centralised here so eyebrows
+   *  can't mislabel one as the other. */
+  tierLabel: "Tier 1" | "Tier 2";
   /** One-line summary of the delivery channel. */
   deliveryChannel: string;
 };
@@ -29,12 +34,14 @@ export const TIER_PRICING: Record<TierChoice, TierConfig> = {
     amountInr: 499,
     requiresVerifiedEmail: true,
     label: "Regulatory Readiness Report",
+    tierLabel: "Tier 1",
     deliveryChannel: "Emailed to you",
   },
   draft_editor: {
     amountInr: 2499,
     requiresVerifiedEmail: false,
     label: "Submission Workspace",
+    tierLabel: "Tier 2",
     deliveryChannel: "In-app editor",
   },
 };

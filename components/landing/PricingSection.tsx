@@ -116,7 +116,7 @@ export default function PricingSection() {
             </div>
           </div>
 
-          {/* Tier 2 — ₹499 (highlighted) */}
+          {/* Tier 1 — ₹499 Regulatory Readiness Report (highlighted) */}
           <div className="rounded-xl border-2 border-[#0F6E56] bg-[#FDFCF8] p-6 flex flex-col shadow-md">
             <span className="font-mono text-xs tracking-widest uppercase text-[#0F6E56] mb-3">
               Stage 2 · Most popular

@@ -478,6 +478,10 @@ export default async function DraftPackPage({
     <div className="min-h-screen bg-[#F7F6F2] flex flex-col">
       <GlobalHeader signedIn />
       <main className="flex-1 px-4 sm:px-6 lg:px-8 pt-8 pb-24">
+        <EditCoordinatorProvider
+          assessmentId={id}
+          initialNeedsInputFields={needsInputFields}
+        >
         <div className="max-w-content mx-auto grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] gap-8">
           <aside className="hidden lg:block min-w-0">
             <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pr-2">
@@ -485,6 +489,8 @@ export default async function DraftPackPage({
                 sections={draftSections.map((d) => ({
                   number: d.renderable.section_number,
                   title: d.renderable.title,
+                  sectionKey: d.renderable.section_key,
+                  content: d.renderable.content,
                   status: d.status,
                   pendingCount: d.pendingCount,
                 }))}
@@ -550,33 +556,29 @@ export default async function DraftPackPage({
               <ValidationSummary report={validationReport} />
             ) : null}
 
-            <EditCoordinatorProvider
-              assessmentId={id}
-              initialNeedsInputFields={needsInputFields}
-            >
-              <div className="space-y-10 mt-8">
-                {draftSections.map((d) => (
-                  <SectionCard
-                    key={d.renderable.section_key}
-                    assessmentId={id}
-                    attachments={
-                      attachmentsBySection.get(d.renderable.section_key) ?? []
-                    }
-                    section={d.renderable}
-                    hasOverlay={d.hasOverlay}
-                    initialEditContent={d.initialEditContent}
-                    status={d.status}
-                    pendingCount={d.pendingCount}
-                  />
-                ))}
-                <OtherDocumentsBucket
+            <div className="space-y-10 mt-8">
+              {draftSections.map((d) => (
+                <SectionCard
+                  key={d.renderable.section_key}
                   assessmentId={id}
-                  initialAttachments={attachmentsBySection.get("other") ?? []}
+                  attachments={
+                    attachmentsBySection.get(d.renderable.section_key) ?? []
+                  }
+                  section={d.renderable}
+                  hasOverlay={d.hasOverlay}
+                  initialEditContent={d.initialEditContent}
+                  status={d.status}
+                  pendingCount={d.pendingCount}
                 />
-              </div>
-            </EditCoordinatorProvider>
+              ))}
+              <OtherDocumentsBucket
+                assessmentId={id}
+                initialAttachments={attachmentsBySection.get("other") ?? []}
+              />
+            </div>
           </div>
         </div>
+        </EditCoordinatorProvider>
       </main>
     </div>
   );

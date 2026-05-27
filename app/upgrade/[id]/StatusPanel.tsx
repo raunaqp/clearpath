@@ -149,6 +149,7 @@ export function StatusPanel({
             email={email}
             draftHref={draftHref}
             assessmentId={assessmentId}
+            cashfreeEnv={cashfreeEnv}
           />
         )}
         {order.status === "failed" && <FailedDetails order={order} />}
@@ -342,11 +343,13 @@ function DeliveredDetails({
   email,
   draftHref,
   assessmentId,
+  cashfreeEnv,
 }: {
   order: Tier2Order;
   email: string;
   draftHref: string;
   assessmentId: string;
+  cashfreeEnv: "TEST" | "PROD" | null;
 }) {
   const tier = order.tier_choice ?? "draft_pack";
   if (tier === "draft_editor") {
@@ -357,6 +360,7 @@ function DeliveredDetails({
       order={order}
       email={email}
       assessmentId={assessmentId}
+      cashfreeEnv={cashfreeEnv}
     />
   );
 }
@@ -410,10 +414,12 @@ function DeliveredReport({
   order,
   email,
   assessmentId,
+  cashfreeEnv,
 }: {
   order: Tier2Order;
   email: string;
   assessmentId: string;
+  cashfreeEnv: "TEST" | "PROD" | null;
 }) {
   // Phase 1.6 UX fix B — Tier 1 delivered page is intentionally
   // minimal: two actions only (Regenerate PDF · Back to dashboard).
@@ -481,6 +487,40 @@ function DeliveredReport({
           ⚠ {error}
         </p>
       ) : null}
+
+      {/* Phase B Item 1 — upgrade path. Routes through the same
+          /api/cashfree/create-order endpoint a fresh Tier 2 buyer uses;
+          tier_choice='draft_editor' creates a NEW tier2_orders row
+          (the delivered ₹499 row stays delivered, untouched). The
+          /draft/[id] tier-guard then unlocks once the new order
+          settles. Hidden when Cashfree isn't configured server-side. */}
+      <hr className="border-t border-[#D9D5C8]" />
+      <div>
+        <p className="text-sm text-[#0E1411] mb-3">
+          Need to actually <span className="font-medium">edit + file</span>?
+          Upgrade to the Submission Workspace — all 17 MD-7 sections, editable
+          inline, delivered in-app.
+        </p>
+        {cashfreeEnv ? (
+          <CashfreePayButton
+            assessmentId={assessmentId}
+            cashfreeEnv={cashfreeEnv}
+            tierChoice="draft_editor"
+            label="Upgrade to Submission Workspace · ₹2,499 →"
+          />
+        ) : (
+          <p className="text-sm text-[#993C1D]">
+            Cashfree is not configured — email{" "}
+            <a
+              href="mailto:founder@clearpath.in"
+              className="text-[#0F6E56] underline underline-offset-2"
+            >
+              founder@clearpath.in
+            </a>{" "}
+            to upgrade manually.
+          </p>
+        )}
+      </div>
     </>
   );
 }

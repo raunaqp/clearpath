@@ -99,17 +99,19 @@ export default function TermsPage() {
             </Clause>
 
             <Clause title="5. Payments and refunds">
-              Tier 2 (Draft Pack) is charged at ₹499 per assessment via UPI /
-              card payments. Tier 3 (Submission Concierge) is a separate
-              service with its own pricing. We may revise pricing at any
-              time; changes apply only to new orders. Refunds are at the
-              Company&apos;s discretion:{" "}
+              Tier 1 (Regulatory Readiness Report) is charged at ₹499 per
+              assessment. Tier 2 (Submission Workspace) is charged at ₹2,499
+              per assessment. Both are paid via UPI / card payments through
+              Cashfree. Tier 3 (Human Concierge) is a separate service with
+              its own pricing. We may revise pricing at any time; changes
+              apply only to new orders. Refunds are at the Company&apos;s
+              discretion:{" "}
               <strong>
                 refund requests are honoured if made within 24 hours of
-                payment and before Draft Pack delivery
+                payment and before delivery of the Report or Workspace
               </strong>
-              . Once delivered, the Draft Pack is non-refundable because the
-              AI generation cost has already been incurred.
+              . Once delivered, the Report or Workspace is non-refundable
+              because the AI generation cost has already been incurred.
             </Clause>
 
             <Clause title="6. Intellectual property">
