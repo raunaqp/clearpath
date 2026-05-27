@@ -43,6 +43,10 @@ export function softenCertainty(text: string): string {
     const re = new RegExp(escapeRegex(hard), "gi");
     out = out.replace(re, (matched) => matchLeadingCase(matched, soft));
   }
+  // Replace Unicode arrow glyphs that the built-in @react-pdf/renderer
+  // Helvetica font cannot render (would otherwise show as broken apostrophes
+  // in the PDF). LLMs occasionally use them despite prompt guidance.
+  out = out.replace(/[←→⇐⇒⟶]/g, " / ");
   return out;
 }
 

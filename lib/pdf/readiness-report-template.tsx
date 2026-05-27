@@ -21,8 +21,17 @@ import {
   Text,
   View,
   StyleSheet,
+  Font,
 } from "@react-pdf/renderer";
 import React from "react";
+
+// Disable react-pdf's default hyphenation so narrow table cells like
+// "No EC-approved clinical investigation plan" wrap at word boundaries
+// instead of breaking mid-word ("investiga-tion"). The callback returns
+// the word as a single-element array — i.e. "treat as atomic, don't
+// hyphenate." Module-load side effect; safe because the same callback
+// applies to all PDFs rendered in the process.
+Font.registerHyphenationCallback((word) => [word]);
 import type {
   ReadinessReport,
   GapRow,
@@ -134,14 +143,14 @@ const styles = StyleSheet.create({
   brandTagline: {
     fontSize: 7.5,
     color: TEXT_MUTED,
-    letterSpacing: 0.6,
+    letterSpacing: 0.4,
     textTransform: "uppercase",
     marginTop: 2,
   },
   metaTag: {
     fontSize: 8,
     color: TEXT_MUTED,
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
     textTransform: "uppercase",
     textAlign: "right",
   },
@@ -154,15 +163,16 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     fontSize: 7.5,
     color: TEXT_FAINT,
-    letterSpacing: 0.4,
+    letterSpacing: 0.2,
   },
 
   // section heads
   sectionEyebrow: {
-    fontSize: 8,
+    fontSize: 8.5,
     color: TEAL_DEEP,
-    letterSpacing: 1.4,
+    letterSpacing: 0.5,
     textTransform: "uppercase",
+    fontFamily: "Helvetica-Bold",
     marginBottom: 4,
   },
   sectionTitle: {
@@ -215,10 +225,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   scoreLabel: {
-    fontSize: 7.5,
+    fontSize: 8,
     color: TEXT_MUTED,
-    letterSpacing: 1,
+    letterSpacing: 0.4,
     textTransform: "uppercase",
+    fontFamily: "Helvetica-Bold",
     marginBottom: 4,
   },
   scoreValue: {
@@ -295,17 +306,18 @@ const styles = StyleSheet.create({
     backgroundColor: TEAL_LIGHT,
     borderLeftColor: TEAL_DEEP,
     borderLeftWidth: 3,
-    paddingVertical: 10,
+    paddingVertical: 8,
     paddingHorizontal: 12,
-    marginTop: 12,
+    marginTop: 8,
     marginBottom: 4,
     borderRadius: 4,
   },
   calloutLabel: {
-    fontSize: 7.5,
+    fontSize: 8,
     color: TEAL_DEEP,
-    letterSpacing: 1.2,
+    letterSpacing: 0.5,
     textTransform: "uppercase",
+    fontFamily: "Helvetica-Bold",
     marginBottom: 3,
   },
   calloutBody: {
@@ -317,39 +329,43 @@ const styles = StyleSheet.create({
   // pathway step list
   stepRow: {
     flexDirection: "row",
-    marginBottom: 10,
+    marginBottom: 2,
     alignItems: "flex-start",
   },
   stepNumberCol: {
-    width: 26,
-    marginRight: 8,
+    width: 22,
+    marginRight: 6,
     alignItems: "flex-end",
   },
   stepNumber: {
     fontFamily: "Times-Bold",
     fontSize: 13,
     color: TEAL_DEEP,
+    lineHeight: 1.2,
   },
   stepBody: {
     flex: 1,
+    minWidth: 0,
   },
   stepName: {
     fontFamily: "Times-Bold",
     fontSize: 11,
     color: TEXT_DARK,
+    lineHeight: 1.25,
   },
   stepWhat: {
     fontSize: 9.5,
     color: TEXT_MUTED,
     marginTop: 2,
-    marginRight: 60,
+    lineHeight: 1.35,
   },
   stepDuration: {
     fontSize: 8.5,
     color: AMBER,
-    marginTop: 3,
+    marginTop: 2,
     textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
+    lineHeight: 1.2,
   },
 
   // pathway forms strip
@@ -363,8 +379,9 @@ const styles = StyleSheet.create({
   formsLabel: {
     fontSize: 8,
     color: TEXT_MUTED,
-    letterSpacing: 0.8,
+    letterSpacing: 0.4,
     textTransform: "uppercase",
+    fontFamily: "Helvetica-Bold",
     marginRight: 6,
   },
   formPill: {
@@ -391,29 +408,35 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     backgroundColor: "#EFEDE2",
     paddingVertical: 6,
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
   },
   gapHeaderCell: {
-    fontSize: 7.5,
+    fontSize: 8,
     color: TEXT_MUTED,
-    letterSpacing: 1,
+    letterSpacing: 0.4,
     textTransform: "uppercase",
+    fontFamily: "Helvetica-Bold",
   },
   gapRow: {
     flexDirection: "row",
-    paddingVertical: 8,
-    paddingHorizontal: 8,
+    paddingVertical: 5,
+    paddingHorizontal: 6,
     borderTopColor: RULE,
     borderTopWidth: 1,
     backgroundColor: SURFACE,
   },
-  gapCellPriority: { width: 40, justifyContent: "flex-start" },
-  gapCellGap: { flex: 1.2, paddingRight: 6 },
-  gapCellWhy: { flex: 1.7, paddingRight: 6 },
-  gapCellNext: { flex: 1.5, paddingRight: 6 },
-  gapCellEffort: { width: 100 },
-  gapText: { fontSize: 9, color: TEXT_DARK, lineHeight: 1.45 },
-  gapTextMuted: { fontSize: 8.5, color: TEXT_MUTED, lineHeight: 1.4 },
+  // Column widths re-balanced to give 'Why it matters' the most room
+  // (longest LLM paragraph), trim the priority chip column, and keep
+  // EFFORT·COST compact since it's always short (e.g. "6–9 months · Rs 3–5L").
+  gapCellPriority: { width: 32, justifyContent: "flex-start", paddingRight: 4 },
+  gapCellGap: { flex: 1.3, paddingRight: 6, minWidth: 0 },
+  gapCellWhy: { flex: 2.0, paddingRight: 6, minWidth: 0 },
+  gapCellNext: { flex: 1.5, paddingRight: 6, minWidth: 0 },
+  // 100 is enough for the longest expected effort string
+  // ("9–14 months · Rs 8–18L") to stay on one line at 9pt.
+  gapCellEffort: { width: 100, minWidth: 0 },
+  gapText: { fontSize: 9, color: TEXT_DARK, lineHeight: 1.32 },
+  gapTextMuted: { fontSize: 9, color: TEXT_MUTED, lineHeight: 1.32 },
 
   priorityChip: {
     paddingHorizontal: 6,
@@ -454,7 +477,7 @@ const styles = StyleSheet.create({
   phaseDuration: {
     fontSize: 8.5,
     color: AMBER,
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
     textTransform: "uppercase",
     marginRight: 8,
   },
@@ -495,7 +518,7 @@ const styles = StyleSheet.create({
 
   // smart examples
   exampleBlock: {
-    marginBottom: 14,
+    marginBottom: 10,
   },
   exampleHeader: {
     flexDirection: "row",
@@ -503,10 +526,11 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   exampleCategory: {
-    fontSize: 7.5,
+    fontSize: 8,
     color: TEAL_DEEP,
-    letterSpacing: 1.2,
+    letterSpacing: 0.5,
     textTransform: "uppercase",
+    fontFamily: "Helvetica-Bold",
     marginRight: 8,
   },
   exampleTopic: {
@@ -523,7 +547,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   examplePaneInner: {
-    paddingVertical: 8,
+    paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 5,
     borderWidth: 1,
@@ -532,8 +556,9 @@ const styles = StyleSheet.create({
   badPane: { backgroundColor: CORAL_LIGHT, borderColor: CORAL },
   paneLabel: {
     fontSize: 8,
-    letterSpacing: 1,
+    letterSpacing: 0.4,
     textTransform: "uppercase",
+    fontFamily: "Helvetica-Bold",
     marginBottom: 3,
   },
   goodLabel: { color: GREEN_DARK },
@@ -541,28 +566,29 @@ const styles = StyleSheet.create({
   paneBody: {
     fontSize: 9,
     color: TEXT_DARK,
-    lineHeight: 1.45,
+    lineHeight: 1.35,
   },
   exampleAnnotation: {
     backgroundColor: TEAL_LIGHT,
     borderLeftColor: TEAL_DEEP,
     borderLeftWidth: 3,
-    paddingVertical: 8,
+    paddingVertical: 6,
     paddingHorizontal: 10,
-    marginTop: 6,
+    marginTop: 4,
     borderRadius: 4,
   },
   exampleAnnotationLabel: {
-    fontSize: 7.5,
+    fontSize: 8,
     color: TEAL_DEEP,
-    letterSpacing: 1,
+    letterSpacing: 0.4,
     textTransform: "uppercase",
+    fontFamily: "Helvetica-Bold",
     marginBottom: 2,
   },
   exampleAnnotationBody: {
     fontSize: 9.5,
     color: TEXT_DARK,
-    lineHeight: 1.5,
+    lineHeight: 1.4,
   },
 
   // generic helpers
@@ -586,11 +612,9 @@ const s = (t: string | null | undefined) => (t ? softenCertainty(t) : "");
 
 function PageFrame({
   children,
-  pageNumber,
   assessmentId,
 }: {
   children: React.ReactNode;
-  pageNumber: number;
   assessmentId: string;
 }) {
   return (
@@ -614,7 +638,11 @@ function PageFrame({
           Decision-support, not submission-ready content. Tier 2
           (Submission Workspace) generates submission artifacts.
         </Text>
-        <Text>Page {pageNumber}</Text>
+        <Text
+          render={({ pageNumber, totalPages }) =>
+            `Page ${pageNumber} of ${totalPages}`
+          }
+        />
       </View>
     </Page>
   );
@@ -659,7 +687,7 @@ function ScorecardPage({
   const confidenceFill = CONFIDENCE_BARS[sc.confidence] ?? 1;
   const score = sc.readiness_score;
   return (
-    <PageFrame pageNumber={1} assessmentId={report.meta.source_assessment_id}>
+    <PageFrame assessmentId={report.meta.source_assessment_id}>
       <Text style={styles.sectionEyebrow}>Regulatory Scorecard</Text>
       <Text style={styles.heroTitle}>{s(report.meta.product_name)}</Text>
       <Text style={styles.heroSubtitle}>
@@ -816,10 +844,33 @@ function ScorecardPage({
 // Page 2 — Pathway
 // ─────────────────────────────────────────────────────────────
 
+/** Match a step name to the relevant inline note, so the note
+ *  appears under the step it's explaining instead of as an
+ *  orphan callout on a near-empty page. The matching is by
+ *  substring on the step name — stable enough because the step
+ *  names are generated deterministically by the generator
+ *  (buildStepSequence). If the matcher ever drifts, the note
+ *  falls back to being unrendered, which is safe (the content
+ *  also lives in the pathway-paragraph context). */
+function noteForStep(
+  stepName: string,
+  testLicenceNote: string | null,
+  acpNote: string | null
+): { label: string; body: string; accent: "teal" | "amber" } | null {
+  const name = stepName.toLowerCase();
+  if (testLicenceNote && name.includes("test licence")) {
+    return { label: "Test licence note", body: testLicenceNote, accent: "teal" };
+  }
+  if (acpNote && (name.includes("acp") || name.includes("pccp"))) {
+    return { label: "ACP note", body: acpNote, accent: "amber" };
+  }
+  return null;
+}
+
 function PathwayPage({ report }: { report: ReadinessReport }) {
   const p = report.pathway;
   return (
-    <PageFrame pageNumber={2} assessmentId={report.meta.source_assessment_id}>
+    <PageFrame assessmentId={report.meta.source_assessment_id}>
       <Text style={styles.sectionEyebrow}>Section 2</Text>
       <Text style={styles.sectionTitle}>Your Likely Regulatory Pathway</Text>
       <Text style={styles.sectionDeck}>
@@ -827,7 +878,7 @@ function PathwayPage({ report }: { report: ReadinessReport }) {
         sequence reviewers typically expect.
       </Text>
 
-      <Text style={{ ...styles.calloutBody, marginBottom: 12 }}>
+      <Text style={{ ...styles.calloutBody, marginBottom: 8, lineHeight: 1.45 }}>
         {s(p.why_this_class_applies)}
       </Text>
 
@@ -852,38 +903,51 @@ function PathwayPage({ report }: { report: ReadinessReport }) {
 
       <Text style={styles.scoreLabel}>Likely step sequence</Text>
       <View style={{ marginTop: 6 }}>
-        {p.step_sequence.map((step, i) => (
-          <View key={i} style={styles.stepRow}>
-            <View style={styles.stepNumberCol}>
-              <Text style={styles.stepNumber}>{`0${i + 1}`.slice(-2)}</Text>
+        {p.step_sequence.map((step, i) => {
+          const note = noteForStep(step.step, p.test_licence_note, p.acp_note);
+          return (
+            <View key={i} style={styles.stepRow} wrap={false}>
+              <View style={styles.stepNumberCol}>
+                <Text style={styles.stepNumber}>{`0${i + 1}`.slice(-2)}</Text>
+              </View>
+              <View style={styles.stepBody}>
+                <Text style={styles.stepName}>{s(step.step)}</Text>
+                <Text style={styles.stepWhat}>{s(step.what_happens)}</Text>
+                <Text style={styles.stepDuration}>{s(step.duration)}</Text>
+                {note ? (
+                  <View
+                    style={{
+                      backgroundColor:
+                        note.accent === "amber" ? AMBER_LIGHT : TEAL_LIGHT,
+                      borderLeftColor:
+                        note.accent === "amber" ? AMBER : TEAL_DEEP,
+                      borderLeftWidth: 2,
+                      paddingVertical: 4,
+                      paddingHorizontal: 8,
+                      marginTop: 3,
+                      borderRadius: 3,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        ...styles.calloutLabel,
+                        color: note.accent === "amber" ? AMBER : TEAL_DEEP,
+                        fontSize: 7.5,
+                        marginBottom: 2,
+                      }}
+                    >
+                      {note.label}
+                    </Text>
+                    <Text style={{ ...styles.calloutBody, fontSize: 9 }}>
+                      {s(note.body)}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
             </View>
-            <View style={styles.stepBody}>
-              <Text style={styles.stepName}>{s(step.step)}</Text>
-              <Text style={styles.stepWhat}>{s(step.what_happens)}</Text>
-              <Text style={styles.stepDuration}>{s(step.duration)}</Text>
-            </View>
-          </View>
-        ))}
+          );
+        })}
       </View>
-
-      {p.test_licence_note ? (
-        <View style={styles.callout}>
-          <Text style={styles.calloutLabel}>Test licence note</Text>
-          <Text style={styles.calloutBody}>{s(p.test_licence_note)}</Text>
-        </View>
-      ) : null}
-      {p.acp_note ? (
-        <View
-          style={{
-            ...styles.callout,
-            backgroundColor: AMBER_LIGHT,
-            borderLeftColor: AMBER,
-          }}
-        >
-          <Text style={{ ...styles.calloutLabel, color: AMBER }}>ACP note</Text>
-          <Text style={styles.calloutBody}>{s(p.acp_note)}</Text>
-        </View>
-      ) : null}
     </PageFrame>
   );
 }
@@ -894,7 +958,7 @@ function PathwayPage({ report }: { report: ReadinessReport }) {
 
 function GapAnalysisPage({ report }: { report: ReadinessReport }) {
   return (
-    <PageFrame pageNumber={3} assessmentId={report.meta.source_assessment_id}>
+    <PageFrame assessmentId={report.meta.source_assessment_id}>
       <Text style={styles.sectionEyebrow}>Section 3</Text>
       <Text style={styles.sectionTitle}>Readiness Gap Analysis</Text>
       <Text style={styles.sectionDeck}>
@@ -971,7 +1035,7 @@ function TimelineCostPage({
 }) {
   const tc: TimelineCost = report.timeline_cost;
   return (
-    <PageFrame pageNumber={4} assessmentId={report.meta.source_assessment_id}>
+    <PageFrame assessmentId={report.meta.source_assessment_id}>
       <Text style={styles.sectionEyebrow}>Section 4</Text>
       <Text style={styles.sectionTitle}>Timeline + Cost Estimator</Text>
       <Text style={styles.sectionDeck}>
@@ -1046,7 +1110,7 @@ function ReviewerInsightsPage({
   report: ReadinessReport;
 }) {
   return (
-    <PageFrame pageNumber={5} assessmentId={report.meta.source_assessment_id}>
+    <PageFrame assessmentId={report.meta.source_assessment_id}>
       <Text style={styles.sectionEyebrow}>Section 5</Text>
       <Text style={styles.sectionTitle}>Reviewer Insights</Text>
       <Text style={styles.sectionDeck}>
@@ -1077,7 +1141,7 @@ function SmartExamplesPage({
   report: ReadinessReport;
 }) {
   return (
-    <PageFrame pageNumber={6} assessmentId={report.meta.source_assessment_id}>
+    <PageFrame assessmentId={report.meta.source_assessment_id}>
       <Text style={styles.sectionEyebrow}>Section 6</Text>
       <Text style={styles.sectionTitle}>Smart Examples</Text>
       <Text style={styles.sectionDeck}>

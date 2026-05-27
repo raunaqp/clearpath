@@ -67,6 +67,7 @@ const SHARED_TONE_RULES = `
 - Distinguish Readiness (preparedness) from Risk (exposure).
 - If unsure about a regulation applying, say "conditional" not "required".
 - This is decision-support content, not submission text. Do not draft MD-7 sections, DMFs, QMS docs, or RMFs.
+- ASCII-only output. Do NOT use arrow characters (→ ← ⇒ ⇐ ⟶) — the PDF font cannot render them and they appear as broken glyphs. Use "to" or "/" or "then" instead. Em-dashes (—), en-dashes (–), middle-dot (·), and curly quotes are fine.
 `.trim();
 
 // ─────────────────────────────────────────────────────────────
@@ -101,16 +102,25 @@ export async function generateReadinessReport(
   const ctx = buildReviewerContext(card, input.wizard_answers);
 
   // ── Deterministic sections (no LLM) ──────────────────────
-  const scorecard = buildScorecard(input, card, ctx);
-  const timelineCost = buildTimelineCost(card, ctx);
+  // Build phases first so the scorecard's compliance-spend headline
+  // is a computed sum of the phase bands (reconciliation by
+  // construction — see sumPhaseCostRange).
+  const phases = buildPhases(card, ctx);
+  const overallCostRange = sumPhaseCostRange(phases);
+  const scorecard = buildScorecard(input, card, ctx, overallCostRange);
+  const timelineCost = buildTimelineCost(card, ctx, phases);
   const pathwayDeterministic = buildPathwaySkeleton(card, ctx);
 
   // ── Pre-select dynamic content ──────────────────────────
   const gapRowSeeds = buildGapRowSeeds(card);
   const reviewerPrioritySeeds = selectReviewerPriorities(ctx, 5);
+  // Pick 2, not 3 — the third example reliably orphans onto a near-empty
+  // page because react-pdf's wrap={false} block-sizing over-reserves
+  // for the longest good-snippet (ISO 14971 hazard chain, 8 lines).
+  // Tier 2 (Submission Workspace) can carry the full set if needed.
   const smartExampleSeeds = selectSmartExamples(
     { cdsco_class: ctx.cdsco_class, ai_ml_flag: ctx.ai_ml_flag },
-    3
+    2
   );
 
   // ── 4 LLM calls in parallel ─────────────────────────────
@@ -310,7 +320,11 @@ function deriveDataSensitivity(
 function buildScorecard(
   input: ReadinessReportInput,
   card: ReadinessCard,
-  ctx: ReviewerContext
+  ctx: ReviewerContext,
+  /** Computed sum of Section 4 phase bands. Passed in rather than
+   *  derived here so the scorecard headline and the phase table
+   *  reconcile by construction — see sumPhaseCostRange. */
+  costRangeDisplay: string
 ): Scorecard {
   const cls = card.classification;
   const classification_label = buildClassLabel(cls.cdsco_class, cls.class_qualifier);
@@ -320,7 +334,6 @@ function buildScorecard(
   const pathwayLabel = buildPathwayLabel(card.recommended_path, pathwayForms);
   const clinicalInvestigationLikely =
     card.recommended_path === "clinical_investigation";
-  const costRangeDisplay = buildOverallCostRange(card);
   const topGapTitles = card.top_gaps.slice(0, 3).map((g) => g.gap_title);
   const recommendedNextAction = buildRecommendedNextAction(card);
   const triggers = buildTriggers(card, ctx);
@@ -407,7 +420,7 @@ function buildPathwayLabel(
 ): string {
   const pri = forms[0] ?? "MD-3 / MD-7";
   if (path === "clinical_investigation") {
-    return `${pri} (Central) · likely MD-22 / MD-12 test licence path`;
+    return `${pri} (Central) · likely MD-22 / test-licence (MD-13) path`;
   }
   if (path === "manufacturing_license") {
     return `${pri} (Manufacturing licence path)`;
@@ -415,15 +428,9 @@ function buildPathwayLabel(
   return `${pri} · path TBD`;
 }
 
-function buildOverallCostRange(card: ReadinessCard): string {
-  // Heuristic overall band tied to class.
-  const cls = card.classification.cdsco_class;
-  if (cls === null) return "—";
-  if (cls === "A") return formatInrLakhs(2, 6);
-  if (cls === "B") return formatInrLakhs(6, 18);
-  if (cls === "C") return formatInrLakhs(18, 32);
-  return formatInrLakhs(28, 60);
-}
+// (buildOverallCostRange removed — the page-1 cost-band headline is
+// now a computed sum of the Section 4 phase bands via
+// sumPhaseCostRange, so the two surfaces reconcile by construction.)
 
 function buildRecommendedNextAction(card: ReadinessCard): string {
   // Prefer the highest-severity gap's fix_action; otherwise a path-tied default.
@@ -474,7 +481,7 @@ function buildPathwaySkeleton(
     step_sequence: steps,
     test_licence_note:
       card.recommended_path === "clinical_investigation"
-        ? "A test licence (MD-12) typically precedes the clinical investigation. The investigation itself runs under MD-22 / MD-23 permissions before the device can be cleared for commercial manufacture."
+        ? "A test licence (granted as MD-13, applied via MD-12) typically precedes the clinical investigation. The investigation itself runs under MD-22 / MD-23 permissions before the device can be cleared for commercial manufacture."
         : null,
     acp_note: card.classification.acp_required
       ? "Adaptive AI/ML behaviour means an Algorithm Change Protocol (ACP / PCCP) typically accompanies the MD-7 file per the Oct 2025 CDSCO SaMD draft."
@@ -503,9 +510,9 @@ function buildStepSequence(
   }
   if (card.recommended_path === "clinical_investigation") {
     steps.push({
-      step: "MD-12 test licence",
+      step: "Test licence (MD-12 / MD-13)",
       what_happens:
-        "Apply for the test licence so a small number of devices can be made for the clinical investigation.",
+        "Apply via MD-12 for a test licence (granted as MD-13) so a small number of devices can be made for the clinical investigation.",
       duration: "2–3 months",
     });
     steps.push({
@@ -576,40 +583,62 @@ function priorityFromSeverityOrIndex(
 // Section 4 — Timeline + Cost (deterministic)
 // ─────────────────────────────────────────────────────────────
 
+/** Internal richer phase type — carries numeric cost bands so the
+ *  page-1 headline can sum them. Converted to the schema shape (with
+ *  a formatted cost_range_inr string) for the report payload. */
+interface PhaseWithCost {
+  name: string;
+  duration: string;
+  what_happens: string;
+  cost_low_lakh: number;
+  cost_high_lakh: number;
+}
+
 function buildTimelineCost(
   card: ReadinessCard,
-  ctx: ReviewerContext
+  ctx: ReviewerContext,
+  phases: PhaseWithCost[]
 ): TimelineCost {
-  const overall = card.timeline.display;
-  const cls = card.classification.cdsco_class;
-  const phases = buildPhases(card, ctx);
-  const bottlenecks = buildBottlenecks(card, ctx);
   return {
-    total_range_display: overall,
+    total_range_display: card.timeline.display,
     total_anchor: card.timeline.anchor,
-    phases,
-    bottlenecks,
+    phases: phases.map((p) => ({
+      name: p.name,
+      duration: p.duration,
+      what_happens: p.what_happens,
+      cost_range_inr: formatInrLakhs(p.cost_low_lakh, p.cost_high_lakh),
+    })),
+    bottlenecks: buildBottlenecks(card, ctx),
   };
+}
+
+function sumPhaseCostRange(phases: PhaseWithCost[]): string {
+  if (phases.length === 0) return "—";
+  const low = phases.reduce((acc, p) => acc + p.cost_low_lakh, 0);
+  const high = phases.reduce((acc, p) => acc + p.cost_high_lakh, 0);
+  return formatInrLakhs(low, high);
 }
 
 function buildPhases(
   card: ReadinessCard,
   ctx: ReviewerContext
-): TimelineCost["phases"] {
-  const ph: TimelineCost["phases"] = [];
+): PhaseWithCost[] {
+  const ph: PhaseWithCost[] = [];
   ph.push({
     name: "Phase 1 — Foundational compliance",
     duration: "3–6 months",
     what_happens:
       "Engage an ISO 13485 consultant for a gap assessment, document the Intended Use Statement, and lock the classification rationale.",
-    cost_range_inr: formatInrLakhs(3, 6),
+    cost_low_lakh: 3,
+    cost_high_lakh: 6,
   });
   ph.push({
     name: "Phase 2 — Technical documentation",
     duration: "4–6 months",
     what_happens:
       "Build the IEC 62304 software lifecycle file, ISO 14971 risk file, IEC 81001-5-1 cybersecurity controls, and IEC 62366-1 usability evidence.",
-    cost_range_inr: formatInrLakhs(3, 7),
+    cost_low_lakh: 3,
+    cost_high_lakh: 7,
   });
   if (ctx.recommended_path === "clinical_investigation") {
     ph.push({
@@ -617,7 +646,8 @@ function buildPhases(
       duration: "9–14 months",
       what_happens:
         "Design and run a multi-centre clinical investigation with EC approval and CTRI registration. Typically the longest item on the critical path.",
-      cost_range_inr: formatInrLakhs(8, 18),
+      cost_low_lakh: 8,
+      cost_high_lakh: 18,
     });
   } else {
     ph.push({
@@ -625,7 +655,8 @@ function buildPhases(
       duration: "3–6 months",
       what_happens:
         "Run analytical and clinical performance evaluations against the intended use, gather Indian-population data where applicable.",
-      cost_range_inr: formatInrLakhs(3, 8),
+      cost_low_lakh: 3,
+      cost_high_lakh: 8,
     });
   }
   ph.push({
@@ -633,14 +664,16 @@ function buildPhases(
     duration: "2–3 months",
     what_happens:
       "Assemble the Device Master File, labelling, IFU, predicate or SE narrative, and pre-submission review.",
-    cost_range_inr: formatInrLakhs(2, 5),
+    cost_low_lakh: 2,
+    cost_high_lakh: 5,
   });
   ph.push({
     name: "Phase 5 — CDSCO review cycle",
     duration: "4–8 months",
     what_happens:
       "Submission filing, queries-and-responses cycle, possible site inspection, licence grant.",
-    cost_range_inr: formatInrLakhs(1, 3),
+    cost_low_lakh: 1,
+    cost_high_lakh: 3,
   });
   return ph;
 }
@@ -838,9 +871,12 @@ const PATHWAY_INPUT_SCHEMA: Anthropic.Tool.InputSchema = {
     why_this_class_applies: {
       type: "string",
       minLength: 80,
-      maxLength: 1500,
+      // Hard cap ~110 words × ~7 chars + small buffer. Keeps the page-2
+      // hero paragraph at ~7 lines so the step list + inline notes
+      // reliably fit on a single page.
+      maxLength: 850,
       description:
-        "Single paragraph, 90–180 words, plain English, soft framing ('likely', 'may'), ends by naming the form pathway.",
+        "Single paragraph, 90–130 words, plain English, soft framing ('likely', 'may'), ends by naming the form pathway.",
     },
   },
   required: ["why_this_class_applies"],
@@ -856,7 +892,7 @@ async function callPathwayNarrative(
   }
 ) {
   const systemPrompt = `
-You write a single paragraph (90–180 words) for the "Your Likely Regulatory Pathway" section of a ₹499 founder-facing regulatory report.
+You write a single paragraph (90–130 words, hard cap) for the "Your Likely Regulatory Pathway" section of a ₹499 founder-facing regulatory report.
 
 ${SHARED_TONE_RULES}
 
@@ -866,6 +902,7 @@ The paragraph answers: "Why does this likely class apply to THIS product?" It mu
 - Use "likely" / "may" framing throughout.
 - End by naming the form pathway (e.g., "MD-7 via the Central Licensing Authority") in one short sentence.
 - Avoid restating the full step sequence — that's a separate table.
+- Stay tight: 90–130 words. Under 130 is non-negotiable for layout reasons.
 
 Call the \`emit_pathway_narrative\` tool with the paragraph as \`why_this_class_applies\`.
 `.trim();
@@ -1031,9 +1068,12 @@ const REVIEWER_INSIGHTS_INPUT_SCHEMA: Anthropic.Tool.InputSchema = {
           what_reviewers_look_for: {
             type: "string",
             minLength: 60,
-            maxLength: 1500,
+            // Hard cap ~80 words × ~7 chars + buffer. Keeps the Section 5
+            // page packing 5 insights without an orphan card overflowing
+            // to a near-empty next page.
+            maxLength: 600,
             description:
-              "One continuous paragraph, 60–110 words, no line breaks. Soft framing throughout ('likely', 'may'). Tailor to product specifics.",
+              "One continuous paragraph, 50–80 words, no line breaks. Soft framing throughout ('likely', 'may'). Tailor to product specifics.",
           },
         },
         required: ["key", "what_reviewers_look_for"],
@@ -1057,7 +1097,9 @@ You write the "what reviewers will likely look for" descriptions in Section 5 (R
 
 ${SHARED_TONE_RULES}
 
-For each reviewer priority below, return ONE softened, product-tailored paragraph (60–110 words) explaining what CDSCO reviewers typically expect to see. Tailor the seed phrase to the product specifics — name the indication / patient population / data type when relevant.
+For each reviewer priority below, return ONE softened, product-tailored paragraph (50–80 words, hard cap) explaining what CDSCO reviewers typically expect to see. Tailor the seed phrase to the product specifics — name the indication / patient population / data type when relevant.
+
+Stay tight: 50–80 words. Under 80 is non-negotiable for layout reasons. Cut adjectives and connective tissue before cutting facts.
 
 Call the \`emit_reviewer_insights_rows\` tool. Return one row per input priority with the same "key" values; do not invent new keys.
 `.trim();
@@ -1122,10 +1164,13 @@ const SMART_EXAMPLES_INPUT_SCHEMA: Anthropic.Tool.InputSchema = {
           },
           why_this_is_safer: {
             type: "string",
-            minLength: 60,
-            maxLength: 1500,
+            minLength: 50,
+            // Hard cap ~75 words × ~7 chars + buffer so all 3 examples
+            // (each with static good/bad pair + LLM annotation) fit on
+            // one page instead of orphaning the 3rd to a near-empty next.
+            maxLength: 550,
             description:
-              "One continuous paragraph, 60–110 words, no line breaks. Explains why the good wording is regulator-defensible and why the bad wording invites questions.",
+              "One continuous paragraph, 50–75 words, no line breaks. Explains why the good wording is regulator-defensible and why the bad wording invites questions.",
           },
         },
         required: ["key", "why_this_is_safer"],
@@ -1156,7 +1201,9 @@ You write the "Why this wording is safer" annotation in Section 6 (Smart Example
 
 ${SHARED_TONE_RULES}
 
-For each example pair (good + bad snippet) below, return ONE softened annotation (60–110 words) explaining why the good wording is regulator-defensible and why the bad wording typically invites questions or stricter classification. Tailor to product specifics where relevant; otherwise stay close to the seed.
+For each example pair (good + bad snippet) below, return ONE softened annotation (50–75 words, hard cap) explaining why the good wording is regulator-defensible and why the bad wording typically invites questions or stricter classification. Tailor to product specifics where relevant; otherwise stay close to the seed.
+
+Stay tight: 50–75 words. Under 75 is non-negotiable for layout reasons.
 
 Boundary: the snippet pairs themselves are static. You annotate, not rewrite, the snippets.
 
