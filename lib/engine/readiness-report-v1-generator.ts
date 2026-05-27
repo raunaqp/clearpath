@@ -1160,13 +1160,16 @@ const SMART_EXAMPLES_INPUT_SCHEMA: Anthropic.Tool.InputSchema = {
           },
           why_this_is_safer: {
             type: "string",
-            minLength: 45,
-            // Tightened to fit 3 examples on one Section 6 page (the
-            // 3rd has an 8-line ISO 14971 good-snippet that forces a
-            // taller block).
-            maxLength: 450,
+            minLength: 35,
+            // Tightened to 30-45 words after 3 live runs showed 40-60
+            // reliably overflows page 7 in production. The 3rd example's
+            // good-snippet (ISO 14971 hazard chain, 8 lines) is fixed,
+            // so the only place to claim back vertical space is the
+            // LLM annotation. 30-45 words still carries the
+            // regulator-defensible vs invites-questions contrast.
+            maxLength: 340,
             description:
-              "One continuous paragraph, 40–60 words, no line breaks. Explains why the good wording is regulator-defensible and why the bad wording invites questions.",
+              "One continuous paragraph, 30–45 words, no line breaks. Explains why the good wording is regulator-defensible and why the bad wording invites questions.",
           },
         },
         required: ["key", "why_this_is_safer"],
@@ -1197,9 +1200,9 @@ You write the "Why this wording is safer" annotation in Section 6 (Smart Example
 
 ${SHARED_TONE_RULES}
 
-For each example pair (good + bad snippet) below, return ONE softened annotation (40–60 words, hard cap) explaining why the good wording is regulator-defensible and why the bad wording typically invites questions or stricter classification. Tailor to product specifics where relevant; otherwise stay close to the seed.
+For each example pair (good + bad snippet) below, return ONE softened annotation (30–45 words, hard cap) explaining why the good wording is regulator-defensible and why the bad wording typically invites questions or stricter classification. Tailor to product specifics where relevant; otherwise stay close to the seed.
 
-Stay tight: 40–60 words. Under 60 is non-negotiable for layout reasons.
+Stay tight: 30–45 words. Under 45 is non-negotiable for layout reasons. Cut connective tissue and adjectives before cutting facts; the contrast (regulator-defensible vs invites-questions) is what must survive.
 
 Boundary: the snippet pairs themselves are static. You annotate, not rewrite, the snippets.
 
