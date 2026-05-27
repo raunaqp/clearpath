@@ -78,16 +78,33 @@ export default async function UpgradePage({
       .is("tier2_intent_clicked", null);
   }
 
-  const { data: order } = await supabase
+  // Phase B B1 — fetch up to 5 most-recent orders and skip
+  // payment-failed ones in app code so we can differentiate:
+  //   - payment-failed (Cashfree webhook flipped to 'failed' before
+  //     any charge cleared)  → hide, let customer retry payment
+  //   - generation-failed (tier1-gen / auto-gen failed AFTER customer
+  //     paid)                → surface so they see the "contact support"
+  //     state and don't accidentally pay a second time
+  //   - null notes / unknown prefix → surface (safer default — never
+  //     risk charging an already-paid customer twice)
+  // The old `.neq("status","failed")` filter conflated both kinds of
+  // failure and let paid+gen-failed customers see the TierPicker again.
+  const { data: recentOrders } = await supabase
     .from("tier2_orders")
     .select(
       "id, status, transaction_id, payment_screenshot_url, draft_pack_pdf_url, delivered_at, created_at, email_sent_to, tier_choice, notes"
     )
     .eq("assessment_id", id)
-    .neq("status", "failed")
     .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle<Tier2Order>();
+    .limit(5);
+
+  const isPaymentFailed = (o: Tier2Order): boolean =>
+    o.status === "failed" && (o.notes ?? "").startsWith("Cashfree payment");
+
+  const order =
+    (recentOrders as Tier2Order[] | null)?.find(
+      (o) => !isPaymentFailed(o)
+    ) ?? null;
 
   // Sprint 2 Story 2.5 Phase 3.5 Bug A — gate payment on the explicit
   // submission flag (meta.tier_b_completed_at), not on field presence.
