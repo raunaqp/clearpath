@@ -4,6 +4,9 @@ import { getServiceClient } from "@/lib/supabase";
 
 const idSchema = z.string().uuid();
 
+/** In-flight statuses where a section-progress count is meaningful. */
+const PROGRESSIVE_STATUSES = new Set(["verified", "generating"]);
+
 export async function GET(req: NextRequest) {
   const assessment_id = req.nextUrl.searchParams.get("assessment_id");
   const parsed = idSchema.safeParse(assessment_id);
@@ -32,5 +35,24 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  return NextResponse.json({ order: data ?? null });
+  // Phase B Item 3 — surface section-by-section progress for the
+  // Submission Workspace generating state. The orchestrator persists
+  // each section to draft_pack_sections as it completes, so a simple
+  // count moves naturally from 0 → 12 over the 4-6 min generation.
+  // Only meaningful while the workspace is actively generating; null
+  // otherwise so the client can branch cleanly.
+  let sectionsComplete: number | null = null;
+  if (
+    data &&
+    data.tier_choice === "draft_editor" &&
+    PROGRESSIVE_STATUSES.has(data.status)
+  ) {
+    const { count } = await supabase
+      .from("draft_pack_sections")
+      .select("id", { count: "exact", head: true })
+      .eq("order_id", data.id);
+    sectionsComplete = count ?? 0;
+  }
+
+  return NextResponse.json({ order: data ?? null, sections_complete: sectionsComplete });
 }

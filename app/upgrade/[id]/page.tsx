@@ -106,6 +106,22 @@ export default async function UpgradePage({
       (o) => !isPaymentFailed(o)
     ) ?? null;
 
+  // Phase B Item 3 — first-paint section-progress count for the
+  // Submission Workspace generating state. Mirrors the /api/upgrade/status
+  // logic so the loader doesn't render "Section ? of 12" until first poll.
+  let initialSectionsComplete: number | null = null;
+  if (
+    order &&
+    (order.tier_choice ?? "draft_pack") === "draft_editor" &&
+    (order.status === "verified" || order.status === "generating")
+  ) {
+    const { count } = await supabase
+      .from("draft_pack_sections")
+      .select("id", { count: "exact", head: true })
+      .eq("order_id", order.id);
+    initialSectionsComplete = count ?? 0;
+  }
+
   // Sprint 2 Story 2.5 Phase 3.5 Bug A — gate payment on the explicit
   // submission flag (meta.tier_b_completed_at), not on field presence.
   // Field-presence broke on refresh because save-on-blur populates b1
@@ -132,6 +148,7 @@ export default async function UpgradePage({
         {order ? (
           <StatusPanel
             initialOrder={order}
+            initialSectionsComplete={initialSectionsComplete}
             assessmentId={id}
             email={assessment.email}
             cardHref={cardHref}

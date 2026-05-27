@@ -15,6 +15,7 @@ import { getUser } from "@/lib/auth/session";
 import { GlobalHeader } from "@/components/layout/GlobalHeader";
 import { SectionRenderer, type RenderableSection } from "@/components/draft/SectionRenderer";
 import { DraftPackTOC } from "./DraftPackTOC";
+import { LiveCompletionStrip } from "./LiveCompletionStrip";
 import { DraftPackDownloadButton } from "./DraftPackDownloadButton";
 import { ValidationSummary } from "./ValidationSummary";
 import { SectionCard } from "./SectionCard";
@@ -527,29 +528,17 @@ export default async function DraftPackPage({
                 </a>
               </div>
 
-              {/* Completion strip — Phase 5.5.E */}
-              <div
-                className="mt-5 flex flex-wrap items-center gap-3 text-sm"
-                title={`${completion.complete} of ${completion.total} sections complete · ${completion.wip} need input · ${completion.empty} empty · ${completion.totalPending} pending marker${completion.totalPending === 1 ? "" : "s"} total`}
-              >
-                <div className="inline-flex items-center gap-2 rounded-pill bg-[#FDFCF8] border border-[#E8E4D6] px-3 py-1.5">
-                  <span
-                    className="inline-block h-2 w-2 rounded-full bg-[#0F6E56]"
-                    aria-hidden
-                  />
-                  <span className="font-mono text-xs uppercase tracking-widest text-[#6B766F]">
-                    Document
-                  </span>
-                  <span className="font-medium text-[#0E1411]">
-                    {completion.percent}% complete
-                  </span>
-                </div>
-                <span className="text-xs text-[#6B766F] font-mono">
-                  {completion.complete}/{completion.total} sections ·{" "}
-                  {completion.totalPending} item
-                  {completion.totalPending === 1 ? "" : "s"} pending
-                </span>
-              </div>
+              {/* Completion strip — Phase B Item 2 follow-up. Now a
+                  client component that recomputes from EditCoordinator
+                  state so it tracks the in-section badges in real time
+                  (same fix as the TOC dot). */}
+              <LiveCompletionStrip
+                sections={draftSections.map((d) => ({
+                  sectionKey: d.renderable.section_key,
+                  content: d.renderable.content,
+                }))}
+                initial={completion}
+              />
             </header>
 
             {validationReport ? (

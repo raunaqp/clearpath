@@ -66,14 +66,24 @@ const STATUS_TINT: Record<string, { bg: string; fg: string }> = {
   failed: { bg: "#FAECE7", fg: "#993C1D" },
 };
 
+/** Total sections the v2 generator persists for a Submission Workspace
+ *  order. The orchestrator emits one row per draft_pack_sections section
+ *  as it completes — this is the denominator the loader shows. */
+const SUBMISSION_WORKSPACE_SECTION_TOTAL = 12;
+
 export function StatusPanel({
   initialOrder,
+  initialSectionsComplete,
   assessmentId,
   email,
   cardHref,
   cashfreeEnv,
 }: {
   initialOrder: Tier2Order;
+  /** First-paint section-progress count for the Submission Workspace
+   *  generating state. null when not applicable (different tier or
+   *  status). Polling refreshes it. */
+  initialSectionsComplete: number | null;
   assessmentId: string;
   email: string;
   cardHref: string;
@@ -84,6 +94,9 @@ export function StatusPanel({
 }) {
   const draftHref = `/draft/${assessmentId}`;
   const [order, setOrder] = useState<Tier2Order>(initialOrder);
+  const [sectionsComplete, setSectionsComplete] = useState<number | null>(
+    initialSectionsComplete
+  );
   const isTerminal = order.status === "delivered" || order.status === "failed";
 
   useEffect(() => {
@@ -96,11 +109,17 @@ export function StatusPanel({
           { cache: "no-store" }
         );
         if (!res.ok || cancelled) return;
-        const data = (await res.json()) as { order: Tier2Order | null };
+        const data = (await res.json()) as {
+          order: Tier2Order | null;
+          sections_complete: number | null;
+        };
         if (cancelled || !data.order) return;
         if (data.order.status !== order.status || data.order.id !== order.id) {
           setOrder(data.order);
         }
+        // Always update the progress count — it bumps 0 → 12 over the
+        // wait even when the order's status string doesn't change.
+        setSectionsComplete(data.sections_complete);
       } catch {
         // best-effort poll; never throw to UI
       }
@@ -141,7 +160,11 @@ export function StatusPanel({
           <PendingDetails order={order} email={email} />
         )}
         {(order.status === "verified" || order.status === "generating") && (
-          <GeneratingDetails email={email} tier={tier} />
+          <GeneratingDetails
+            email={email}
+            tier={tier}
+            sectionsComplete={sectionsComplete}
+          />
         )}
         {order.status === "delivered" && (
           <DeliveredDetails
@@ -297,23 +320,78 @@ function PendingDetails({
 function GeneratingDetails({
   email,
   tier,
+  sectionsComplete,
 }: {
   email: string;
   tier: "draft_pack" | "draft_editor";
+  /** Live section-progress count (0–12) for Submission Workspace. null
+   *  for Tier 1 or when not generating. */
+  sectionsComplete: number | null;
 }) {
-  // Phase 1.6 UX fix A — Submission Workspace pre-generated state shows
-  // a clean loader and nothing else; we'll notify the customer when the
-  // workspace is ready and they can return here from the email. Tier 1
-  // delivered-by-email path keeps the email-reassurance copy because the
-  // report won't reappear in any in-app surface.
+  // Phase B Item 3 — the Submission Workspace generation is a 4–6
+  // minute job. The old loader was a tiny grey spinner + "a few
+  // minutes" — under-reassuring for the actual wait length. New UX:
+  // concrete estimate, permission to leave, and section-by-section
+  // progress driven by the count of draft_pack_sections rows the
+  // orchestrator persists incrementally.
   if (tier === "draft_editor") {
+    const done = Math.min(
+      sectionsComplete ?? 0,
+      SUBMISSION_WORKSPACE_SECTION_TOTAL
+    );
+    const percent = Math.round(
+      (done / SUBMISSION_WORKSPACE_SECTION_TOTAL) * 100
+    );
     return (
-      <div className="flex items-center gap-3 text-sm text-[#6B766F]">
-        <span
-          aria-hidden
-          className="w-4 h-4 rounded-full border-2 border-[#0F6E56]/30 border-t-[#0F6E56] animate-spin"
-        />
-        Generating your Submission Workspace — this usually takes a few minutes.
+      <div className="space-y-5">
+        <div className="flex items-center gap-4">
+          <span
+            aria-hidden
+            className="w-8 h-8 rounded-full border-[3px] border-[#0F6E56]/25 border-t-[#0F6E56] animate-spin shrink-0"
+          />
+          <div className="flex-1 min-w-0">
+            <p className="text-[#0E1411] font-medium text-base">
+              Generating your Submission Workspace
+            </p>
+            <p className="text-sm text-[#6B766F] mt-0.5">
+              Typically 4–6 minutes. We&apos;re drafting 12 sections in
+              parallel.
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between text-xs font-mono uppercase tracking-widest text-[#6B766F] mb-1.5">
+            <span>
+              {sectionsComplete === null
+                ? "Starting…"
+                : `Section ${done} of ${SUBMISSION_WORKSPACE_SECTION_TOTAL} ready`}
+            </span>
+            <span>{percent}%</span>
+          </div>
+          <div
+            className="h-2 w-full rounded-full bg-[#EFECE3] overflow-hidden"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={SUBMISSION_WORKSPACE_SECTION_TOTAL}
+            aria-valuenow={done}
+            aria-label="Section generation progress"
+          >
+            <div
+              className="h-full bg-[#0F6E56] transition-all duration-700 ease-out"
+              style={{ width: `${percent}%` }}
+            />
+          </div>
+        </div>
+
+        <hr className="border-t border-[#D9D5C8]" />
+
+        <div className="text-sm text-[#0E1411] leading-relaxed">
+          Keep this tab open, or close it and check back — your workspace
+          will be ready in your dashboard. We&apos;ll also email{" "}
+          <span className="font-medium">{email}</span> when it&apos;s
+          ready.
+        </div>
       </div>
     );
   }
