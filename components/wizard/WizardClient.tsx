@@ -9,8 +9,18 @@ import CheckboxCard from "./CheckboxCard";
 import WizardNav from "./WizardNav";
 import Q2FollowupCard from "./Q2FollowupCard";
 import { useToast } from "./WizardToastRoot";
-import { getQuestion, totalSteps } from "@/lib/wizard/questions";
-import type { WizardAnswers, DataSensitivity } from "@/lib/wizard/types";
+import {
+  getNextVisibleStep,
+  getPrevVisibleStep,
+  getQuestion,
+  getVisibleOrdinal,
+  totalSteps,
+} from "@/lib/wizard/questions";
+import type {
+  DataSensitivity,
+  Persona,
+  WizardAnswers,
+} from "@/lib/wizard/types";
 
 type Props = {
   assessmentId: string;
@@ -19,6 +29,10 @@ type Props = {
   initialAnswers: WizardAnswers;
   initialSkipped: number[];
   productType: string | null;
+  /** Phase 2c — persona drives whether the wizard ends at Q7 (SaMD /
+   *  clinical) or Q9 (hardware). Already verified non-null on the server
+   *  by the persona-gate redirect in q/[n]/page.tsx. */
+  persona: Persona;
   conflictEncountered: boolean;
   pdfCount: number; // for Q2 follow-up source label
   /** True when all 7 answers are prefilled (e.g. demo packets).
@@ -46,6 +60,7 @@ export default function WizardClient({
   initialAnswers,
   initialSkipped,
   productType,
+  persona,
   conflictEncountered,
   pdfCount,
   allAnswersPrefilled = false,
@@ -53,7 +68,7 @@ export default function WizardClient({
   aiPrefilledCount = 0,
 }: Props) {
   const router = useRouter();
-  const total = totalSteps();
+  const total = totalSteps(persona);
   const question = getQuestion(currentStep);
   const { showToast } = useToast();
 
@@ -96,8 +111,19 @@ export default function WizardClient({
     return typeof answer === "string" && answer.length > 0;
   }, [question, answer]);
 
-  const isLastStep = currentStep === total;
-  // Q7 (last step) hides the Skip link — the Generate button auto-skips
+  // Phase 2c — last visible step depends on persona (Q7 for SaMD,
+  // Q9 for hardware). `currentStep === total` is no longer correct
+  // because hardware visible steps include 8/9 with total=7.
+  const nextVisibleStep = useMemo(
+    () => getNextVisibleStep(currentStep, persona),
+    [currentStep, persona]
+  );
+  const prevVisibleStep = useMemo(
+    () => getPrevVisibleStep(currentStep, persona),
+    [currentStep, persona]
+  );
+  const isLastStep = nextVisibleStep === null;
+  // Last visible step hides the Skip link — the Generate button auto-skips
   // when unanswered, so a separate Skip would be a redundant click.
   const showSkip = question ? !question.required && !isLastStep : false;
 
@@ -169,9 +195,9 @@ export default function WizardClient({
         }),
       });
       if (!res.ok) throw new Error(`complete failed: ${res.status}`);
-      const answered = ([1, 2, 3, 4, 5, 6, 7] as number[]).filter(
-        (n) => !snapshot.includes(n)
-      ).length;
+      // Phase 2c — answered count walks 1..total (7 for SaMD, 9 for hardware).
+      const allSteps = Array.from({ length: total }, (_, i) => i + 1);
+      const answered = allSteps.filter((n) => !snapshot.includes(n)).length;
       try {
         posthog.capture("wizard_completed", {
           product_type: productType,
@@ -182,7 +208,7 @@ export default function WizardClient({
         });
       } catch {}
     },
-    [assessmentId, productType, conflictEncountered]
+    [assessmentId, productType, conflictEncountered, total]
   );
 
   /**
@@ -230,15 +256,17 @@ export default function WizardClient({
 
   /**
    * Prefetch the next destination on step mount so clicking Next uses
-   * the cached RSC payload instead of a cold server fetch. For Q1–Q6
-   * this is the next question page; for Q7 it's /assess/[id].
+   * the cached RSC payload instead of a cold server fetch. Phase 2c —
+   * the next destination is the next *visible* step for the persona,
+   * not currentStep + 1 (hardware skips Q2 and Q4).
    */
   useEffect(() => {
-    const nextUrl = isLastStep
-      ? `/assess/${assessmentId}`
-      : `/wizard/${assessmentId}/q/${currentStep + 1}`;
+    const nextUrl =
+      isLastStep || nextVisibleStep === null
+        ? `/assess/${assessmentId}`
+        : `/wizard/${assessmentId}/q/${nextVisibleStep}`;
     router.prefetch(nextUrl);
-  }, [assessmentId, currentStep, isLastStep, router]);
+  }, [assessmentId, isLastStep, nextVisibleStep, router]);
 
   const handleNext = useCallback(async () => {
     if (!question) return;
@@ -331,7 +359,8 @@ export default function WizardClient({
       return;
     }
 
-    // ── Optimistic path for Q1, Q3–Q6.
+    // ── Optimistic path — Phase 2c advances to next visible step
+    // (hardware skips Q2/Q4; SaMD walks 1→7 contiguously).
     try {
       posthog.capture("wizard_step_completed", {
         step_number: currentStep,
@@ -339,7 +368,9 @@ export default function WizardClient({
       });
     } catch {}
     saveAnswerBackground(currentStep, partial);
-    advanceTo(currentStep + 1);
+    if (nextVisibleStep !== null) {
+      advanceTo(nextVisibleStep);
+    }
   }, [
     question,
     busy,
@@ -347,6 +378,7 @@ export default function WizardClient({
     answer,
     currentStep,
     isLastStep,
+    nextVisibleStep,
     skipped,
     saveAnswerAwaited,
     saveAnswerBackground,
@@ -358,13 +390,16 @@ export default function WizardClient({
   ]);
 
   const handleBack = useCallback(() => {
-    if (currentStep === 1) return;
-    advanceTo(currentStep - 1);
-  }, [currentStep, advanceTo]);
+    // Phase 2c — back navigates to previous visible step. Hardware
+    // founder on Q3 goes back to Q1 (Q2 is hidden); on Q9 goes back
+    // to Q8.
+    if (prevVisibleStep === null) return;
+    advanceTo(prevVisibleStep);
+  }, [prevVisibleStep, advanceTo]);
 
   const handleSkip = useCallback(() => {
-    // handleSkip only fires for Q4–Q6 (showSkip excludes Q1–Q3 and Q7).
-    // No answer to save; just mark step as skipped and advance.
+    // Optional questions only — showSkip already excludes required
+    // questions and the last step. Advances to next visible step.
     if (!question) return;
     if (question.required || isLastStep) return;
     try {
@@ -374,10 +409,11 @@ export default function WizardClient({
     // collected and submitted on wizard_complete. Since navigating
     // mounts a fresh WizardClient, the local `skipped` is reset to
     // initialSkipped each mount. Acceptable: the complete endpoint
-    // accepts the final array at Q7 submit, and the navigation
-    // forward-only pattern means we typically reach Q7 in one session.
-    advanceTo(currentStep + 1);
-  }, [question, isLastStep, currentStep, advanceTo]);
+    // accepts the final array at last-step submit.
+    if (nextVisibleStep !== null) {
+      advanceTo(nextVisibleStep);
+    }
+  }, [question, isLastStep, currentStep, nextVisibleStep, advanceTo]);
 
   // Keyboard shortcuts: Enter, Escape, 1-N (digit keys select options)
   useEffect(() => {
@@ -468,7 +504,7 @@ export default function WizardClient({
             <span className="font-medium">Demo mode</span>
             <span className="text-[#6B766F]">
               {" "}
-              · all 7 answers prefilled. Click Next to walk partners
+              · all {total} answers prefilled. Click Next to walk partners
               through, or skip straight to the card.
             </span>
           </p>
@@ -484,7 +520,7 @@ export default function WizardClient({
       )}
       <WizardHeader
         productDisplayName={productDisplayName}
-        currentStep={currentStep}
+        currentStep={getVisibleOrdinal(currentStep, persona)}
         totalSteps={total}
       />
 

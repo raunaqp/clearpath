@@ -57,7 +57,12 @@ const MODEL: ModelKey = "claude-opus-4-7";
 const MAX_TOKENS_PATHWAY = 800;
 const MAX_TOKENS_GAPS = 1500;
 const MAX_TOKENS_INSIGHTS = 1800;
-const MAX_TOKENS_EXAMPLES = 1000;
+// Phase 2c Bug 2 — bumped from 1000 to 2500. The smart_examples tool
+// now emits good_snippet + bad_snippet + why_this_is_safer per row
+// (was just why_this_is_safer); 3 rows × ~380 output tokens + wrapper
+// overhead routinely landed at the 1000 cap before. 2500 leaves comfortable
+// headroom while staying well under the model's natural ceiling.
+const MAX_TOKENS_EXAMPLES = 2500;
 
 const SHARED_TONE_RULES = `
 - Tone: premium SaaS-onboarding, founder-friendly, calm, concise. Stripe Atlas / ClearTax / Mercury feel.
@@ -112,7 +117,7 @@ export async function generateReadinessReport(
   const pathwayDeterministic = buildPathwaySkeleton(card, ctx);
 
   // ── Pre-select dynamic content ──────────────────────────
-  const gapRowSeeds = buildGapRowSeeds(card);
+  const gapRowSeeds = buildGapRowSeeds(card, ctx);
   const reviewerPrioritySeeds = selectReviewerPriorities(ctx, 5);
   const smartExampleSeeds = selectSmartExamples(
     { cdsco_class: ctx.cdsco_class, ai_ml_flag: ctx.ai_ml_flag },
@@ -191,14 +196,22 @@ export async function generateReadinessReport(
       insightsCall.rowsByKey[p.key] ?? p.what_reviewers_look_for_seed,
   }));
 
-  const smartExamples: SmartExample[] = smartExampleSeeds.map((s) => ({
-    category: s.category,
-    topic: s.topic,
-    good_snippet: s.good_snippet,
-    bad_snippet: s.bad_snippet,
-    why_this_is_safer:
-      examplesCall.rowsByKey[s.key] ?? s.why_this_is_safer_seed,
-  }));
+  // Phase 2c Bug 2 — prefer LLM-emitted device-specific snippets;
+  // fall back to the library's curated wording if the LLM call missed
+  // a row (e.g., transient failure). The library seeds always describe
+  // a generic AI-CDS pattern, so the fallback is regulatorily safe but
+  // visibly off-brand for non-AI-CDS devices — telemetry'd via the
+  // engine_costs ledger and revisited if the miss rate climbs.
+  const smartExamples: SmartExample[] = smartExampleSeeds.map((s) => {
+    const llm = examplesCall.rowsByKey[s.key];
+    return {
+      category: s.category,
+      topic: s.topic,
+      good_snippet: llm?.good_snippet ?? s.good_snippet,
+      bad_snippet: llm?.bad_snippet ?? s.bad_snippet,
+      why_this_is_safer: llm?.why_this_is_safer ?? s.why_this_is_safer_seed,
+    };
+  });
 
   const raw: ReadinessReport = {
     meta: {
@@ -207,6 +220,11 @@ export async function generateReadinessReport(
       scoped_feature: input.scoped_feature,
       generated_at: new Date().toISOString(),
       source_assessment_id: input.assessment_id,
+      // Phase 2c — passthrough the synthesizer's inference markers so
+      // the report renderer can surface them alongside the card. Hardware
+      // persona reports will have ≥5 markers; SaMD reports will be empty
+      // or undefined.
+      inference_markers: card.inference_markers,
     },
     scorecard,
     pathway,
@@ -273,6 +291,30 @@ function buildReviewerContext(
   card: ReadinessCard,
   wiz: WizardAnswers
 ): ReviewerContext {
+  // Phase 2c — hardware-persona signal extraction. The synthesizer
+  // emits inference markers (sterile / software_in_device / etc.) for
+  // hardware founders; we surface those into the reviewer context so
+  // the lookup + priority libraries can gate hardware-specific entries.
+  const persona = wiz.persona;
+  const isHardware = persona === "manufacturer_hardware";
+
+  const sterileMarker = findInferenceMarker(card, "sterile");
+  const softwareMarker =
+    findInferenceMarker(card, "software_in_device") ??
+    findInferenceMarker(card, "software_component");
+  const infoSignificanceMarker = findInferenceMarker(card, "info_significance");
+
+  // Hardware persona: derive drives_or_diagnoses from the
+  // info_significance marker (Q2 is hidden for hardware so wiz.q2 is
+  // undefined). The marker value is plain-language ("Drives clinical
+  // management", "Diagnoses / treats", "Informs only"); match on the
+  // verb prefix.
+  const driverFromMarker = (() => {
+    if (!infoSignificanceMarker) return false;
+    const v = infoSignificanceMarker.value.toLowerCase();
+    return /\b(drives?|diagnos)/i.test(v);
+  })();
+
   return {
     cdsco_class: card.classification.cdsco_class,
     class_qualifier: card.classification.class_qualifier,
@@ -283,15 +325,36 @@ function buildReviewerContext(
     data_sensitivity: deriveDataSensitivity(card, wiz),
     // Phase 1.6 polish — only flag ABDM as "in scope" when the
     // synthesizer concluded the integration is actually required.
-    // Conditional / optional / for-procurement should NOT surface
-    // "ABDM integration in scope" in the scorecard triggers, and
-    // the abdm_interoperability reviewer priority should stay
-    // dormant in those cases.
     abdm_in_scope: card.regulations.abdm.verdict === "required",
     use_environment_home: wiz.b2_use_environment === "home",
-    drives_or_diagnoses:
-      wiz.q2 === "drives" || wiz.q2 === "diagnoses_treats",
+    drives_or_diagnoses: isHardware
+      ? driverFromMarker
+      : wiz.q2 === "drives" || wiz.q2 === "diagnoses_treats",
+
+    // Phase 2c additions.
+    persona,
+    patient_contact: isHardware ? wiz.q9 : undefined,
+    // Marker value starts with "Yes" or "No". For hardware-persona
+    // reports the sterile_inferred flag drives the sterilization-
+    // validation priority + DMF §8.14 lookup.
+    sterile_inferred: sterileMarker
+      ? /^yes/i.test(sterileMarker.value.trim())
+      : undefined,
+    // Software-in-device — primary signal is the synthesizer's marker;
+    // also true when ai_ml_flag is set (SaMD / hybrid path).
+    software_in_device: softwareMarker
+      ? /^yes/i.test(softwareMarker.value.trim())
+      : card.classification.ai_ml_flag,
   };
+}
+
+/** Phase 2c — look up an inference marker by `field` key, case-insensitive.
+ *  Returns undefined when markers are absent (SaMD reports) or the key
+ *  isn't emitted. Tolerant of minor key drift (the synthesizer is
+ *  instructed to use the listed keys but may emit close variants). */
+function findInferenceMarker(card: ReadinessCard, field: string) {
+  const markers = card.inference_markers ?? [];
+  return markers.find((m) => m.field.toLowerCase() === field.toLowerCase());
 }
 
 function deriveDataSensitivity(
@@ -327,7 +390,12 @@ function buildScorecard(
   const confidence = inferConfidence(card);
   const complexity = inferComplexity(cls.cdsco_class);
   const pathwayForms = card.regulations.cdsco_mdr.forms ?? [];
-  const pathwayLabel = buildPathwayLabel(card.recommended_path, pathwayForms);
+  const pathwayLabel = buildPathwayLabel(
+    card.recommended_path,
+    pathwayForms,
+    card,
+    ctx
+  );
   const clinicalInvestigationLikely =
     card.recommended_path === "clinical_investigation";
   const topGapTitles = card.top_gaps.slice(0, 3).map((g) => g.gap_title);
@@ -412,9 +480,20 @@ function inferComplexity(
 
 function buildPathwayLabel(
   path: ReadinessCard["recommended_path"],
-  forms: string[]
+  forms: string[],
+  card: ReadinessCard,
+  ctx: ReviewerContext
 ): string {
-  const pri = forms[0] ?? "MD-3 / MD-7";
+  // Phase 2c — derive the manufacturing-licence form deterministically
+  // from CDSCO class, NOT from the synthesizer's `forms[0]`. The
+  // synthesizer sometimes puts MD-12 (test-licence application) first
+  // in the forms array which then propagates here as the manufacturing-
+  // licence label — that's wrong: MD-12 is the test licence, the
+  // manufacturing licence forms are MD-3 (Class A/B SLA) and MD-7
+  // (Class C/D CLA). Hardware persona has an additional carve-out:
+  // Class A non-sterile non-measuring goes via SLA portal self-
+  // notification (no form filed).
+  const pri = manufacturingLicenceForm(card, ctx) ?? forms[0] ?? "MD-3 / MD-7";
   if (path === "clinical_investigation") {
     return `${pri} (Central) · likely MD-22 / test-licence (MD-13) path`;
   }
@@ -422,6 +501,57 @@ function buildPathwayLabel(
     return `${pri} (Manufacturing licence path)`;
   }
   return `${pri} · path TBD`;
+}
+
+/** Phase 2c — the manufacturing-licence form for this device. Returns
+ *  null only when the class is unknown (caller falls back to the
+ *  synthesizer's first form, then to a generic placeholder). */
+function manufacturingLicenceForm(
+  card: ReadinessCard,
+  ctx: ReviewerContext
+): string | null {
+  const cls = card.classification.cdsco_class;
+  if (
+    ctx.persona === "manufacturer_hardware" &&
+    cls === "A" &&
+    ctx.sterile_inferred === false
+  ) {
+    return "Portal self-notification";
+  }
+  if (cls === "C" || cls === "D") return "MD-7";
+  if (cls === "A" || cls === "B") return "MD-3";
+  return null;
+}
+
+/** Phase 2c Bug 1 — deterministic pathway forms in the natural CDSCO
+ *  order: predicate gate (MD-26/27) → test licence (MD-12/13) →
+ *  clinical investigation (MD-22) → manufacturing licence (MD-3/MD-5
+ *  for Class A/B, MD-7/MD-9 for Class C/D) → portal self-notification
+ *  carve-out for hardware Class A non-sterile non-measuring. Replaces
+ *  the previous passthrough from the synthesizer, which leaked MD-12
+ *  into the manufacturing-licence slot for SaMD. */
+function pathwayForms(card: ReadinessCard, ctx: ReviewerContext): string[] {
+  const mfg = manufacturingLicenceForm(card, ctx);
+  const result: string[] = [];
+  if (card.classification.novel_or_predicate === "novel") {
+    result.push("MD-26", "MD-27");
+  }
+  if (card.recommended_path === "clinical_investigation") {
+    result.push("MD-12", "MD-13", "MD-22");
+  }
+  if (mfg === "Portal self-notification") {
+    result.push("Portal self-notification");
+  } else if (mfg === "MD-7") {
+    result.push("MD-7", "MD-9");
+  } else if (mfg === "MD-3") {
+    result.push("MD-3", "MD-5");
+  }
+  if (result.length > 0) return result;
+  // Unknown class — fall back to whatever the synthesizer emitted, or
+  // a generic placeholder. Always returns ≥1 entry so the schema
+  // (forms.min(1)) is satisfied.
+  const fallback = card.regulations.cdsco_mdr.forms ?? [];
+  return fallback.length > 0 ? fallback : ["MD-7"];
 }
 
 // (buildOverallCostRange removed — the page-1 cost-band headline is
@@ -467,10 +597,15 @@ function buildPathwaySkeleton(
   card: ReadinessCard,
   ctx: ReviewerContext
 ): Omit<Pathway, "why_this_class_applies"> {
-  const forms = card.regulations.cdsco_mdr.forms ?? [];
-  const formList = forms.length > 0 ? forms : ["MD-7"];
+  // Phase 2c Bug 1 — derive forms deterministically from class +
+  // recommended_path + novel/predicate. The synthesizer's
+  // `regulations.cdsco_mdr.forms` historically leaked MD-12 (the test-
+  // licence application form) into the manufacturing-licence slot for
+  // SaMD; the canonical order is test-licence → CI → mfg-licence, with
+  // each form labelled to match its real role.
+  const formList = pathwayForms(card, ctx);
   const authority = inferAuthority(card.classification.cdsco_class);
-  const steps = buildStepSequence(card, formList);
+  const steps = buildStepSequence(card, formList, ctx);
   return {
     authority,
     forms: formList,
@@ -493,7 +628,8 @@ function inferAuthority(cls: CdscoClass): string {
 
 function buildStepSequence(
   card: ReadinessCard,
-  forms: string[]
+  forms: string[],
+  ctx: ReviewerContext
 ): Pathway["step_sequence"] {
   const steps: Pathway["step_sequence"] = [];
   if (card.classification.novel_or_predicate === "novel") {
@@ -518,12 +654,33 @@ function buildStepSequence(
       duration: "9–14 months",
     });
   }
-  steps.push({
-    step: `${forms[0] ?? "MD-7"} manufacturing licence`,
-    what_happens:
-      "File the manufacturing licence with QMS evidence, technical file, predicate or substantial-equivalence narrative, and risk file.",
-    duration: "6–9 months",
-  });
+
+  // Phase 2c — hardware persona: when the path collapses to just the
+  // manufacturing-licence step (predicate-claimed, manufacturing_license,
+  // no ACP), the step_sequence ends up with a single entry which the
+  // schema rejects (min 2). Add a pre-submission preparation step that
+  // covers Plant Master File + audit readiness — this is real work for
+  // hardware founders and makes the journey legible.
+  const isHardware = ctx.persona === "manufacturer_hardware";
+  const isClassBcd =
+    card.classification.cdsco_class === "B" ||
+    card.classification.cdsco_class === "C" ||
+    card.classification.cdsco_class === "D";
+  if (isHardware && isClassBcd && steps.length === 0) {
+    steps.push({
+      step: "Pre-submission preparation",
+      what_happens:
+        "Lock the Plant Master File (Appendix I), finalise the Device Master File, and ready the site for the pre-grant audit (Notified Body for Class B; MD Officer team for Class C/D).",
+      duration: "3–4 months",
+    });
+  }
+
+  // Phase 2c — pick the right manufacturing-licence step label by class.
+  // Class A non-sterile non-measuring uses the SLA portal self-notification;
+  // Class A sterile/measuring + B use MD-3 → MD-5; Class C/D use MD-7 → MD-9.
+  const mfgStep = buildMfgLicenceStep(card, forms, ctx);
+  steps.push(mfgStep);
+
   if (card.classification.acp_required) {
     steps.push({
       step: "ACP / PCCP submission",
@@ -533,6 +690,79 @@ function buildStepSequence(
     });
   }
   return steps;
+}
+
+/** Phase 2c — choose the right manufacturing-licence step for the
+ *  device class. Hardware persona gets a class-specific label; other
+ *  personas fall back to the existing SaMD-style MD-7 label. */
+function buildMfgLicenceStep(
+  card: ReadinessCard,
+  forms: string[],
+  ctx: ReviewerContext
+): Pathway["step_sequence"][number] {
+  const cls = card.classification.cdsco_class;
+  const isHardware = ctx.persona === "manufacturer_hardware";
+
+  if (isHardware) {
+    // Class A non-sterile non-measuring → portal self-notification (no
+    // pre-grant audit, no fee). The synthesizer marks the class with a
+    // qualifier or via the inference marker; fall back to a class-only
+    // heuristic when no signal differentiates.
+    if (cls === "A" && ctx.sterile_inferred === false) {
+      return {
+        step: "SLA portal self-notification",
+        what_happens:
+          "Register the device on the CDSCO MD Online portal (cdscomdonline.gov.in) with manufacturer details, device description, label, IFU, and applicable-standards declaration. No fee; no audit before the licence number issues.",
+        duration: "1–2 months",
+      };
+    }
+    if (cls === "A" || cls === "B") {
+      return {
+        step: "MD-3 manufacturing licence (SLA → MD-5)",
+        what_happens:
+          "File MD-3 with the State Licensing Authority alongside DMF, PMF, and Fifth-Schedule QMS evidence. Notified Body audit follows (post-grant within 120 days for Class A measuring/sterile; pre-grant within 90 days for Class B).",
+        duration: "4–7 months",
+      };
+    }
+    // Class C / D
+    return {
+      step: "MD-7 manufacturing licence (CLA → MD-9)",
+      what_happens:
+        "File MD-7 with the Central Licensing Authority alongside DMF, PMF, Fifth-Schedule QMS, clinical evidence, biocompatibility (and sterilization validation where applicable). CDSCO MD Officer team conducts a pre-grant site audit within 60 days of application.",
+      duration: "6–9 months",
+    };
+  }
+
+  // SaMD / clinical-investigation persona — derive the form from class
+  // (not from synthesizer forms[0], which sometimes wrongly contains
+  // MD-12, the test-licence form). MD-7 → MD-9 for Class C/D CLA;
+  // MD-3 → MD-5 for Class A/B SLA. Test-licence (MD-12 → MD-13) and
+  // clinical-investigation (MD-22) appear as separate prior steps in
+  // the sequence when the recommended_path requires them.
+  const samdForm = manufacturingLicenceForm(card, ctx);
+  if (samdForm === "MD-7") {
+    return {
+      step: "MD-7 manufacturing licence (CLA → MD-9)",
+      what_happens:
+        "File MD-7 with the Central Licensing Authority alongside QMS evidence, the technical file, predicate or substantial-equivalence narrative, and risk file.",
+      duration: "6–9 months",
+    };
+  }
+  if (samdForm === "MD-3") {
+    return {
+      step: "MD-3 manufacturing licence (SLA → MD-5)",
+      what_happens:
+        "File MD-3 with the State Licensing Authority alongside QMS evidence, the technical file, predicate or substantial-equivalence narrative, and risk file.",
+      duration: "4–7 months",
+    };
+  }
+  // Unknown class — final fallback to the legacy generic label.
+  return {
+    step: `${forms[0] ?? "MD-7"} manufacturing licence`,
+    what_happens:
+      "File the manufacturing licence with QMS evidence, technical file, predicate or substantial-equivalence narrative, and risk file.",
+    duration: "6–9 months",
+  };
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -549,8 +779,11 @@ interface GapRowSeed {
   fallbackWhy: string;
 }
 
-function buildGapRowSeeds(card: ReadinessCard): GapRowSeed[] {
-  return card.top_gaps.map((g, idx) => {
+function buildGapRowSeeds(
+  card: ReadinessCard,
+  ctx: ReviewerContext
+): GapRowSeed[] {
+  const seeds: GapRowSeed[] = card.top_gaps.map((g, idx) => {
     const entry = matchEffortCost(g.gap_title, g.dim);
     return {
       lookupKey: entry.key,
@@ -562,6 +795,111 @@ function buildGapRowSeeds(card: ReadinessCard): GapRowSeed[] {
       fallbackWhy: entry.why_it_matters_seed,
     } satisfies GapRowSeed;
   });
+
+  // Phase 2c — hardware persona augmentation. The card top_gaps array is
+  // capped at 3 entries; for hardware devices with sterile + invasive +
+  // novel triggers all firing, the MUST-SURFACE biocomp rule displaces
+  // sterilization or DMF. The ₹499 report has no top-3 cap on gap_rows
+  // (schema is min-1, no max), so we add the displaced gaps here when
+  // their hardware triggers fire and the card didn't surface them.
+  if (ctx.persona !== "manufacturer_hardware") return seeds;
+
+  const haveBiocomp = seeds.some((s) =>
+    /biocomp|iso\s*10993/i.test(s.gap_title)
+  );
+  const haveSterilization = seeds.some((s) =>
+    /steriliz|eto\b|gamma|autoclav|iso\s*1113[57]/i.test(s.gap_title)
+  );
+  const haveDmf = seeds.some((s) =>
+    /device\s+master\s+file|\bdmf\b|appendix\s+ii/i.test(s.gap_title)
+  );
+  const have62304 = seeds.some((s) =>
+    /iec\s*62304|software\s+lifecycle/i.test(s.gap_title)
+  );
+
+  const augmentations: GapRowSeed[] = [];
+
+  // Biocomp — patient_contact != no_contact AND not already surfaced.
+  // Soft tier for surface_intact_skin / surface_mucosal (P3); higher
+  // tier for blood / invasive / implant (P2 since card-side MUST-SURFACE
+  // already gives them P1 when present).
+  if (
+    ctx.patient_contact &&
+    ctx.patient_contact !== "no_contact" &&
+    !haveBiocomp
+  ) {
+    const isInvasive =
+      ctx.patient_contact === "blood_path_direct" ||
+      ctx.patient_contact === "blood_path_indirect" ||
+      ctx.patient_contact === "invasive_transient_lt_24h" ||
+      ctx.patient_contact === "invasive_long_term_30d" ||
+      ctx.patient_contact === "implant_gt_30d";
+    const entry = matchEffortCost("ISO 10993 biocompatibility evidence", "technical_docs");
+    augmentations.push({
+      lookupKey: entry.key,
+      priority: isInvasive ? "P2" : "P3",
+      gap_title: "ISO 10993 biocompatibility evidence not documented",
+      dim: "technical_docs",
+      fix_action:
+        "Commission an ISO 10993-1 risk assessment at a NABL-accredited lab and the panel matching your contact tier (10993-10 sensitisation for skin contact; -4 blood; -6 implantation; -11 systemic toxicity).",
+      estimated_effort: formatEffort(entry),
+      fallbackWhy: entry.why_it_matters_seed,
+    });
+  }
+
+  // Sterilization — sterile inferred yes AND not already surfaced.
+  if (ctx.sterile_inferred === true && !haveSterilization) {
+    const entry = matchEffortCost("sterilization validation", "technical_docs");
+    augmentations.push({
+      lookupKey: entry.key,
+      priority: "P2",
+      gap_title: "Sterilization validation method not documented",
+      dim: "technical_docs",
+      fix_action:
+        "Pick the method (EtO / gamma / steam / aseptic), engage a validated sterilization partner, and assemble the validation file per the relevant standard (ISO 11135 / 11137 / 17665).",
+      estimated_effort: formatEffort(entry),
+      fallbackWhy: entry.why_it_matters_seed,
+    });
+  }
+
+  // IEC 62304 — hardware-with-software (companion app, embedded firmware,
+  // AI/ML) AND not already surfaced. Class B/C/D only — Class A devices
+  // with software exist (some monitoring accessories) but their IEC 62304
+  // bar is much lower; defer to the editor.
+  const isClassBcdEarly =
+    ctx.cdsco_class === "B" || ctx.cdsco_class === "C" || ctx.cdsco_class === "D";
+  if (ctx.software_in_device === true && isClassBcdEarly && !have62304) {
+    const entry = matchEffortCost("IEC 62304 software lifecycle", "technical_docs");
+    augmentations.push({
+      lookupKey: entry.key,
+      priority: "P2",
+      gap_title: "IEC 62304 software lifecycle evidence missing for device software",
+      dim: "technical_docs",
+      fix_action:
+        "Establish IEC 62304 lifecycle processes for the software component (safety classification, SOUP list, V&V plan, release controls) — applies whether the software is a companion app, embedded firmware, or AI/ML inference.",
+      estimated_effort: formatEffort(entry),
+      fallbackWhy: entry.why_it_matters_seed,
+    });
+  }
+
+  // DMF — hardware persona Class B/C/D should always have a DMF row.
+  const isClassBcd =
+    ctx.cdsco_class === "B" || ctx.cdsco_class === "C" || ctx.cdsco_class === "D";
+  if (isClassBcd && !haveDmf) {
+    const entry = matchEffortCost("Device Master File", "technical_docs");
+    augmentations.push({
+      lookupKey: entry.key,
+      priority: "P3",
+      gap_title: "Device Master File (Appendix II) not assembled",
+      dim: "technical_docs",
+      fix_action:
+        "Assemble the DMF per Appendix II of the Fourth Schedule — descriptive info, classification, product specification, predicate comparison, labelling, design & mfg, essential principles, risk file, V&V, biocomp, sterilization, stability, clinical evidence, PMS, batch CoA.",
+      estimated_effort: formatEffort(entry),
+      fallbackWhy: entry.why_it_matters_seed,
+    });
+  }
+
+  return [...seeds, ...augmentations];
 }
 
 function priorityFromSeverityOrIndex(
@@ -619,7 +957,20 @@ function buildPhases(
   card: ReadinessCard,
   ctx: ReviewerContext
 ): PhaseWithCost[] {
+  // Phase 2c — hardware persona uses a hardware-flavoured Phase 2 that
+  // emphasises Device/Plant Master Files + biocomp + sterilization
+  // (when applicable) rather than IEC 62304 / IEC 81001-5-1 software
+  // gates. Software-side standards reappear only when the device
+  // actually contains software (companion app, embedded firmware, etc.)
+  // per the inference_markers signal.
+  const isHardware = ctx.persona === "manufacturer_hardware";
+  const hasSoftware = ctx.software_in_device === true;
+  const needsSterilization = ctx.sterile_inferred === true;
+  const needsBiocomp =
+    ctx.patient_contact !== undefined && ctx.patient_contact !== "no_contact";
+
   const ph: PhaseWithCost[] = [];
+
   ph.push({
     name: "Phase 1 — Foundational compliance",
     duration: "3–6 months",
@@ -628,14 +979,50 @@ function buildPhases(
     cost_low_lakh: 3,
     cost_high_lakh: 6,
   });
-  ph.push({
-    name: "Phase 2 — Technical documentation",
-    duration: "4–6 months",
-    what_happens:
-      "Build the IEC 62304 software lifecycle file, ISO 14971 risk file, IEC 81001-5-1 cybersecurity controls, and IEC 62366-1 usability evidence.",
-    cost_low_lakh: 3,
-    cost_high_lakh: 7,
-  });
+
+  // Phase 2 — branch by persona. The "what happens" text drives the
+  // founder's expectation-setting so we keep it concrete and bounded
+  // to standards that actually apply.
+  if (isHardware) {
+    const docs: string[] = [
+      "Device Master File (Appendix II) — descriptive info, predicate comparison, design & manufacturing, essential principles, ISO 14971 risk file",
+    ];
+    if (needsBiocomp) {
+      docs.push(
+        "ISO 10993 biocompatibility evidence at the tier matching patient contact"
+      );
+    }
+    if (needsSterilization) {
+      docs.push(
+        "Sterilization validation per the chosen method (ISO 11135 EO / ISO 11137 radiation / ISO 17665 steam)"
+      );
+    }
+    if (hasSoftware) {
+      docs.push(
+        "IEC 62304 software lifecycle and IEC 81001-5-1 cybersecurity for the device's software component"
+      );
+    }
+    // Hardware Phase 2 cost band rises with biocomp panel depth and
+    // sterilization validation; nudge the high band when applicable.
+    const phase2HighLakh = needsBiocomp && needsSterilization ? 9 : needsBiocomp ? 7 : 5;
+    ph.push({
+      name: "Phase 2 — Technical documentation",
+      duration: "4–7 months",
+      what_happens: `Build the ${docs.join("; ")}.`,
+      cost_low_lakh: 3,
+      cost_high_lakh: phase2HighLakh,
+    });
+  } else {
+    ph.push({
+      name: "Phase 2 — Technical documentation",
+      duration: "4–6 months",
+      what_happens:
+        "Build the IEC 62304 software lifecycle file, ISO 14971 risk file, IEC 81001-5-1 cybersecurity controls, and IEC 62366-1 usability evidence.",
+      cost_low_lakh: 3,
+      cost_high_lakh: 7,
+    });
+  }
+
   if (ctx.recommended_path === "clinical_investigation") {
     ph.push({
       name: "Phase 3 — Clinical validation",
@@ -649,28 +1036,34 @@ function buildPhases(
     ph.push({
       name: "Phase 3 — Performance evaluation",
       duration: "3–6 months",
-      what_happens:
-        "Run analytical and clinical performance evaluations against the intended use, gather Indian-population data where applicable.",
+      what_happens: isHardware
+        ? "Run bench performance and Indian-population clinical evaluation against the predicate; gather batch-release Certificates of Analysis (≥3 consecutive batches) and stability data (real-time + accelerated)."
+        : "Run analytical and clinical performance evaluations against the intended use, gather Indian-population data where applicable.",
       cost_low_lakh: 3,
       cost_high_lakh: 8,
     });
   }
+
   ph.push({
     name: "Phase 4 — Submission preparation",
     duration: "2–3 months",
-    what_happens:
-      "Assemble the Device Master File, labelling, IFU, predicate or SE narrative, and pre-submission review.",
+    what_happens: isHardware
+      ? "Assemble the Plant Master File (Appendix I), finalise the Device Master File, labelling and IFU, predicate or substantial-equivalence narrative, and pre-submission review."
+      : "Assemble the Device Master File, labelling, IFU, predicate or SE narrative, and pre-submission review.",
     cost_low_lakh: 2,
     cost_high_lakh: 5,
   });
+
   ph.push({
     name: "Phase 5 — CDSCO review cycle",
     duration: "4–8 months",
-    what_happens:
-      "Submission filing, queries-and-responses cycle, possible site inspection, licence grant.",
+    what_happens: isHardware
+      ? "Submission filing (MD-3 to SLA or MD-7 to CLA depending on class), queries-and-responses cycle, pre-grant site audit (60 days for Class C/D, 90 days for Class B), licence grant."
+      : "Submission filing, queries-and-responses cycle, possible site inspection, licence grant.",
     cost_low_lakh: 1,
     cost_high_lakh: 3,
   });
+
   return ph;
 }
 
@@ -1133,11 +1526,19 @@ Call the \`emit_reviewer_insights_rows\` tool. Return one row per input priority
 // LLM call 4 — smart example annotations (batched)
 // ─────────────────────────────────────────────────────────────
 
+// Phase 2c Bug 2 — the library's `good_snippet` / `bad_snippet` are now
+// STRUCTURAL TEMPLATES (regulatory framing, ISO 14971 hazard-chain shape,
+// scoped vs. autonomous Intended Use language). Opus rewrites them to
+// match the actual product so a retinal-fundus tool doesn't ship with
+// brain-MRI / Alzheimer's wording. The LLM stays within the curated
+// regulatory shape; only device-specific terminology is substituted.
 const SmartExampleAnnotationsSchema = z.object({
   rows: z
     .array(
       z.object({
         key: z.string(),
+        good_snippet: z.string().min(60).max(900),
+        bad_snippet: z.string().min(20).max(500),
         why_this_is_safer: z.string().min(60).max(1500),
       })
     )
@@ -1158,21 +1559,31 @@ const SMART_EXAMPLES_INPUT_SCHEMA: Anthropic.Tool.InputSchema = {
             type: "string",
             description: "Verbatim key from the input list.",
           },
+          good_snippet: {
+            type: "string",
+            minLength: 60,
+            maxLength: 900,
+            description:
+              "Device-specific good-wording snippet. Use the seed snippet as a STRUCTURAL TEMPLATE (regulator-defensible framing, scoped intent, ISO 14971 hazard chain where applicable) but substitute the actual modality, disease, patient population, user, and parameters drawn from the product description. Never carry through brain-MRI / Alzheimer's / generic placeholders if the device is something else.",
+          },
+          bad_snippet: {
+            type: "string",
+            minLength: 20,
+            maxLength: 500,
+            description:
+              "Device-specific bad-wording snippet that mirrors the seed's failure mode (e.g., autonomous-diagnosis claim, unbounded indication, hand-waved risk) but uses the actual device's vocabulary. Stay regulatorily realistic — the contrast with the good snippet is what makes the example useful.",
+          },
           why_this_is_safer: {
             type: "string",
             minLength: 35,
             // Tightened to 30-45 words after 3 live runs showed 40-60
-            // reliably overflows page 7 in production. The 3rd example's
-            // good-snippet (ISO 14971 hazard chain, 8 lines) is fixed,
-            // so the only place to claim back vertical space is the
-            // LLM annotation. 30-45 words still carries the
-            // regulator-defensible vs invites-questions contrast.
+            // reliably overflows page 7 in production.
             maxLength: 340,
             description:
               "One continuous paragraph, 30–45 words, no line breaks. Explains why the good wording is regulator-defensible and why the bad wording invites questions.",
           },
         },
-        required: ["key", "why_this_is_safer"],
+        required: ["key", "good_snippet", "bad_snippet", "why_this_is_safer"],
       },
     },
   },
@@ -1196,15 +1607,28 @@ async function callSmartExamples(
   }
 ) {
   const systemPrompt = `
-You write the "Why this wording is safer" annotation in Section 6 (Smart Examples) of a ₹499 founder-facing regulatory report.
+You write Section 6 (Smart Examples) of a ₹499 founder-facing regulatory report. Section 6 shows two-to-three good-vs-bad wording pairs that teach the founder how to talk about their device to CDSCO reviewers.
 
 ${SHARED_TONE_RULES}
 
-For each example pair (good + bad snippet) below, return ONE softened annotation (30–45 words, hard cap) explaining why the good wording is regulator-defensible and why the bad wording typically invites questions or stricter classification. Tailor to product specifics where relevant; otherwise stay close to the seed.
+You receive a curated SEED for each example — its category, topic, structural template (good/bad), and a why-this-is-safer reasoning seed. The seed snippets are written against a GENERIC AI-CDS pattern (e.g., brain-MRI / Alzheimer's). **Your job is to REWRITE the snippets so they reflect the actual product** while keeping the structural shape (scoped vs. autonomous intent, ISO 14971 hazard chain, indication scope, etc.).
 
-Stay tight: 30–45 words. Under 45 is non-negotiable for layout reasons. Cut connective tissue and adjectives before cutting facts; the contrast (regulator-defensible vs invites-questions) is what must survive.
+What stays curated (do not drift):
+- The regulator-defensible framing — scoped intent, named user, named setting, named function, advisory boundary, ISO 14971 hazard → situation → harm chain where the seed uses it, indication exclusions where the seed names them.
+- The contrast between good and bad — the bad snippet mirrors the SAME failure mode the seed shows (autonomous-diagnosis claim, unverifiable comparator, label-creep indication, hand-waved risk), just expressed in the actual product's vocabulary.
 
-Boundary: the snippet pairs themselves are static. You annotate, not rewrite, the snippets.
+What MUST change to match the product:
+- Modality / mechanism (e.g. "brain MRI" → "fundus photograph" / "blood-glucose strip" / "coronary stent").
+- Disease / condition (e.g. "Alzheimer's" → "diabetic retinopathy" / "ischaemic heart disease").
+- Patient population, intended user, clinical setting if the product implies different ones.
+- Parameter names, operating points, study-design language to fit the actual device's evidence basis.
+
+Output structure per row:
+1. \`good_snippet\` — the rewritten good wording (60–900 chars). Keeps the seed's regulatory anchors but uses the actual device's terminology.
+2. \`bad_snippet\` — the rewritten bad wording (20–500 chars). Same failure mode as the seed's bad snippet, applied to this device.
+3. \`why_this_is_safer\` — 30–45 words explaining why the good wording is regulator-defensible and why the bad wording invites questions. Hard cap 340 chars / 45 words for layout reasons; cut connective tissue and adjectives before cutting facts.
+
+If the product genuinely IS the same domain as the seed (e.g., the seed is an AI-CDS for brain MRI and the product is an AI-CDS for brain MRI), keep the wording close to the seed. Only force rewrites when there's a real domain mismatch.
 
 Call the \`emit_smart_examples_rows\` tool. Return one row per input example with the same "key" values; do not invent new keys.
 `.trim();
@@ -1213,10 +1637,10 @@ Call the \`emit_smart_examples_rows\` tool. Return one row per input example wit
     `Product: ${args.productLine}`,
     `Class: ${args.ctx.cdsco_class ?? "TBD"} · AI/ML: ${args.ctx.ai_ml_flag}`,
     "",
-    "Example pairs (process every entry):",
+    "Example seeds (rewrite snippets to match the product; process every entry):",
     ...args.seeds.map(
       (s) =>
-        `- key=${s.key} | topic=${s.topic} | category=${s.category}\n  good=${s.good}\n  bad=${s.bad}\n  seed=${s.seed}`
+        `- key=${s.key} | topic=${s.topic} | category=${s.category}\n  seed_good=${s.good}\n  seed_bad=${s.bad}\n  why_seed=${s.seed}`
     ),
   ].join("\n");
 
@@ -1227,14 +1651,21 @@ Call the \`emit_smart_examples_rows\` tool. Return one row per input example wit
     userPrompt,
     toolName: "emit_smart_examples_rows",
     toolDescription:
-      "Emit the per-example 'why this wording is safer' annotations for Section 6 (Smart Examples).",
+      "Emit device-specific good/bad wording pairs + 'why this wording is safer' annotations for Section 6 (Smart Examples).",
     inputSchema: SMART_EXAMPLES_INPUT_SCHEMA,
     schema: SmartExampleAnnotationsSchema,
     maxTokens: MAX_TOKENS_EXAMPLES,
   });
-  const rowsByKey: Record<string, string> = {};
+  const rowsByKey: Record<
+    string,
+    { good_snippet: string; bad_snippet: string; why_this_is_safer: string }
+  > = {};
   for (const row of result.value.rows) {
-    rowsByKey[row.key] = row.why_this_is_safer;
+    rowsByKey[row.key] = {
+      good_snippet: row.good_snippet,
+      bad_snippet: row.bad_snippet,
+      why_this_is_safer: row.why_this_is_safer,
+    };
   }
   return { rowsByKey, usage: result.usage, cost: result.cost };
 }

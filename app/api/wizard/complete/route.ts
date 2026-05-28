@@ -4,7 +4,11 @@ import { getServiceClient } from "@/lib/supabase";
 
 const bodySchema = z.object({
   assessment_id: z.string().uuid(),
-  skipped: z.array(z.number().int().min(1).max(7)),
+  // Phase 2c — skipped step indices range 1..9. Steps 8 and 9 are the
+  // hardware-persona Tier A suffix (predicate + patient-contact); only
+  // hardware founders will skip them, and the wizard UI marks both as
+  // required so a "skip" in practice means the founder bailed out.
+  skipped: z.array(z.number().int().min(1).max(9)),
 });
 
 type AssessmentMeta = Record<string, unknown>;

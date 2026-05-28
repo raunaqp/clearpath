@@ -96,7 +96,18 @@ Return ONLY a single JSON object matching this schema exactly. No markdown fence
   "tier1_teaser": "what ₹499 unlocks",
   "tier2_teaser": "what ₹25K unlocks",
 
-  "recommended_path": "manufacturing_license | clinical_investigation | unclear"
+  "recommended_path": "manufacturing_license | clinical_investigation | unclear",
+
+  "inference_markers": [
+    {
+      "field": "sterile",
+      "label": "Sterile device",
+      "value": "Yes (assumed)",
+      "status": "estimated | assumed | extracted",
+      "basis": "Inferred from patient-contact tier = implant (long-term)",
+      "correctable_at": "wizard Q9 or editor §14"
+    }
+  ]
 }
 \`\`\`
 
@@ -158,6 +169,8 @@ Use these instead: "likely", "may", "typically", "generally", "based on publishe
 
 # IMDRF × CDSCO classification matrix (§3.5)
 
+**Applies only when \`wizard_answers.persona\` is \`"manufacturer_samd"\`, \`"clinical_investigation_researcher"\`, or unset. For \`"manufacturer_hardware"\`, skip this section entirely and use §3.5b below.**
+
 Use the wizard's Q1 (clinical_state) × Q2 (info_significance) to derive IMDRF category and CDSCO class. Apply the table; then soften (e.g. "likely Class B/C") if the case is borderline.
 
 | Q1 clinical_state | Q2 info_significance | IMDRF cat | CDSCO class | Guidance |
@@ -181,6 +194,154 @@ Use the wizard's Q1 (clinical_state) × Q2 (info_significance) to derive IMDRF c
 - **Hardware + software**: SiMD inherits the hardware's class; do NOT classify the app independently. Note state-FDA carve-in for export.
 - **Documentation / scribe tools**: AI-assisted medical documentation tools — including scribes that transcribe doctor-patient conversations to populate EHR/EMR fields, note-taking assistants, and dictation aids — are typically NOT medical devices under CDSCO MDR 2017. They document clinical encounters but do not drive clinical decisions, diagnose, or recommend treatment. Default \`medical_device_status = not_medical_device\` (or \`wellness_carve_out\`) and \`cdsco_class = null\`. Use Class A only as a conservative anchor when claims approach clinical decision support (e.g. structured summaries that flag risk patterns or recommend follow-up). Distinguish carefully from AI clinical decision support (Class B+) which provides diagnostic or treatment recommendations.
 - **Unclear**: \`class_qualifier = "unclear"\` — soften everywhere; lean toward \`conditional\` over \`required\`.
+
+---
+
+# Hardware-manufacturer classification (§3.5b — Phase 2c)
+
+**When \`wizard_answers.persona === "manufacturer_hardware"\`, the IMDRF Q1×Q2 SaMD matrix above does NOT apply.** Indian hardware medical devices classify under MDR-2017 by device type, patient contact, sterility, drug content, and ionising-radiation properties — not by the SaMD significance×situation lens.
+
+For hardware founders, use this overlay instead.
+
+## Hardware-persona wizard shape (what you receive)
+
+Hardware founders answer a **7-question Tier A** with a different mix than SaMD founders:
+
+| Wizard slot | Answered? | Source for hardware |
+|---|---|---|
+| Q1 (\`clinical_state\`) | YES | direct from \`wizard_answers.q1\` |
+| Q2 (\`info_significance\`) | **HIDDEN** | inferred — see "Q2 inference" below |
+| Q3 (\`user_type\`) | YES | \`wizard_answers.q3\` |
+| Q4 (\`year_1_users\`) | **HIDDEN** | defaulted to \`under_10k\` — see "Q4 default" below |
+| Q5 (\`integrations\`) | YES | \`wizard_answers.q5\` — drives ABDM verdict; never silently defaulted (kept asked because the live demo card is regulator-facing) |
+| Q6 (\`data_types\`) | YES | \`wizard_answers.q6\` — drives DPDP verdict; never silently defaulted |
+| Q7 (\`commercial_stage\`) | YES | \`wizard_answers.q7\` |
+| Q8 (\`predicate_exists\`) | YES | \`wizard_answers.q8\` |
+| Q9 (\`patient_contact\`) | YES | \`wizard_answers.q9\` |
+
+If \`q2\` or \`q4\` are absent from \`wizard_answers\` for a hardware founder, that is expected — the wizard hides them. Infer Q2 and default Q4 per the rules below, then emit one \`inference_markers\` entry for EACH.
+
+### Q2 inference (hardware persona only)
+
+- If \`detected_signals\` / pitch-extract shows \`ai_ml === "adaptive"\` OR \`"static"\` → \`q2 = "drives"\`.
+- If one-liner mentions "diagnos*", "detect*", "screen*", "treat*", "deliver*", "intervention" → \`q2 = "diagnoses_treats"\` (or \`"drives"\` when language is closer to flagging than diagnosing).
+- If one-liner is purely descriptive ("monitor", "measure", "track", "display", "record") → \`q2 = "informs_only"\`.
+- Otherwise → \`q2 = "informs_only"\` (safest default; low blast radius for hardware because the class branch ignores Q2 entirely).
+
+Emit marker: \`{ field: "info_significance", label: "Information role", value: "<value>", status: "estimated", basis: "Inferred from your device description; hardware founders don't answer this directly.", correctable_at: "editor or by changing your one-liner" }\`.
+
+### Q4 default (hardware persona only)
+
+Default \`q4 = "under_10k"\`. Override only if pitch-extract or one-liner explicitly mentions scale ("national rollout", "millions of patients", "10 lakh", etc.).
+
+Emit marker: \`{ field: "year1_users_scale", label: "Year-1 users", value: "Under 10,000", status: "assumed", basis: "Hardware launches typically stay below 10 lakh users in Year 1. Correct in your editor if you expect scale that triggers DPDP SDF designation.", correctable_at: "editor" }\`.
+
+## Hardware classification signals
+
+Beyond Q5/Q6/Q8/Q9 (directly answered), every other signal needed for hardware classification is **inferred and surfaced as an inference marker** for the founder to correct in the editor:
+
+| Signal | Source / inference rule |
+|---|---|
+| \`patient_contact\` (Q9) | Direct from wizard. 8 ISO-10993 tiers: no_contact / surface_intact_skin / surface_mucosal / blood_path_indirect / blood_path_direct / invasive_transient_lt_24h / invasive_long_term_30d / implant_gt_30d |
+| \`predicate_exists\` (Q8) | Direct from wizard: yes_indian / yes_only_foreign / no / not_sure |
+| \`sterile\` (inferred) | invasive_* / implant / blood_path_direct → likely YES. surface_intact_skin / no_contact → likely NO. blood_path_indirect / surface_mucosal → check pitch-extract \`product_meta.sterile\`; default YES (safer). |
+| \`drug_content\` (assumed) | DEFAULT \`no\`. Override only if one-liner / pitch-extract explicitly mentions drug-elution / drug-coating / drug-release / drug-reservoir. |
+| \`ionising_radiation\` (assumed) | DEFAULT \`no\`. Override only if one-liner / pitch-extract mentions X-ray / CT / fluoroscopy / gamma / radioactive / radioisotope / nuclear medicine / AERB / BARC. |
+| \`veterinary_use\` (assumed) | DEFAULT \`humans_only\`. Override only if explicit veterinary mention. |
+| \`manufacturing_location\` (extracted) | From \`detected_signals\` or pitch-extract \`company.manufacturing_address\`. Default \`india\`. |
+| \`measuring_function\` (inferred) | From one-liner / extract keywords: "monitor", "measure", "gauge", "sensor", "track vitals" → \`yes\`. Otherwise \`no\`. |
+| \`implantable\` (inferred) | TRUE iff \`patient_contact === "implant_gt_30d"\`. |
+| \`software_in_device\` (inferred) | TRUE iff one-liner / extract mentions AI / ML / algorithm / software / app / firmware / model / inference. Hardware founders with software-in-device get the Software V&V sub-block in pack §11; pure-hardware skips it. |
+
+## Hardware class derivation (apply in order; first match wins)
+
+Apply these rules with the inferred + answered signals above.
+
+1. **Class D** when ANY hold:
+   - \`patient_contact === "implant_gt_30d"\` (long-term implant)
+   - \`patient_contact === "invasive_long_term_30d"\` AND drug_content !== \`no\`
+   - device contains ionising radiation source (AERB/BARC trigger)
+
+2. **Class C** when ANY hold:
+   - \`patient_contact \in {"blood_path_direct", "invasive_transient_lt_24h", "invasive_long_term_30d"}\`
+   - drug_content !== \`no\` (combination product baseline)
+   - device emits ionising radiation but does not contain radioactive source
+
+3. **Class B** when ANY hold:
+   - \`patient_contact \in {"surface_mucosal", "blood_path_indirect"}\`
+   - \`measuring_function === "yes"\` AND patient_contact !== \`"no_contact"\`
+   - device handles patient data with display-only output (active medical device, non-invasive)
+
+4. **Class A** (default) — \`patient_contact === "no_contact"\` OR \`patient_contact === "surface_intact_skin"\` with no measuring / no sterile requirement.
+
+   Sub-distinction (drives form path, see below):
+   - **A non-sterile non-measuring** — sterile === \`no\` AND measuring_function === \`no\`. Portal registration only.
+   - **A sterile or measuring** — sterile === \`yes\` OR measuring_function === \`yes\`. Goes via MD-3 to SLA.
+
+Set \`cdsco_class\` to \`"A" | "B" | "C" | "D"\`. Set \`imdrf_category\` to \`null\` (the IMDRF SaMD matrix doesn't apply to hardware). Set \`class_qualifier\` to one of: \`"novel"\` (when predicate_exists === \`"no"\`), \`"scoped"\` if sub-feature of a platform, \`"unclear"\` when predicate_exists === \`"not_sure"\` AND patient_contact ambiguous, else \`null\`.
+
+## Hardware form-path mapping
+
+Use this to populate \`regulations.cdsco_mdr.forms\` and the verdict's MD-form references:
+
+| Class | Authority | Form pair | Audit timing |
+|---|---|---|---|
+| A non-sterile non-measuring | SLA portal (\`cdscomdonline.gov.in\`) | None — self-notification | None pre-grant |
+| A sterile or measuring | SLA | MD-3 → MD-5 | NB audit within 120 days post-grant |
+| B | SLA | MD-3 → MD-5 | NB audit within 90 days of application |
+| C | CLA (CDSCO HQ / Zonal) | MD-7 → MD-9 | MD Officer team within 60 days of application |
+| D | CLA | MD-7 → MD-9 | Same as C with heightened scrutiny |
+
+Predicate-existence overlay (applies to any class above A non-sterile non-measuring):
+- predicate_exists === \`"no"\` OR \`"not_sure"\` → \`pathway_note\` MUST mention "MD-26/MD-27 pre-permission likely required before manufacturing licence; adds a separate review cycle." Set \`novel_or_predicate = "novel"\`.
+- predicate_exists === \`"yes_only_foreign"\` → \`pathway_note\` mentions "international comparables exist; CDSCO will likely require stronger substantial-equivalence narrative." Set \`novel_or_predicate = "novel"\` (conservative).
+- predicate_exists === \`"yes_indian"\` → set \`novel_or_predicate = "has_predicate"\`.
+
+## Hardware top-gaps (priority order)
+
+When \`persona === "manufacturer_hardware"\` and the device is regulated, surface these gaps if their trigger fires (descending severity):
+
+- **HIGH** — \`patient_contact !== "no_contact"\` AND no biocompatibility evidence in pitch-extract → "ISO 10993 biocompatibility tier not documented" (DMF §8.11).
+- **HIGH** — sterile inferred yes AND no sterilization-validation evidence → "Sterilization validation method not documented" (DMF §8.14).
+- **HIGH** — class B/C/D AND ISO 13485 not detected → "ISO 13485 QMS evidence missing".
+- **MEDIUM** — class C/D AND clinical_evidence dimension < 2 → "Clinical evidence below CDSCO Class C/D expectations".
+- **MEDIUM** — predicate_exists === \`"no"\` → "No Indian predicate — MD-26/MD-27 pre-permission cycle likely required".
+- **MEDIUM** — no stability data evidence → "Real-time + accelerated stability data not documented" (DMF §8.17).
+
+Do NOT surface SaMD-specific gaps (IEC 62304, ACP, IEC 81001-5-1) unless the hardware also contains software (inferred software_in_device === true).
+
+### MUST-SURFACE rule for top_gaps (hardware persona, hard constraint)
+
+The \`top_gaps\` array is capped at 3 entries (see "Schema rules — \`top_gaps\` length is 2–3"). When the device has blood-path, transient-invasive, long-term-invasive, or implant contact (\`patient_contact \in {"blood_path_direct", "blood_path_indirect", "invasive_transient_lt_24h", "invasive_long_term_30d", "implant_gt_30d"}\`), **the biocompatibility gap (ISO 10993-4 blood / -6 implant / -10 sensitisation / -11 systemic toxicity) MUST appear in \`top_gaps\`.** This is a hard constraint, not a preference.
+
+Use this **explicit displacement order** when biocomp would be the 4th gap and you need to drop one to fit:
+
+1. **First displace ISO 13485 QMS gap** — it is a foundational gap present in nearly every Class B/C/D card; the founder gets the message via the readiness score and the report's deeper analysis.
+2. **Next displace IEC 62304 software lifecycle gap** — software-side gaps have a dedicated section in the ₹499 report; biocomp does not.
+3. **Next displace IVD performance-evaluation gap** — for Class C IVDs, perf-eval is real but typically surfaces during clinical evidence review; biocomp is required at submission filing.
+4. **Never displace clinical-evidence or predicate-path gaps** — these tie directly to whether the device is approvable in principle.
+
+**Authoritative-signal rule:** \`patient_contact\` (Q9) is the SYSTEM-level signal — answer based on the device-as-supplied-to-patient. Do NOT override the biocomp requirement by reasoning about sub-components (e.g., "the meter unit itself doesn't contact blood, only the test strips do"). If Q9 = blood_path_direct, the system carries blood-contact biocomp scope, period.
+
+For surface-only contact (\`surface_intact_skin\`, \`surface_mucosal\`), biocomp is real but softer (ISO 10993-10 sensitisation only) and may rank below QMS/DMF foundational gaps for very low-class devices. Surface only this when there is room.
+
+## inference_markers — required for hardware persona
+
+Emit ONE marker for EVERY field you inferred or assumed. Minimum required when \`persona === "manufacturer_hardware"\`:
+
+- \`info_significance\` — see "Q2 inference" above. Status \`estimated\`.
+- \`year1_users_scale\` — see "Q4 default" above. Status \`assumed\` (or \`extracted\` if pitch-extract has explicit scale).
+- \`sterile\` — status: \`estimated\` (from patient contact) or \`extracted\` (from pitch-extract)
+- \`drug_content\` — status: \`assumed\` (almost always defaults to "No"); basis: "Most healthtech hardware contains no drug substance — confirm in your editor if your device is drug-eluting or drug-coated."
+- \`ionising_radiation\` — status: \`assumed\`; basis: "Most healthtech hardware does not use X-ray, CT, or radioactive sources — confirm in your editor if yours does (e.g., imaging equipment, brachytherapy)."
+- \`veterinary_use\` — status: \`assumed\`; basis: "Assumed humans-only; if your device is for animals, that path uses DAHD NOC and you should correct this."
+- \`manufacturing_location\` — status: \`extracted\` (if pitch-extract has address) or \`assumed\` (default india)
+- \`cdsco_class\` — status: \`estimated\`; basis: state which signals drove the class (e.g., "Class C — derived from invasive blood-path contact + non-drug + non-radioactive"); correctable_at: "editor §4"
+- \`measuring_function\` — status: \`estimated\` (from one-liner keywords) or \`assumed\` (default no)
+
+For SaMD / clinical-investigation personas, emit \`inference_markers: []\` (empty array). The field is required in shape, optional in content.
+
+The renderer surfaces each marker prominently with the status badge ([ESTIMATED] / [ASSUMED] / [EXTRACTED]) and the "tap to correct" affordance. A founder whose device DOES contain a drug must not miss that "non-drug" was assumed. Per Phase 2c principle: low-blast-radius fields (sterile / drug / radiation / Q2 / Q4 / measuring) are inferred and marked; **demo-visible compliance verdicts (DPDP, ABDM, classification) never ride on a silent default** — Q5/Q6/Q8/Q9 stay asked.
 
 ---
 

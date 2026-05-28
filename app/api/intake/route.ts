@@ -11,6 +11,7 @@ import {
   runPitchExtraction,
   type AiExtractedRow,
 } from "@/lib/intake/ai-extract";
+import { PersonaSchema, type WizardAnswers } from "@/lib/wizard/types";
 
 const uploadedDocSchema = z.object({
   filename: z.string().min(1).max(200),
@@ -64,6 +65,12 @@ const schema = z.object({
    * and tags the assessment with meta.is_demo = true so it's filterable
    * out of analytics + admin views. */
   demo_packet_id: z.string().min(1).max(50).optional(),
+  /** Phase C — persona now collected at intake. Optional on the wire so
+   * legacy clients (browser cache, old SDK builds) keep working; the UI
+   * blocks Step 2 submit while persona is null, and the
+   * /wizard/[id]/persona fallback handles any row that still lands
+   * here without one. */
+  persona: PersonaSchema.optional(),
 });
 
 type AssessmentMeta = Record<string, unknown> & {
@@ -85,7 +92,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: first.message }, { status: 422 });
   }
 
-  const { name, mobile, one_liner, url, uploaded_docs, resume_id, demo_packet_id } = parsed.data;
+  const { name, mobile, one_liner, url, uploaded_docs, resume_id, demo_packet_id, persona } = parsed.data;
   // Sprint 3 Phase 1.5 — authed users must intake under their session
   // email. The dashboard joins assessments → user by email, so any
   // drift here loses the row from /dashboard. Override silently;
@@ -107,7 +114,7 @@ export async function POST(req: NextRequest) {
     // Resume flow: update existing row in place, clear downstream, bump edit counter.
     const { data: existing, error: fetchError } = await supabase
       .from("assessments")
-      .select("id, meta, ai_extracted")
+      .select("id, meta, ai_extracted, wizard_answers")
       .eq("id", resume_id)
       .maybeSingle();
 
@@ -157,6 +164,18 @@ export async function POST(req: NextRequest) {
       ? buildPendingRow({ source_sha256: null, source_filename: null })
       : buildSkippedRow();
 
+    // Phase C — merge persona into wizard_answers. Preserve any existing
+    // q1..q7 / b1..b6 / c1..c2 answers; only overwrite the persona key.
+    // When persona is omitted from the request, leave whatever's there
+    // (older resume from before Phase C might not include it).
+    const existingWizardAnswers =
+      (existing.wizard_answers as WizardAnswers | null) ?? {};
+    const nextWizardAnswers: WizardAnswers | null = persona
+      ? { ...existingWizardAnswers, persona }
+      : Object.keys(existingWizardAnswers).length > 0
+      ? existingWizardAnswers
+      : null;
+
     const { error: updateError } = await supabase
       .from("assessments")
       .update({
@@ -169,6 +188,7 @@ export async function POST(req: NextRequest) {
         status: "draft",
         product_type: null,
         url_fetched_content: null,
+        wizard_answers: nextWizardAnswers,
         meta: nextMeta,
         ai_extracted: nextAiExtracted,
         updated_at: new Date().toISOString(),
@@ -230,6 +250,28 @@ export async function POST(req: NextRequest) {
     ? buildPendingRow({ source_sha256: null, source_filename: null })
     : buildSkippedRow();
 
+  // Phase C — persona lands on wizard_answers.persona at insert time.
+  // - Real intake: persona comes from the form (required by UI).
+  // - Demo packet: persona is part of the packet's wizard_answers and
+  //   the demo packet itself also carries .persona at the packet level;
+  //   we merge so an explicit persona in the request still wins.
+  // - Edge: anonymous tests / legacy clients omitting persona → null;
+  //   the /wizard/[id]/persona fallback gate handles the row.
+  const baseWizardAnswers =
+    demoWizardAnswers ??
+    (persona ? ({} as WizardAnswers) : null);
+  const mergedWizardAnswers: WizardAnswers | null =
+    baseWizardAnswers
+      ? {
+          ...baseWizardAnswers,
+          ...(persona
+            ? { persona }
+            : demoPacket
+            ? { persona: demoPacket.persona }
+            : {}),
+        }
+      : null;
+
   const { data, error } = await supabase
     .from("assessments")
     .insert({
@@ -241,7 +283,7 @@ export async function POST(req: NextRequest) {
       uploaded_docs: uploaded_docs.length > 0 ? uploaded_docs : null,
       status: "draft",
       // Demo packets pre-fill wizard answers so partners see a card in <30s
-      wizard_answers: demoWizardAnswers,
+      wizard_answers: mergedWizardAnswers,
       meta: demoPacket ? demoMeta : null,
       ai_extracted: initialAiExtracted,
     })

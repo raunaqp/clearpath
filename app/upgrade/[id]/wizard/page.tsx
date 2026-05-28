@@ -233,7 +233,12 @@ export default async function TierBWizardPage({
             initialValues={initialValues}
             c1Trigger={c1Trigger}
             c2Trigger={c2Trigger}
-            paymentHref={`/upgrade/${id}`}
+            /* Phase 2c tier-picker fix — Tier B wizard is now only
+             * entered after the customer picked draft_editor on the
+             * TierPicker. Preserve the tier choice through submit so
+             * the user lands on the ₹2,499 payment surface (not the
+             * picker again). */
+            paymentHref={`/upgrade/${id}?tier=draft_editor`}
           />
 
           <div className="mt-8">

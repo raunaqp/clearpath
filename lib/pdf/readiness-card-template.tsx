@@ -51,6 +51,21 @@ const VERDICT_LABEL: Record<string, string> = {
   not_applicable: "n/a",
 };
 
+/**
+ * Phase 2c — inference-marker status badges. Mirrors the on-screen
+ * InferenceMarkersBlock. Each marker carries a status that drives the
+ * pill colour; the founder sees the same badge language across screen
+ * and PDF so the assumption can't slip past.
+ */
+const MARKER_BADGE: Record<
+  "estimated" | "assumed" | "extracted",
+  { bg: string; fg: string; label: string }
+> = {
+  estimated: { bg: "#FAEEDA", fg: AMBER, label: "ESTIMATED" },
+  assumed: { bg: "#FAECE7", fg: CORAL, label: "ASSUMED" },
+  extracted: { bg: "#E1F5EE", fg: TEAL_DEEP, label: "EXTRACTED" },
+};
+
 const REG_ORDER: ReadonlyArray<{
   key: keyof ReadinessCard["regulations"];
   label: string;
@@ -246,6 +261,83 @@ const styles = StyleSheet.create({
     lineHeight: 1.5,
     marginTop: 10,
   },
+  // Phase 2c — assumptions/estimates block. Mirrors the on-screen
+  // InferenceMarkersBlock so the founder sees the same content in PDF
+  // exports. Placed between the metric row and the Verdict so it can't
+  // be missed during a regulator walk-through.
+  markerSection: {
+    marginTop: 8,
+    marginBottom: 14,
+    padding: 12,
+    borderRadius: 6,
+    borderWidth: 0.5,
+    borderColor: "#E8D4A6",
+    backgroundColor: "#FCF8F1",
+  },
+  markerHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "baseline",
+    marginBottom: 4,
+  },
+  markerTitle: {
+    fontFamily: "Times-Bold",
+    fontSize: 11,
+    color: TEXT_DARK,
+  },
+  markerCorrectHint: {
+    fontSize: 7.5,
+    color: AMBER,
+    letterSpacing: 1.0,
+    textTransform: "uppercase",
+  },
+  markerIntro: {
+    fontSize: 9,
+    color: TEXT_MUTED,
+    marginBottom: 8,
+    lineHeight: 1.45,
+  },
+  markerRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    paddingVertical: 4,
+  },
+  markerBadge: {
+    fontSize: 7,
+    fontFamily: "Helvetica-Bold",
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+    paddingVertical: 2,
+    paddingHorizontal: 5,
+    borderRadius: 3,
+    width: 56,
+    textAlign: "center",
+  },
+  markerBody: {
+    flex: 1,
+    fontSize: 9.5,
+  },
+  markerHeadline: {
+    fontFamily: "Helvetica-Bold",
+    color: TEXT_DARK,
+  },
+  markerValue: {
+    color: TEXT_DARK,
+  },
+  markerBasis: {
+    fontSize: 8.5,
+    color: TEXT_MUTED,
+    marginTop: 1,
+    lineHeight: 1.4,
+  },
+  markerCorrectAt: {
+    fontSize: 8,
+    color: TEAL_DEEP,
+    marginTop: 2,
+    letterSpacing: 0.3,
+    textTransform: "uppercase",
+  },
 });
 
 const SEVERITY_TINT: Record<string, { bg: string; fg: string }> = {
@@ -362,6 +454,47 @@ export const ReadinessCardDocument = ({
             </View>
           </View>
         </View>
+
+        {card.inference_markers && card.inference_markers.length > 0 && (
+          <View style={styles.markerSection} wrap={false}>
+            <View style={styles.markerHeaderRow}>
+              <Text style={styles.markerTitle}>
+                What we assumed about your device
+              </Text>
+              <Text style={styles.markerCorrectHint}>Correct in editor</Text>
+            </View>
+            <Text style={styles.markerIntro}>
+              We inferred the fields below from your wizard answers and
+              uploaded materials. Correct anything that's wrong &mdash; the
+              Submission Pack regenerates from your corrected values.
+            </Text>
+            {card.inference_markers.map((m, i) => {
+              const badge = MARKER_BADGE[m.status];
+              return (
+                <View key={`${m.field}-${i}`} style={styles.markerRow} wrap={false}>
+                  <Text
+                    style={[
+                      styles.markerBadge,
+                      { backgroundColor: badge.bg, color: badge.fg },
+                    ]}
+                  >
+                    {badge.label}
+                  </Text>
+                  <View style={styles.markerBody}>
+                    <Text>
+                      <Text style={styles.markerHeadline}>{m.label}</Text>
+                      <Text style={styles.markerValue}> — {m.value}</Text>
+                    </Text>
+                    <Text style={styles.markerBasis}>{m.basis}</Text>
+                    <Text style={styles.markerCorrectAt}>
+                      ↳ Correct at {m.correctable_at}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
 
         <Text style={styles.sectionHeader}>Verdict</Text>
         <Text style={styles.body}>{card.verdict}</Text>

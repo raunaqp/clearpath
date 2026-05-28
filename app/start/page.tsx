@@ -9,6 +9,7 @@ import { getBrowserSupabase } from "@/lib/auth/supabase-browser";
 import { JourneyProgress } from "@/components/layout/JourneyProgress";
 import { DemoPacketBar } from "@/components/landing/DemoPacketBar";
 import { type DemoPacket } from "@/lib/demo-packets";
+import type { Persona } from "@/lib/wizard/types";
 import { countPdfPages, sha256Hex } from "@/lib/pdf-utils";
 import {
   validateEmail,
@@ -92,6 +93,11 @@ function StartPageInner() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
+  // Phase C — persona moved into intake (was a separate /wizard/[id]/persona
+  // gate). null = "not yet chosen"; the UI blocks Step 2 submit while null.
+  // The legacy /wizard/[id]/persona route stays as a fallback for any row
+  // that lands without a persona (legacy assessments, admin seeds, etc.).
+  const [persona, setPersona] = useState<Persona | null>(null);
   const [oneLiner, setOneLiner] = useState("");
   const [url, setUrl] = useState("");
   const [docs, setDocs] = useState<UploadedDoc[]>([]);
@@ -211,6 +217,11 @@ function StartPageInner() {
         setMobile(data.mobile ?? "");
         setOneLiner(data.one_liner ?? "");
         setUrl(data.url ?? "");
+        // Phase C — restore persona if the assessment already has one.
+        // Resumed rows from before Phase C will have null here; the user
+        // will be prompted to choose on Step 2 like a fresh intake.
+        const resumedPersona = data.wizard_answers?.persona as Persona | undefined;
+        if (resumedPersona) setPersona(resumedPersona);
         if (Array.isArray(data.uploaded_docs)) {
           setDocs(
             (
@@ -259,6 +270,7 @@ function StartPageInner() {
   const hasPendingUploads = docs.some((d) => d.status === "uploading");
   const hasFailedUploads = docs.some((d) => d.status === "failed");
   const step2Valid =
+    persona !== null &&
     validateOneLiner(oneLiner) === null &&
     validateUrl(url) === null &&
     !hasPendingUploads &&
@@ -319,6 +331,10 @@ function StartPageInner() {
     setMobile(packet.prefill.mobile);
     setOneLiner(packet.prefill.one_liner);
     setUrl(packet.prefill.url);
+    // Phase C — persona is now part of the intake; demo packets carry
+    // the right value so the customer goes straight from demo-click
+    // to Step 2 without an extra persona pick.
+    setPersona(packet.persona);
     setErrors({});
     setTouched({});
     // Update URL so submit handler picks up packet ID
@@ -490,6 +506,11 @@ function StartPageInner() {
         mobile: mobile || undefined,
         one_liner: oneLiner,
         url: url || undefined,
+        // Phase C — persona is now collected here. The /wizard/[id]/persona
+        // gate remains as fallback for rows without a persona set, so
+        // null is acceptable on the server side; the UI blocks submit
+        // while persona is null so a new intake never gets here without one.
+        ...(persona ? { persona } : {}),
         uploaded_docs: uploaded.map((d) => ({
           filename: d.filename,
           storage_path: d.storage_path,
@@ -571,6 +592,8 @@ function StartPageInner() {
 
           {step === 2 && (
             <Step2
+              persona={persona}
+              setPersona={setPersona}
               oneLiner={oneLiner}
               setOneLiner={(v) => {
                 setOneLiner(v);
@@ -692,6 +715,8 @@ function Step1({
 }
 
 function Step2({
+  persona,
+  setPersona,
   oneLiner,
   setOneLiner,
   oneLinerLen,
@@ -712,6 +737,8 @@ function Step2({
   onBack,
   onSubmit,
 }: {
+  persona: Persona | null;
+  setPersona: (p: Persona) => void;
   oneLiner: string;
   setOneLiner: (v: string) => void;
   oneLinerLen: number;
@@ -745,6 +772,11 @@ function Step2({
 
       <form onSubmit={onSubmit} noValidate>
         <div className="bg-[#FDFCF8] border border-[#D9D5C8] rounded-xl p-5 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
+
+          {/* Phase C — persona, formerly a separate /wizard/[id]/persona
+              gate. Sets framing for the rest of the form; the synthesizer
+              + Tier 2 reads wizard_answers.persona via /api/intake. */}
+          <PersonaPicker persona={persona} setPersona={setPersona} />
 
           {/* One-liner with helper + counter ABOVE the box */}
           <div>
@@ -1092,5 +1124,118 @@ function Field({
         helper && <p className="text-xs text-[#6B766F] mt-1.5">{helper}</p>
       )}
     </div>
+  );
+}
+
+// ───────────────────────────────────────────────────────────────────
+// Phase C — persona picker. Same three options + copy as
+// components/wizard/PersonaGate.tsx; lifted here so the question is
+// asked at intake instead of as a separate gate after submit.
+// PersonaGate.tsx is intentionally kept as a fallback for legacy rows
+// (assessments created before this change had no persona; the gate at
+// /wizard/[id]/persona handles them).
+// ───────────────────────────────────────────────────────────────────
+const PERSONA_OPTIONS: ReadonlyArray<{
+  value: Persona;
+  title: string;
+  subtitle: string;
+  detail: string;
+  forms: string;
+}> = [
+  {
+    value: "manufacturer_samd",
+    title: "I'm bringing a software-based medical product to market",
+    subtitle: "Software as a Medical Device (SaMD)",
+    detail:
+      "An app, SaaS, AI tool, or other software product that diagnoses, treats, monitors, or supports clinical decision-making.",
+    forms: "MD-3 / MD-7 path · software-centric questions",
+  },
+  {
+    value: "manufacturer_hardware",
+    title: "I'm bringing a physical medical device to market",
+    subtitle: "Hardware / instrument manufacturer",
+    detail:
+      "A physical device — diagnostic equipment, implant, instrument, monitor, or accessory — manufactured for sale or distribution.",
+    forms: "MD-3 (Class A/B) or MD-7 (Class C/D) · facility + ISO 13485 questions",
+  },
+  {
+    value: "clinical_investigation_researcher",
+    title: "I'm running a clinical investigation of a medical device",
+    subtitle: "Clinical Investigation researcher",
+    detail:
+      "A systematic study of an investigational medical device on human participants to assess safety, performance, or effectiveness.",
+    forms: "MD-22 → MD-23 · sponsor / EC / protocol questions",
+  },
+];
+
+function PersonaPicker({
+  persona,
+  setPersona,
+}: {
+  persona: Persona | null;
+  setPersona: (p: Persona) => void;
+}) {
+  return (
+    <fieldset>
+      <legend className="block text-sm font-medium text-[#0E1411] mb-1">
+        Which path applies to you?
+        <span className="text-[#993C1D] ml-0.5">*</span>
+      </legend>
+      <p className="text-xs text-[#6B766F] leading-relaxed mb-3">
+        Pick the one that matches your goal. We&apos;ll tune the wizard, the
+        gap analysis, and your Readiness Report to your path. You can&apos;t
+        change this later for this assessment.
+      </p>
+      <div className="space-y-2.5">
+        {PERSONA_OPTIONS.map((opt) => {
+          const checked = persona === opt.value;
+          return (
+            <label
+              key={opt.value}
+              htmlFor={`intake_persona_${opt.value}`}
+              className={`block px-4 py-3 rounded-lg cursor-pointer transition-colors ${
+                checked
+                  ? "border-2 border-[#0F6E56] bg-[#EAF3EF]"
+                  : "border border-[#D9D5C8] bg-white hover:bg-[#FAFAF7]"
+              }`}
+            >
+              <input
+                id={`intake_persona_${opt.value}`}
+                type="radio"
+                name="intake_persona"
+                value={opt.value}
+                checked={checked}
+                onChange={() => setPersona(opt.value)}
+                className="sr-only"
+              />
+              <div className="flex items-start gap-3">
+                <span
+                  aria-hidden
+                  className={`mt-1 inline-flex w-4 h-4 rounded-full shrink-0 ${
+                    checked
+                      ? "bg-[#0F6E56] ring-4 ring-[#0F6E56]/20"
+                      : "border border-[#D9D5C8] bg-white"
+                  }`}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[14px] font-medium text-[#0E1411] leading-snug">
+                    {opt.title}
+                  </p>
+                  <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-[#6B766F] mt-1">
+                    {opt.subtitle}
+                  </p>
+                  <p className="text-xs text-[#2A3430] leading-relaxed mt-1.5">
+                    {opt.detail}
+                  </p>
+                  <p className="font-mono text-[10px] tracking-[0.1em] uppercase text-[#BA7517] mt-1.5">
+                    {opt.forms}
+                  </p>
+                </div>
+              </div>
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
   );
 }

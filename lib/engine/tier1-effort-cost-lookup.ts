@@ -253,6 +253,144 @@ export const EFFORT_COST_LIBRARY: EffortCostEntry[] = [
       "Reviewers and ethics committees increasingly reference the ICMR 2023 AI-in-health-research ethics guideline — bias evaluation, explainability, and Indian-population validity typically need explicit treatment for AI/ML devices.",
     review_status: "estimate",
   },
+
+  // Phase 2c hardware additions — bible §4.B Block 4 (Device Master File
+  // §8.11 biocomp, §8.14 sterilization, §8.17 stability, §8.20 batch CoA),
+  // Block 2 (Plant Master File), Block 3 (QMS — overlaps with iso_13485
+  // above), plus the BIS / IS conformance lookup the synthesizer doesn't
+  // surface yet but which reviewers expect for Class B/C/D filings.
+
+  {
+    key: "biocompatibility_iso_10993",
+    display_name: "Biocompatibility evidence (ISO 10993)",
+    patterns: [
+      /biocomp/i,
+      /iso\s*10993/i,
+      /sensiti[sz]ation/i,
+      /irritation\s+test/i,
+      /implantation\s+test/i,
+      /haemocompatib/i,
+      /hemocompatib/i,
+    ],
+    dim_fallback: ["technical_docs"],
+    // Cost band varies wide by contact tier: an intact-skin ISO 10993-10
+    // panel is ~Rs 1.5L; a long-term implant full panel (-1/-4/-6/-10/-11
+    // /-17/-18) at a NABL-accredited lab is Rs 6-12L. Use a middle range
+    // here; the Opus tailoring call narrows for the specific device.
+    effort_months: { low: 3, high: 6 },
+    cost_inr_lakhs: { low: 2, high: 8 },
+    why_it_matters_seed:
+      "Reviewers will likely expect ISO 10993-aligned biocompatibility evidence at the tier matching patient contact (-10 for skin, -4 for blood, -6 for implant, -11 for systemic toxicity). DMF §8.11 is a non-negotiable Class B/C/D checklist item — missing it typically holds the submission.",
+    review_status: "estimate",
+  },
+  {
+    key: "sterilization_validation",
+    display_name: "Sterilization validation (EO / steam / gamma)",
+    patterns: [
+      /sterili[sz]ation\s+validation/i,
+      /steriliz(e|ation)/i,
+      /\beto\b/i,
+      /ethylene\s+oxide/i,
+      /gamma\s+sterilis/i,
+      /steam\s+autoclav/i,
+      /iso\s*11135/i,
+      /iso\s*11137/i,
+    ],
+    dim_fallback: ["technical_docs"],
+    effort_months: { low: 2, high: 4 },
+    cost_inr_lakhs: { low: 1.5, high: 3 },
+    why_it_matters_seed:
+      "Reviewers will likely expect a documented sterilization validation per the chosen method (ISO 11135 for EO, ISO 11137 for radiation, ISO 17665 for steam) — bioburden, sterility assurance level (SAL 10^-6), dose mapping or biological-indicator data, and packaging-integrity validation. DMF §8.14.",
+    review_status: "estimate",
+  },
+  {
+    key: "device_master_file",
+    display_name: "Device Master File (DMF, Appendix II)",
+    patterns: [
+      /device\s+master\s+file/i,
+      /\bdmf\b/i,
+      /appendix\s+ii/i,
+      /technical\s+file/i,
+    ],
+    dim_fallback: ["technical_docs"],
+    effort_months: { low: 2, high: 4 },
+    cost_inr_lakhs: { low: 1, high: 3 },
+    why_it_matters_seed:
+      "The DMF (Appendix II of the Fourth Schedule) is the spine of every MDR-2017 manufacturing-licence submission — descriptive info, classification, product spec, predicate, labelling, design & mfg, essential principles, risk file, V&V, biocomp, sterilization, stability, clinical evidence, PMS, batch CoA. Reviewers cross-check every claim against this file.",
+    review_status: "estimate",
+  },
+  {
+    key: "plant_master_file",
+    display_name: "Plant Master File (PMF, Appendix I)",
+    patterns: [
+      /plant\s+master\s+file/i,
+      /\bpmf\b/i,
+      /appendix\s+i\b/i,
+      /site\s+master\s+file/i,
+    ],
+    dim_fallback: ["quality_system"],
+    effort_months: { low: 2, high: 4 },
+    cost_inr_lakhs: { low: 1, high: 2.5 },
+    why_it_matters_seed:
+      "The Plant Master File (Appendix I of the Fourth Schedule) documents the manufacturing site — layout, equipment, personnel qualifications, environmental conditions (Annexure A), and storage. Required for SLA and CLA filings; reviewers visit / audit against this file.",
+    review_status: "estimate",
+  },
+  {
+    key: "batch_release_coa",
+    display_name: "Batch release Certificates of Analysis (≥3 batches)",
+    patterns: [
+      /batch\s+release/i,
+      /certificate\s+of\s+analysis/i,
+      /\bcoa\b/i,
+      /three\s+batch/i,
+      /3\s+batch/i,
+    ],
+    dim_fallback: ["technical_docs"],
+    effort_months: { low: 2, high: 4 },
+    cost_inr_lakhs: { low: 0.5, high: 1.5 },
+    why_it_matters_seed:
+      "MD-7 checklist §8.20 expects Certificates of Analysis for at least three consecutive production batches — a basic batch-record system, in-process controls, and release criteria. Lighter than full clinical evidence but a hard gate.",
+    review_status: "estimate",
+  },
+  {
+    key: "stability_data",
+    display_name: "Stability data (real-time + accelerated)",
+    patterns: [
+      /stability\s+(data|stud|test)/i,
+      /shelf\s+life/i,
+      /accelerated\s+ageing/i,
+      /aging\s+protocol/i,
+      /real[-\s]?time\s+stability/i,
+    ],
+    dim_fallback: ["technical_docs"],
+    // Long lead-time item — accelerated data is provisional, real-time
+    // runs for 1-3 years in the background; "months" here reflects the
+    // protocol-and-initial-data effort, not the wall-clock to a final
+    // shelf-life claim.
+    effort_months: { low: 3, high: 6 },
+    cost_inr_lakhs: { low: 1, high: 3 },
+    why_it_matters_seed:
+      "DMF §8.17 expects real-time and accelerated stability evidence per ASTM F1980 / ICH Q1A — chamber qualification, time points, performance and packaging assays. Accelerated data is acceptable provisionally with real-time running concurrently.",
+    review_status: "estimate",
+  },
+  {
+    key: "bis_standards",
+    display_name: "BIS / IS / IEC standards conformance",
+    patterns: [
+      /\bbis\b/i,
+      /\bis\s+\d{4}/i, // matches "IS 13485", "IS 1234" — Indian Standards
+      /bureau\s+of\s+indian\s+standards/i,
+      /iec\s+\d{5}/i, // IEC 60601 etc.
+      /iec\s+60601/i,
+      /iec\s+61010/i,
+    ],
+    dim_fallback: ["technical_docs"],
+    effort_months: { low: 2, high: 4 },
+    cost_inr_lakhs: { low: 2, high: 5 },
+    why_it_matters_seed:
+      "Where a BIS standard exists for the device family (electromedical IEC 60601 series, electrical safety IEC 61010, etc.), CDSCO expects conformance — third-party testing at a NABL/BIS-recognised lab, certificates, and gap analyses for any deviations.",
+    review_status: "estimate",
+  },
 ];
 
 /**
@@ -284,5 +422,8 @@ export function formatEffort(entry: EffortCostEntry): string {
 export function formatInrLakhs(low: number, high: number): string {
   const round = (n: number) =>
     Number.isInteger(n) ? n.toString() : n.toFixed(1).replace(/\.0$/, "");
-  return `₹${round(low)}–${round(high)}L`;
+  // Use "Rs " instead of "₹" — react-pdf's default Helvetica lacks the
+  // Indian Rupee glyph (U+20B9), which renders as a superscript "1"
+  // in the PDF. The HTML/web surfaces still use "₹" via Tailwind/CSS.
+  return `Rs ${round(low)}–${round(high)}L`;
 }

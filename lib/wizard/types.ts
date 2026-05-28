@@ -27,6 +27,29 @@ export type DataSensitivity =
   | "none";
 export type CommercialStage = "pre_mvp" | "mvp" | "scaling" | "filed";
 
+// Phase 2c — hardware-persona Tier A suffix (Q8 + Q9).
+// Bible §4.D #6 (predicate existence) and §4.D #2 (patient-contact tier).
+// Only rendered when wizard_answers.persona === "manufacturer_hardware".
+// All other inferred fields (sterile, drug, radiation, mfg-location,
+// veterinary, measuring, sterilization-mode) follow the
+// "make assumptions, validate in editor" pattern — surfaced as
+// [ESTIMATED]/[ASSUMED] markers on the card, not asked up front.
+export type PredicateExists =
+  | "yes_indian"
+  | "yes_only_foreign"
+  | "no"
+  | "not_sure";
+
+export type PatientContact =
+  | "no_contact"
+  | "surface_intact_skin"
+  | "surface_mucosal"
+  | "blood_path_indirect"
+  | "blood_path_direct"
+  | "invasive_transient_lt_24h"
+  | "invasive_long_term_30d"
+  | "implant_gt_30d";
+
 // Tier B (Sprint 2 Story 2.5 Phase 3) — CDSCO manufacturing-license-specific
 // follow-up wizard gated to paying Tier 2 customers. Lives in the same
 // jsonb column (assessments.wizard_answers) as Tier A — clean additive
@@ -96,6 +119,14 @@ export type WizardAnswers = {
   q6?: DataSensitivity[];
   q7?: CommercialStage;
 
+  // Phase 2c — hardware-persona Tier A suffix. Only present when
+  // persona === "manufacturer_hardware"; SaMD / clinical-investigation
+  // founders never see these questions and the fields stay undefined.
+  // Field names follow the q1..q7 convention so WizardClient's
+  // `q${step}` key construction picks them up without special-casing.
+  q8?: PredicateExists;
+  q9?: PatientContact;
+
   // Tier B — Draft Pack intake (Sprint 2 Story 2.5 Phase 3)
   b1_intended_use_statement?: string;
   b2_use_environment?: UseEnvironment;
@@ -163,6 +194,24 @@ export const CommercialStageSchema = z.enum([
   "filed",
 ]);
 
+export const PredicateExistsSchema = z.enum([
+  "yes_indian",
+  "yes_only_foreign",
+  "no",
+  "not_sure",
+]);
+
+export const PatientContactSchema = z.enum([
+  "no_contact",
+  "surface_intact_skin",
+  "surface_mucosal",
+  "blood_path_indirect",
+  "blood_path_direct",
+  "invasive_transient_lt_24h",
+  "invasive_long_term_30d",
+  "implant_gt_30d",
+]);
+
 export const WizardAnswersSchema = z.object({
   q1: ClinicalStateSchema,
   q2: InfoSignificanceSchema,
@@ -177,6 +226,11 @@ export const WizardAnswersSchema = z.object({
 export const WizardAnswersPartialSchema = WizardAnswersSchema.partial().extend({
   // Phase 2a — persona may be saved on its own from the pre-Q1 gate.
   persona: PersonaSchema.optional(),
+  // Phase 2c — hardware Tier A suffix. Optional in partial save shape;
+  // the wizard page enforces both before letting the hardware founder
+  // hit /readiness.
+  q8: PredicateExistsSchema.optional(),
+  q9: PatientContactSchema.optional(),
 });
 
 // Tier B schemas (Sprint 2 Story 2.5 Phase 3)
