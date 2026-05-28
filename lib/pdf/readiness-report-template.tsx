@@ -24,6 +24,7 @@ import {
   Font,
 } from "@react-pdf/renderer";
 import React from "react";
+import { PDF_FONT_SANS, PDF_FONT_SERIF } from "./fonts";
 
 // Disable react-pdf's default hyphenation so narrow table cells like
 // "No EC-approved clinical investigation plan" wrap at word boundaries
@@ -111,6 +112,15 @@ const COMPLEXITY_LABEL: Record<string, string> = {
   high: "High complexity",
 };
 
+const MARKER_BADGE: Record<
+  "estimated" | "assumed" | "extracted",
+  { bg: string; fg: string; label: string }
+> = {
+  estimated: { bg: AMBER_LIGHT, fg: AMBER, label: "ESTIMATED" },
+  assumed: { bg: CORAL_LIGHT, fg: CORAL, label: "ASSUMED" },
+  extracted: { bg: TEAL_LIGHT, fg: TEAL_DEEP, label: "EXTRACTED" },
+};
+
 // ─────────────────────────────────────────────────────────────
 // Styles
 // ─────────────────────────────────────────────────────────────
@@ -121,7 +131,7 @@ const styles = StyleSheet.create({
     paddingTop: 44,
     paddingBottom: 56,
     paddingHorizontal: 44,
-    fontFamily: "Helvetica",
+    fontFamily: PDF_FONT_SANS,
     fontSize: 10.5,
     lineHeight: 1.55,
     color: TEXT_DARK,
@@ -135,7 +145,7 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   brandMark: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 14,
     color: TEAL_DEEP,
     letterSpacing: 1.2,
@@ -172,11 +182,11 @@ const styles = StyleSheet.create({
     color: TEAL_DEEP,
     letterSpacing: 0.5,
     textTransform: "uppercase",
-    fontFamily: "Helvetica-Bold",
+    fontFamily: PDF_FONT_SANS, fontWeight: "bold",
     marginBottom: 4,
   },
   sectionTitle: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 18,
     color: TEXT_DARK,
     marginBottom: 4,
@@ -189,7 +199,7 @@ const styles = StyleSheet.create({
 
   // hero title (page 1)
   heroTitle: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 22,
     color: TEXT_DARK,
     marginBottom: 4,
@@ -229,16 +239,16 @@ const styles = StyleSheet.create({
     color: TEXT_MUTED,
     letterSpacing: 0.4,
     textTransform: "uppercase",
-    fontFamily: "Helvetica-Bold",
+    fontFamily: PDF_FONT_SANS, fontWeight: "bold",
     marginBottom: 4,
   },
   scoreValue: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 14,
     color: TEXT_DARK,
   },
   scoreValueSmall: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 11,
     color: TEXT_DARK,
   },
@@ -295,10 +305,81 @@ const styles = StyleSheet.create({
   },
   readinessDotOn: { backgroundColor: TEAL_DEEP },
   readinessScoreText: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 10,
     color: TEXT_DARK,
     marginLeft: 6,
+  },
+
+  // Phase 2c (Day 3 follow-up) — assumptions/estimates strip. Mirrors
+  // the card PDF block; sits between the scorecard grid and the
+  // triggers chips so a regulator skim sees the assumptions before
+  // the conclusions. Renders nothing when the markers array is empty
+  // (SaMD / clinical-investigation founders).
+  markerSection: {
+    marginTop: 10,
+    marginBottom: 4,
+    padding: 12,
+    borderRadius: 6,
+    borderWidth: 0.5,
+    borderColor: "#E8D4A6",
+    backgroundColor: "#FCF8F1",
+  },
+  markerHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "baseline",
+    marginBottom: 4,
+  },
+  markerTitle: {
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
+    fontSize: 11,
+    color: TEXT_DARK,
+  },
+  markerCorrectHint: {
+    fontSize: 7.5,
+    color: AMBER,
+    letterSpacing: 1.0,
+    textTransform: "uppercase",
+  },
+  markerIntro: {
+    fontSize: 9,
+    color: TEXT_MUTED,
+    marginBottom: 6,
+    lineHeight: 1.45,
+  },
+  markerRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    paddingVertical: 4,
+  },
+  markerBadge: {
+    fontSize: 7,
+    fontFamily: PDF_FONT_SANS, fontWeight: "bold",
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+    paddingVertical: 2,
+    paddingHorizontal: 5,
+    borderRadius: 3,
+    width: 56,
+    textAlign: "center",
+  },
+  markerBody: { flex: 1, fontSize: 9.5 },
+  markerHeadline: { fontFamily: PDF_FONT_SANS, fontWeight: "bold", color: TEXT_DARK },
+  markerValue: { color: TEXT_DARK },
+  markerBasis: {
+    fontSize: 8.5,
+    color: TEXT_MUTED,
+    marginTop: 1,
+    lineHeight: 1.4,
+  },
+  markerCorrectAt: {
+    fontSize: 8,
+    color: TEAL_DEEP,
+    marginTop: 2,
+    letterSpacing: 0.3,
+    textTransform: "uppercase",
   },
 
   // callout box (large)
@@ -317,7 +398,7 @@ const styles = StyleSheet.create({
     color: TEAL_DEEP,
     letterSpacing: 0.5,
     textTransform: "uppercase",
-    fontFamily: "Helvetica-Bold",
+    fontFamily: PDF_FONT_SANS, fontWeight: "bold",
     marginBottom: 3,
   },
   calloutBody: {
@@ -338,7 +419,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   stepNumber: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 13,
     color: TEAL_DEEP,
     lineHeight: 1.2,
@@ -348,7 +429,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   stepName: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 11,
     color: TEXT_DARK,
     lineHeight: 1.25,
@@ -381,7 +462,7 @@ const styles = StyleSheet.create({
     color: TEXT_MUTED,
     letterSpacing: 0.4,
     textTransform: "uppercase",
-    fontFamily: "Helvetica-Bold",
+    fontFamily: PDF_FONT_SANS, fontWeight: "bold",
     marginRight: 6,
   },
   formPill: {
@@ -393,7 +474,7 @@ const styles = StyleSheet.create({
     marginRight: 6,
     marginBottom: 4,
     fontSize: 9.5,
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
   },
 
   // gap table
@@ -415,7 +496,7 @@ const styles = StyleSheet.create({
     color: TEXT_MUTED,
     letterSpacing: 0.4,
     textTransform: "uppercase",
-    fontFamily: "Helvetica-Bold",
+    fontFamily: PDF_FONT_SANS, fontWeight: "bold",
   },
   gapRow: {
     flexDirection: "row",
@@ -442,7 +523,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 8.5,
     textAlign: "center",
     borderWidth: 1,
@@ -466,7 +547,7 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   phaseName: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 11,
     color: TEXT_DARK,
   },
@@ -484,7 +565,7 @@ const styles = StyleSheet.create({
   phaseCost: {
     fontSize: 9,
     color: TEAL_DEEP,
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
   },
   phaseWhat: {
     fontSize: 9.5,
@@ -505,7 +586,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   insightTitle: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 11,
     color: TEXT_DARK,
     marginBottom: 3,
@@ -530,11 +611,11 @@ const styles = StyleSheet.create({
     color: TEAL_DEEP,
     letterSpacing: 0.5,
     textTransform: "uppercase",
-    fontFamily: "Helvetica-Bold",
+    fontFamily: PDF_FONT_SANS, fontWeight: "bold",
     marginRight: 8,
   },
   exampleTopic: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 11.5,
     color: TEXT_DARK,
   },
@@ -558,7 +639,7 @@ const styles = StyleSheet.create({
     fontSize: 8,
     letterSpacing: 0.4,
     textTransform: "uppercase",
-    fontFamily: "Helvetica-Bold",
+    fontFamily: PDF_FONT_SANS, fontWeight: "bold",
     marginBottom: 3,
   },
   goodLabel: { color: GREEN_DARK },
@@ -582,7 +663,7 @@ const styles = StyleSheet.create({
     color: TEAL_DEEP,
     letterSpacing: 0.4,
     textTransform: "uppercase",
-    fontFamily: "Helvetica-Bold",
+    fontFamily: PDF_FONT_SANS, fontWeight: "bold",
     marginBottom: 2,
   },
   exampleAnnotationBody: {
@@ -801,6 +882,51 @@ function ScorecardPage({
           </View>
         </View>
       </View>
+
+      {report.meta.inference_markers && report.meta.inference_markers.length > 0 && (
+        // Outer block wraps (long marker lists from hardware-persona
+        // reports can run > 1 page); individual rows stay atomic via
+        // their own wrap={false} so a single marker never splits mid-row.
+        <View style={styles.markerSection}>
+          <View style={styles.markerHeaderRow} wrap={false}>
+            <Text style={styles.markerTitle}>
+              What we assumed about your device
+            </Text>
+            <Text style={styles.markerCorrectHint}>Correct in editor</Text>
+          </View>
+          <Text style={styles.markerIntro}>
+            We inferred the fields below from your wizard answers and
+            uploaded materials. Correct anything that&apos;s wrong &mdash;
+            the Submission Pack regenerates from your corrected values.
+          </Text>
+          {report.meta.inference_markers.map((m, i) => {
+            const badge = MARKER_BADGE[m.status];
+            return (
+              <View key={`${m.field}-${i}`} style={styles.markerRow} wrap={false}>
+                <Text
+                  style={{
+                    ...styles.markerBadge,
+                    backgroundColor: badge.bg,
+                    color: badge.fg,
+                  }}
+                >
+                  {badge.label}
+                </Text>
+                <View style={styles.markerBody}>
+                  <Text>
+                    <Text style={styles.markerHeadline}>{m.label}</Text>
+                    <Text style={styles.markerValue}> &mdash; {m.value}</Text>
+                  </Text>
+                  <Text style={styles.markerBasis}>{m.basis}</Text>
+                  <Text style={styles.markerCorrectAt}>
+                    ↳ Correct at {m.correctable_at}
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      )}
 
       <View style={{ marginTop: 8 }}>
         <Text style={styles.scoreLabel}>What triggered this classification</Text>

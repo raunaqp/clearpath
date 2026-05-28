@@ -7,6 +7,7 @@ import {
 } from "@react-pdf/renderer";
 import React from "react";
 import type { ReadinessCard } from "@/lib/schemas/readiness-card";
+import { PDF_FONT_SANS, PDF_FONT_SERIF } from "./fonts";
 
 // Brand tokens — kept aligned with draft-pack-template.
 const TEAL_DEEP = "#0F6E56";
@@ -87,7 +88,7 @@ const styles = StyleSheet.create({
     paddingTop: 48,
     paddingBottom: 56,
     paddingHorizontal: 48,
-    fontFamily: "Helvetica",
+    fontFamily: PDF_FONT_SANS,
     fontSize: 10.5,
     lineHeight: 1.55,
     color: TEXT_DARK,
@@ -99,7 +100,7 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   brandMark: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 14,
     color: TEAL_DEEP,
     letterSpacing: 1.2,
@@ -125,7 +126,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   productName: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 24,
     color: TEXT_DARK,
     lineHeight: 1.15,
@@ -154,7 +155,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   scoreNumber: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 32,
     lineHeight: 1.05,
   },
@@ -183,11 +184,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderRadius: 999,
     fontSize: 9,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: PDF_FONT_SANS, fontWeight: "bold",
     letterSpacing: 0.4,
   },
   sectionHeader: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 13,
     color: TEAL_DEEP,
     marginTop: 14,
@@ -208,7 +209,7 @@ const styles = StyleSheet.create({
   },
   gapPill: {
     fontSize: 8,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: PDF_FONT_SANS, fontWeight: "bold",
     letterSpacing: 0.4,
     textTransform: "uppercase",
     paddingVertical: 2,
@@ -281,7 +282,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   markerTitle: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 11,
     color: TEXT_DARK,
   },
@@ -305,7 +306,7 @@ const styles = StyleSheet.create({
   },
   markerBadge: {
     fontSize: 7,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: PDF_FONT_SANS, fontWeight: "bold",
     letterSpacing: 0.4,
     textTransform: "uppercase",
     paddingVertical: 2,
@@ -319,7 +320,7 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
   },
   markerHeadline: {
-    fontFamily: "Helvetica-Bold",
+    fontFamily: PDF_FONT_SANS, fontWeight: "bold",
     color: TEXT_DARK,
   },
   markerValue: {
@@ -532,7 +533,7 @@ export const ReadinessCardDocument = ({
                   {gap.severity}
                 </Text>
                 <View style={styles.gapBody}>
-                  <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 10 }}>
+                  <Text style={{ fontFamily: PDF_FONT_SANS, fontWeight: "bold", fontSize: 10 }}>
                     {gap.gap_title}
                   </Text>
                   <Text style={{ fontSize: 9.5, color: TEXT_MUTED, marginTop: 2 }}>
@@ -573,7 +574,7 @@ export const ReadinessCardDocument = ({
 
         <Text style={styles.sectionHeader}>Timeline</Text>
         <View style={styles.timelineBox}>
-          <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 11 }}>
+          <Text style={{ fontFamily: PDF_FONT_SANS, fontWeight: "bold", fontSize: 11 }}>
             {card.timeline.display}
           </Text>
           <Text

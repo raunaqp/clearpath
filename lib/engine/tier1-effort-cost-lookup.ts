@@ -422,8 +422,8 @@ export function formatEffort(entry: EffortCostEntry): string {
 export function formatInrLakhs(low: number, high: number): string {
   const round = (n: number) =>
     Number.isInteger(n) ? n.toString() : n.toFixed(1).replace(/\.0$/, "");
-  // Use "Rs " instead of "₹" — react-pdf's default Helvetica lacks the
-  // Indian Rupee glyph (U+20B9), which renders as a superscript "1"
-  // in the PDF. The HTML/web surfaces still use "₹" via Tailwind/CSS.
-  return `Rs ${round(low)}–${round(high)}L`;
+  // PDF + web both render ₹ correctly now — `lib/pdf/fonts.ts` registers
+  // IBM Plex (full Unicode) for every react-pdf template, so the PDF
+  // matches the web card.
+  return `₹${round(low)}–${round(high)} L`;
 }

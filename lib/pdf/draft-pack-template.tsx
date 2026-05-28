@@ -14,6 +14,7 @@ import {
   applicableRegulations,
   type ApplicableRegulation,
 } from "@/lib/cdsco/regulations-reference";
+import { PDF_FONT_SANS, PDF_FONT_SERIF } from "./fonts";
 
 // ClearPath brand
 const TEAL_DEEP = "#0F6E56";
@@ -29,7 +30,7 @@ const styles = StyleSheet.create({
     paddingTop: 56,
     paddingBottom: 64,
     paddingHorizontal: 56,
-    fontFamily: "Helvetica",
+    fontFamily: PDF_FONT_SANS,
     fontSize: 10.5,
     lineHeight: 1.55,
     color: TEXT_DARK,
@@ -37,12 +38,12 @@ const styles = StyleSheet.create({
   coverPage: {
     backgroundColor: BG_WARM,
     padding: 56,
-    fontFamily: "Helvetica",
+    fontFamily: PDF_FONT_SANS,
     color: TEXT_DARK,
     justifyContent: "space-between",
   },
   brandMark: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 18,
     color: TEAL_DEEP,
     letterSpacing: 1.2,
@@ -54,13 +55,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   coverTitle: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 32,
     color: TEAL_DEEP,
     lineHeight: 1.15,
   },
   coverProduct: {
-    fontFamily: "Times-Roman",
+    fontFamily: PDF_FONT_SERIF,
     fontSize: 22,
     color: TEXT_DARK,
     marginTop: 14,
@@ -85,7 +86,7 @@ const styles = StyleSheet.create({
     lineHeight: 1.5,
   },
   sectionHeader: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 20,
     color: TEAL_DEEP,
     marginBottom: 4,
@@ -102,7 +103,7 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   h2: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 13,
     color: TEXT_DARK,
     marginTop: 14,
@@ -114,7 +115,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   bold: {
-    fontFamily: "Helvetica-Bold",
+    fontFamily: PDF_FONT_SANS, fontWeight: "bold",
   },
   italic: {
     fontStyle: "italic",
@@ -197,7 +198,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   regName: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 12,
     color: TEXT_DARK,
   },
@@ -252,13 +253,13 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   maturityValue: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 22,
     color: TEXT_DARK,
     marginBottom: 6,
   },
   maturityValueUnit: {
-    fontFamily: "Helvetica",
+    fontFamily: PDF_FONT_SANS,
     fontSize: 11,
     color: TEXT_MUTED,
   },
