@@ -1,6 +1,6 @@
 # Hardware Submission Pack — Section Matrix (₹2,499 Tier 2, manufacturer_hardware persona)
 
-**Status:** Draft v1 — pending founder + Stream A review before pack build starts.
+**Status:** v2 — reconciled against bible §4 + §8.x (2026-05-29). Approved for build.
 **Owner:** Sprint 3 Phase 2c.
 **Source:** Derived from `docs/specs/cdsco-regulatory-forms-reference.md` §4 (manufacturer journey) and §8.1–§8.20 (DMF sub-sections), Sprint 2 SaMD 12-section pack precedent, and Sprint 3 scope discussion.
 
@@ -35,15 +35,15 @@ This pack is the **₹2,499 Tier 2 deliverable** for `manufacturer_hardware` per
 | 1 | Executive Summary | DMF §8.1 | Reuse SaMD §01 | LLM (Opus consolidator) | Reads all other sections; emits last |
 | 2 | Device Description | DMF §8.2 + §8.3 | Reuse SaMD §02 | LLM (Sonnet) | |
 | 3 | Intended Use | DMF §8.2.* | Reuse SaMD §03 | LLM (Sonnet) | |
-| 4 | Classification & Risk | §4 lines 167–173 + DMF §8.4 | **Reuse w/ hardware overlay** | LLM (Sonnet) | Hardware A/B/C/D derivation from contact + sterile + drug + radiation. NOT SaMD Q1×Q2. Calls out MD-3 vs MD-7 path. |
+| 4 | Classification & Pathway | §4 sub-case table (lines 167–173) + DMF §8.1 | **Reuse w/ hardware overlay** | LLM (Sonnet) | Hardware A/B/C/D derivation from contact + sterile + drug + radiation. NOT SaMD Q1×Q2. Calls out MD-3 vs MD-7 path. Risk content lives in §10, not here. |
 | 5 | Product Specification | DMF §8.4 | Reuse SaMD §05 | LLM (Sonnet) | |
 | 6 | Predicate Comparison | DMF §8.5 | **Reuse w/ overlay** | LLM (Sonnet) | If `q8_predicate_exists = no`, flags MD-26/MD-27 pre-permission as required |
 | 7 | Labelling | DMF §8.6 | Reuse SaMD §07 | LLM (Sonnet) | |
-| 8 | Design & Manufacturing | DMF §8.7 | **Reuse w/ overlay** | LLM (Sonnet) | Hardware BOM + process steps; no software lifecycle here |
+| 8 | Design & Manufacturing | DMF §8.7 + §8.12 (drug content sub-block) | **Reuse w/ overlay** | LLM (Sonnet) | Hardware BOM + process steps; no software lifecycle here. **Conditional sub-block: §8.12 medicinal-substances data** when `drug_content !== "no"` — describes drug component, leachables source, DCG(I) joint review note. |
 | 9 | Essential Principles Conformity | DMF §8.8 | Reuse SaMD §09 | LLM (Sonnet) | Universal checklist; same for both personas |
 | 10 | Risk Management (ISO 14971) | DMF §8.9 | Reuse SaMD §10 | LLM (Sonnet) | |
-| 11 | Verification & Validation | DMF §8.10 | **Reuse w/ overlay** | LLM (Sonnet) | Skip software V&V sub-block unless `software_in_device = true` |
-| 12 | Clinical Evidence & PMS | DMF §8.18 + §8.19 | Reuse SaMD §12 | LLM (Sonnet) | |
+| 11 | Verification & Validation | DMF §8.10 + §8.15 (software V&V sub-block) | **Reuse w/ overlay** | LLM (Sonnet) | Always emits hardware V&V (electrical/mechanical/performance per IEC 60601-family + product standards). **Conditional structured sub-block: §8.15 software V&V** (`software_vv: { lifecycle_model, classification, verification_methods, test_evidence }` or null) when `software_in_device = true`. Schema-locked, not free prose, so it doesn't drift across runs. |
+| 12 | Clinical Evidence & PMS | DMF §8.18 + §8.19 + §8.16 (animal preclinical sub-block) | **Reuse w/ overlay** | LLM (Sonnet) | **Conditional sub-block: §8.16 animal preclinical** when `patient_contact ∈ {invasive_long_term_30d, implant_gt_30d}` OR `drug_content !== "no"`. Frames animal data as preceding clinical evidence; references species, study design, endpoints. |
 | 13 | **Biocompatibility (ISO 10993)** | DMF §8.11 (line 298) | **NEW** | LLM (Sonnet) | **Gated on `q9_patient_contact != no_contact`.** Tier-matched: surface contact → 10993-5/-10; mucosal → +10993-23; blood-path → +10993-4; implant → +10993-6/-11; resorbable → +10993-13/-17/-18 (degradation/leachables). |
 | 14 | **Sterilization Validation** | DMF §8.14 (line 301) | **NEW** | Template + LLM rationale | **Gated on `sterile = yes`.** Method-specific standard (ISO 11135 EO / ISO 11137 radiation / ISO 17665 steam / aseptic). Founder selects method; LLM drafts the validation-rationale narrative. |
 | 15 | **Stability Data** | DMF §8.17 (line 304) | **NEW** | Template | Real-time + accelerated, always present for hardware. Mostly structural placeholder rows founder fills in editor. |
@@ -52,23 +52,32 @@ This pack is the **₹2,499 Tier 2 deliverable** for `manufacturer_hardware` per
 | 18 | **QMS Compliance attestation** | Block 3, lines 270–284 (11 sub-sections) | **NEW** | Attestation checklist | NOT LLM-drafted. Founder confirms each of the 11 QMS sub-sections exists in their internal docs. |
 | 19 | **Conditional NOCs & Adjacent Permissions** | Blocks 5 + 6, lines 309–322 | **NEW** | Template | Surfaces DAHD / BARC / PNDT / DCG(I) NOCs based on wizard answers (veterinary / radiation / PNDT-scope / drug-content). Conditionally appears.|
 
-**Reuse count:** 12 SaMD generators reused (4 with hardware overlay)
+**Reuse count:** 12 SaMD generators reused (5 with hardware overlay — §4, §6, §8, §11, §12)
 **New:** 7 sections (only 2 — Biocomp, Sterilization — need LLM reasoning; 5 are deterministic templates or attestation checklists)
+**Conditional sub-blocks nested in existing sections:** §8.12 medicinal substances (in §8), §8.15 software V&V (in §11), §8.16 animal preclinical (in §12). Bible-mandated dossier content that doesn't deserve its own top-level section but must surface when triggered.
 
 ---
 
 ## Gating rules — when sections appear or stay quiet
 
-| Section | Always present | Gated on |
-|---|---|---|
-| 13 Biocompatibility | — | `q9_patient_contact != no_contact` |
-| 14 Sterilization | — | `sterile_inferred = yes` OR founder confirms `sterile = yes` |
-| 15 Stability | ✓ (hardware always) | — |
-| 16 Batch Release | ✓ (hardware always) | — |
-| 17 PMF attestation | ✓ | — |
-| 18 QMS attestation | ✓ | — |
-| 19 Conditional NOCs | — | At least one applicable: veterinary / ionising radiation / PNDT-scope / drug-content |
-| Software gates anywhere | — | `software_in_device = true` (from one-liner / pitch-extract / connectivity signal) |
+| Section / sub-block | Always present | Gated on | Field source |
+|---|---|---|---|
+| 13 Biocompatibility | — | `q9_patient_contact !== "no_contact"` | Wizard-explicit (Q9) |
+| 14 Sterilization | — | `sterile === "yes"` OR marker present | Inference marker `sterile` (default-INCLUDE on presence) |
+| 15 Stability | ✓ (hardware always) | — | — |
+| 16 Batch Release | ✓ (hardware always) | — | — |
+| 17 PMF attestation | ✓ | — | — |
+| 18 QMS attestation | ✓ | — | — |
+| 19 Conditional NOCs | — | At least one trigger fires: `veterinary_use !== "humans_only"` / `ionising_radiation === "yes"` / `pndt_in_scope` / `drug_content !== "no"` | Inference markers + Q8 derivation |
+| §8.12 drug sub-block (in §8) | — | `drug_content !== "no"` | Inference marker `drug_content` |
+| §8.15 software V&V sub-block (in §11) | — | `software_in_device === true` | Inference marker `software_in_device` |
+| §8.16 animal preclinical sub-block (in §12) | — | `patient_contact ∈ {invasive_long_term_30d, implant_gt_30d}` OR `drug_content !== "no"` | Wizard-explicit (Q9) + marker |
+| MD-26/MD-27 callout in §6 | — | `q8_predicate_exists === "no"` | Wizard-explicit (Q8) |
+
+**Standing rule for gated sections — blast-radius safeguard.**
+For inferred fields (synthesizer-emitted markers — `sterile`, `software_in_device`, `drug_content`, `ionising_radiation`, `veterinary_use`, `measuring_function`): when a marker is present, the gated section/sub-block is **included** with `[ASSUMED YES — confirm in editor]` framing, regardless of the inferred direction. A wrong-included section is removable in the editor; a wrong-omitted section is invisible and a regulator catches it.
+For wizard-explicit fields (Q8 predicate, Q9 patient contact): gate strictly on the founder's actual answer — these are not inferred.
+Rationale: same blast-radius principle that drives the ₹499 card top-3 gaps, extended to all gated content surfaces.
 
 ---
 
@@ -110,9 +119,9 @@ PMF/QMS as attestation checklists is the cost lever. If those flipped to full LL
 
 ---
 
-## Open questions / things this draft is guessing on
+## Open questions — resolved (2026-05-29 reconciliation)
 
-- **Are exactly these 7 new sections the right ones?** Stream A's earlier proposal listed these; I haven't verified against bible §4 line numbers exhaustively. Stream A should reconcile against `cdsco-regulatory-forms-reference.md` before building.
-- **Section ordering** — currently follows DMF §8.x. Stream A may want to surface a different order for editor UX (e.g. attestations grouped at the end?).
-- **Conditional NOCs (section 19)** — whether to render as a single section or split per applicable NOC type. Stream A's call.
-- **How the editor surfaces attestation checklists (17, 18) vs LLM prose sections** — needs a UI decision, not in this matrix.
+- **Are exactly these 7 new sections the right ones?** Yes for §13–§19. Three additional bible-mandated sub-blocks needed inside existing sections — added as overlays: §8.12 drug content (in §8), §8.15 software V&V (in §11), §8.16 animal preclinical (in §12). §8.13 biological safety stays in backlog (none of the smoke cases trigger; niche biologics/tissue-derived devices only).
+- **Section ordering** — DMF §8.x order kept, attestations (17, 18) and NOCs (19) at the end. `section_number` is the editor's sort key.
+- **Conditional NOCs (§19)** — single section, internal sub-blocks rendered only when their trigger fires (veterinary / radioactive / PNDT / drug-content). No empty "DAHD NOC — N/A" rows.
+- **Editor surfaces attestation checklists (17, 18) vs LLM prose sections** — attestation sections emit `content` as **structured markdown** (`## 6.1 General facility info\n- [ ] Confirmed in internal docs`). Renderer parses checkbox lines; founder ticks them. Avoids extending `SectionOutput` shape or the editor in Sprint 3. Proper UI checklist component can land Sprint 4.
