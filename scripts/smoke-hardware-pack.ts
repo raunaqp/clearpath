@@ -340,6 +340,261 @@ async function main(): Promise<void> {
     );
   }
 
+  // 5c. §8 Design & Manufacturing hardware overlay
+  //     - §8.12 medicinal-substances sub-block PRESENT (stent triggers
+  //       drug_content)
+  //     - NO software-lifecycle prose (SDLC / IEC 62304 / release
+  //       engineering / version control) — §11 V&V handles software_vv
+  //     - NO sterilization prose duplicated inline (§14 owns it)
+  //     - NO QMS 11-sub-row enumeration (§18 owns it)
+  //     - Cross-references to §13 / §14 / §16 / §18 / §10
+  const s8 = byKey.get("08_design_manufacturing");
+  assert("§8 design & manufacturing present", s8 !== undefined);
+  if (s8) {
+    // §8.12 sub-block fires for drug-eluting stent
+    assert(
+      "§8 emits the §8.12 medicinal-substances sub-block (drug_content trigger)",
+      /##\s+§8\.12\s+Medicinal\s+substances/i.test(s8.content)
+    );
+    assert(
+      "§8.12 sub-block includes combination-product attestation rows",
+      /Combination-product\s+dossier\s+attestation/i.test(s8.content) &&
+        /Drug\s+substance\s+characterised/i.test(s8.content) &&
+        /Leachables.*§13/i.test(s8.content) &&
+        /DCG\(I\).*§19/i.test(s8.content)
+    );
+    // BOM section present, hardware-shaped
+    assert(
+      "§8 emits a BOM & materials selection section",
+      /##\s+Bill\s+of\s+materials/i.test(s8.content)
+    );
+    // No software-lifecycle prose. The shared gate-vs-mention detector
+    // catches gates; here we add a stricter test that §8 specifically
+    // doesn't have a section heading naming the SaMD constructs.
+    assert(
+      "§8 has NO 'Software development lifecycle' heading",
+      !/##\s+Software\s+development\s+lifecycle/i.test(s8.content)
+    );
+    assert(
+      "§8 has NO 'Algorithm Change Protocol' heading",
+      !/##\s+Algorithm\s+Change\s+Protocol/i.test(s8.content)
+    );
+    // No inline sterilization prose; cross-references §14 instead
+    assert(
+      "§8 has NO 'Sterilization validation' section heading (§14 owns it)",
+      !/##\s+Sterilization\s+validation/i.test(s8.content) &&
+        /§14/.test(s8.content)
+    );
+    // Cross-references the surrounding hardware sections
+    assert(
+      "§8 cross-references §13 / §14 / §16 / §18",
+      ["§13", "§14", "§16", "§18"].every((ref) => s8.content.includes(ref))
+    );
+    // Anti-hallucination guard inherited from §3
+    assert(
+      "§8 does NOT cite MDR Schedules in Roman-numeral form (anti-hallucination)",
+      !/\bSchedule\s+(I|II|III|IV|V|VI|VII|VIII|IX|X)\b/.test(s8.content)
+    );
+  }
+
+  // 5d. §6 Predicate Comparison hardware overlay
+  //     Stent profile: Q8=no (novel) → novel-device path
+  //     - MD-26 / MD-27 callout PRESENT
+  //     - NO SaMD framing (no 510(k), no IMDRF, no AI/ML predicate)
+  //     - NO 'Reviewer Concierge' platform-marketing leak
+  //     - Cross-references §4 (pathway) + §12 (clinical evidence,
+  //       because no-predicate makes CI effectively mandatory)
+  const s6 = byKey.get("06_predicate_comparison");
+  assert("§6 predicate comparison present", s6 !== undefined);
+  if (s6) {
+    // Novel path content
+    assert(
+      "§6 emits no-predicate declaration (Q8=no)",
+      /No-predicate\s+declaration/i.test(s6.content) ||
+        /No\s+predicate\s+device.*novel/i.test(s6.content)
+    );
+    assert(
+      "§6 surfaces MD-26 / MD-27 pre-permission callout",
+      /MD-26.*MD-27|MD-26\s*→\s*MD-27/i.test(s6.content)
+    );
+    assert(
+      "§6 has a 'Clinical-evidence implication' section (no-predicate → effectively-mandatory CI)",
+      /Clinical-evidence\s+implication/i.test(s6.content)
+    );
+    // Cross-references
+    assert(
+      "§6 cross-references §4 (pathway)",
+      /§4/.test(s6.content)
+    );
+    assert(
+      "§6 cross-references §12 (clinical evidence)",
+      /§12/.test(s6.content)
+    );
+    // SaMD-leak guards
+    assert(
+      "§6 does NOT use SaMD 510(k) framing",
+      !/510\s*\(\s*k\s*\)/i.test(s6.content)
+    );
+    assert(
+      "§6 does NOT use IMDRF / SaMD significance framing",
+      !/IMDRF|significance\s+dimension|SaMD\s+Draft/i.test(s6.content)
+    );
+    // Reviewer Concierge platform-marketing leak guard
+    assert(
+      "§6 does NOT carry 'Reviewer Concierge' platform-marketing language",
+      !/Reviewer\s+Concierge/i.test(s6.content)
+    );
+    // Anti-hallucination
+    assert(
+      "§6 does NOT cite MDR Schedules in Roman-numeral form",
+      !/\bSchedule\s+(I|II|III|IV|V|VI|VII|VIII|IX|X)\b/.test(s6.content)
+    );
+  }
+
+  // 5e. §11 V&V hardware overlay — software_vv suppression case
+  //     Stent profile: software_in_device marker = No status=estimated
+  //     → §8.15 software V&V sub-block code-gated OUT (calibrated
+  //     trigger via shouldIncludeSubBlock). Bench V&V content present.
+  const s11 = byKey.get("11_verification_validation");
+  assert("§11 V&V present", s11 !== undefined);
+  if (s11) {
+    // Code-level gating: meta source_fields carries the gate decision
+    assert(
+      "§11 §8.15 software_vv gate is CODE-set to excluded (not text-absence)",
+      s11.meta.source_fields.includes("_software_vv_gate:excluded")
+    );
+    // Sub-block heading must not appear in rendered output
+    assert(
+      "§11 §8.15 software V&V sub-block ABSENT (not 'Section §8.15: N/A')",
+      !/##\s+§8\.15\s+Software\s+V&V/i.test(s11.content)
+    );
+    assert(
+      "§11 has NO software-V&V attestation rows (suppression case)",
+      !/Software\s+safety\s+classification/i.test(s11.content) &&
+        !/Software\s+unit\s+V&V\s+records/i.test(s11.content)
+    );
+    // Bench V&V content present — verification protocol + design-input
+    // traceability + test programme structure
+    assert(
+      "§11 emits 'Verification protocol' section (hardware bench V&V)",
+      /##\s+Verification\s+protocol/i.test(s11.content)
+    );
+    assert(
+      "§11 emits 'Design-input traceability' section",
+      /##\s+Design-input\s+traceability/i.test(s11.content)
+    );
+    assert(
+      "§11 emits 'Test programme' section",
+      /##\s+Test\s+programme/i.test(s11.content)
+    );
+    // Cross-references to §13 (biocomp) + §15 (stability)
+    assert(
+      "§11 cross-references §13 (biocompatibility)",
+      /§13/.test(s11.content)
+    );
+    assert(
+      "§11 cross-references §15 (stability)",
+      /§15/.test(s11.content)
+    );
+    assert(
+      "§11 cross-references §14 (sterilization)",
+      /§14/.test(s11.content)
+    );
+    assert(
+      "§11 cross-references §10 (risk management)",
+      /§10/.test(s11.content)
+    );
+    // No SaMD framing
+    assert(
+      "§11 does NOT use SaMD framing (IMDRF / Q1×Q2 / SaMD Draft / ACP)",
+      !/IMDRF|Q1.{0,5}Q2|SaMD\s+Draft|Algorithm\s+Change\s+Protocol/i.test(
+        s11.content
+      )
+    );
+    // Anti-hallucination
+    assert(
+      "§11 does NOT cite MDR Schedules in Roman-numeral form",
+      !/\bSchedule\s+(I|II|III|IV|V|VI|VII|VIII|IX|X)\b/.test(s11.content)
+    );
+  }
+
+  // 5f. §12 Clinical Evidence + §8.16 animal preclinical sub-block
+  //     Stent profile: Q9=implant_gt_30d + drug_content trigger →
+  //     §8.16 sub-block code-gated INCLUDED.
+  //     Q8=no (novel) → MD-22/MD-23 clinical-investigation pathway
+  //     section emitted.
+  const s12 = byKey.get("12_clinical_evidence_pms");
+  assert("§12 clinical evidence present", s12 !== undefined);
+  if (s12) {
+    // Code-level gating: meta source_fields carries the gate decision
+    assert(
+      "§12 §8.16 animal preclinical gate is CODE-set to included (Q9 implant + drug)",
+      s12.meta.source_fields.includes("_animal_preclinical_gate:included")
+    );
+    // §8.16 sub-block content present
+    assert(
+      "§12 emits §8.16 animal preclinical sub-block heading",
+      /##\s+§8\.16\s+Animal\s+preclinical/i.test(s12.content)
+    );
+    assert(
+      "§12 animal preclinical sub-block has attestation rows",
+      /GLP-compliant\s+animal\s+study/i.test(s12.content) &&
+        /Implant-model.*species/i.test(s12.content) &&
+        /Chronic\s+histopathology/i.test(s12.content)
+    );
+    // Class D + novel framing: MD-22 / MD-23 pathway present
+    assert(
+      "§12 emits MD-22 / MD-23 clinical-investigation pathway section (Q8=novel)",
+      /MD-22.*MD-23|MD-22\s*→\s*MD-23/i.test(s12.content) &&
+        /CTRI/i.test(s12.content)
+    );
+    assert(
+      "§12 references EC approval (ICMR ethics)",
+      /EC\s+approval|ethics\s+committee|Ethics\s+Committee/i.test(s12.content)
+    );
+    // Cross-references
+    assert(
+      "§12 cross-references §6 (predicate basis drives clinical-evidence expectation)",
+      /§6/.test(s12.content)
+    );
+    assert(
+      "§12 cross-references §13 (biocompatibility / chronic toxicity)",
+      /§13/.test(s12.content)
+    );
+    assert(
+      "§12 cross-references §10 (risk management)",
+      /§10/.test(s12.content)
+    );
+    assert(
+      "§12 cross-references §3 (intended population)",
+      /§3/.test(s12.content)
+    );
+    // PMS framework — MD-42 / MD-43 / Form-25 forms cited
+    assert(
+      "§12 cites MD-42 / MD-43 / Form-25 vigilance forms",
+      /MD-42/.test(s12.content) &&
+        /MD-43/.test(s12.content) &&
+        /Form-25/.test(s12.content)
+    );
+    // No SaMD clinical framing
+    assert(
+      "§12 does NOT use SaMD clinical-evidence framing (ACP / drift / algorithm-validation)",
+      !/Algorithm\s+Change\s+Protocol|ACP\s+retraining|drift[\s-]monitoring|drift[\s-]detection|algorithm\s+validation/i.test(
+        s12.content
+      )
+    );
+    // Reviewer Concierge platform-marketing leak guard
+    assert(
+      "§12 does NOT carry 'Reviewer Concierge' platform-marketing language",
+      !/Reviewer\s+Concierge/i.test(s12.content)
+    );
+    // Anti-hallucination
+    assert(
+      "§12 does NOT cite MDR Schedules in Roman-numeral form",
+      !/\bSchedule\s+(I|II|III|IV|V|VI|VII|VIII|IX|X)\b/.test(s12.content)
+    );
+  }
+
   // 6. SaMD software-gate leak detection — distinguishes GATES from
   //    MENTIONS. A leak is when a section says "IEC 62304 required" /
   //    "must be filed" / "shall be developed per" — a regulatory
