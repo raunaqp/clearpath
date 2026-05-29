@@ -1,6 +1,6 @@
 # Hardware pack smoke output — implant (Drug-eluting coronary stent)
 
-Generated: 2026-05-29T04:26:25.978Z
+Generated: 2026-05-29T09:21:14.218Z
 
 One-liner: A bioresorbable drug-eluting cardiac stent for coronary artery disease.
 
@@ -9,8 +9,8 @@ Q9 patient_contact: implant_gt_30d
 B6 ISO 13485 status: in_progress
 
 Sections rendered: 18
-Total LLM cost: $0.2810
-Assertions: 68 pass / 1 fail
+Total LLM cost: $0.2840
+Assertions: 79 pass / 0 fail
 
 ---
 
@@ -62,48 +62,17 @@ Per your Q8 answer, no predicate device exists in the Indian market for this dev
 
 ---
 
-# §3 Intended Use & Indications
-
-_strategy: llm_synthesized · status: complete · cost: $0.0135_
-
-## Indication
-
-The device is a bioresorbable drug-eluting coronary stent indicated for the percutaneous revascularisation of de novo or restenotic lesions in native coronary arteries in patients diagnosed with coronary artery disease, including stable angina and select presentations of acute coronary syndrome. Implantation is performed by an interventional cardiologist in a cardiac catheterisation laboratory under fluoroscopic guidance. The stent is intended to restore luminal patency, deliver antiproliferative pharmacotherapy to the vessel wall during the critical restenosis window, and subsequently resorb — eliminating the long-term presence of a permanent implant. [NEEDS INPUT: approved antiproliferative drug coating identity and elution duration] [NEEDS INPUT: reference vessel diameter and lesion length range for which the device is sized]
-
-## Intended user
-
-[TBD].
-
-## Use environment
-
-[TBD] — Tier B B2 question not yet answered.
-
-## Patient population
-
-[NEEDS INPUT: target patient demographics and exclusion criteria] Pending applicant confirmation of clinical study inclusion/exclusion criteria, the anticipated population comprises adult patients (≥18 years) with symptomatic coronary artery disease attributable to obstructive native coronary lesions, who are candidates for percutaneous coronary intervention. Patients with left main disease, chronic total occlusions, or in-stent restenosis within a bioresorbable scaffold should be considered excluded until specific study data support those indications. Pregnancy, severe renal impairment, and active bleeding disorders represent additional anticipated exclusions, subject to the final IFU and clinical data package.
-
-## Decision-making role
-
-Per the IMDRF SaMD significance dimension and Tier A Q2 (decision influence), this device is intended to **[TBD]**.
-
-## Contraindications
-
-Contraindications anticipated for this product class include: known hypersensitivity to the scaffold polymer or to [NEEDS INPUT: drug coating active pharmaceutical ingredient]; vessels with reference diameter or lesion morphology outside the device's validated sizing range [NEEDS INPUT: minimum and maximum reference vessel diameter in mm]; heavily calcified or tortuous lesions judged unsuitable for adequate scaffold deployment; patients in whom dual antiplatelet therapy is contraindicated or cannot be maintained for the minimum required duration [NEEDS INPUT: DAPT duration specified in IFU]; and cardiogenic shock or haemodynamic instability precluding elective percutaneous intervention.
-
-
----
-
 # §6 Predicate Device Comparison
 
-_strategy: llm_synthesized · status: complete · cost: $0.0129_
+_strategy: llm_synthesized · status: complete · cost: $0.0120_
 
 ## No-predicate declaration
 
-No predicate device is claimed under this submission. The applicant does not identify an equivalent device already licensed by CDSCO for the same intended use — a bioresorbable, drug-eluting coronary stent with full scaffold resorption over the implant lifecycle. Within Indian regulatory scope, this device is treated as first-in-class for that combination of material platform and drug-delivery mechanism. The consequence is direct: CDSCO applies heightened evidentiary scrutiny, and clinical evidence ceases to be a discretionary element of the dossier. Section 12 (Clinical Evidence) is therefore structured to meet the substantive standard expected of a Class D novel device — not the abbreviated comparator pathway available where a licensed Indian predicate exists. [NEEDS INPUT: Tier B intended use statement, to confirm resorption timeline and drug identity for regulatory scoping]
+No predicate device is claimed for this submission. The bioresorbable drug-eluting cardiac stent occupies a category — fully absorbable coronary scaffold with integrated drug delivery — for which no previously licensed device exists within Indian regulatory scope. The device is accordingly treated as first-in-class under MDR 2017, with the consequence that CDSCO cannot rely on substantial equivalence to an approved Indian device when evaluating safety and performance. Clinical evidence (detailed in Section 12) is therefore not a supplementary filing element; it is the primary evidentiary basis for the application. Reviewers should expect the clinical dossier to carry the burden ordinarily distributed across comparative and bench-equivalence arguments, and should assess its scope against the heightened scrutiny applicable to Class D novel devices.
 
 ## MD-26 → MD-27 pre-permission pathway
 
-Because no predicate is claimed, the applicant is required to obtain prior permission from CDSCO before the MD-7 manufacturing licence application can be filed. The operative sequence under MDR 2017 is: (1) file Form MD-26 (application for permission to manufacture a new drug or medical device for the purpose of examination, test, or clinical trial, or for marketing as a novel device); (2) CDSCO reviews and, if satisfied, issues Form MD-27 (permission to manufacture / import the novel device). The MD-7 application is submitted only after MD-27 is in hand — submitting out of sequence risks outright rejection on procedural grounds. Given that this device also carries a drug component, the review committee composition under MD-27 is likely to include both device and pharmacological expertise, which can extend the pre-permission timeline relative to device-only Class D products. The Reviewer Concierge tier is recommended to manage the dual-pathway sequencing and pre-submission meeting scheduling with CDSCO. [TBD: Anticipated MD-26 filing date and whether a pre-submission meeting has been requested]
+Because no Indian predicate exists, the applicant is required to obtain prior CDSCO permission before the manufacturing licence application (MD-7) can be filed. The prescribed sequence under MDR 2017 is: submit Form MD-26 (application for permission to manufacture a new drug or medical device for clinical trial or examination) to CDSCO; upon satisfactory review, CDSCO issues Form MD-27 (permission to manufacture). The MD-7 application may be filed only after MD-27 is in hand. Attempting to submit MD-7 in parallel or in advance of MD-27 risks procedural rejection without substantive review. Given the dual-pathway sequencing complexity and the Class D risk classification, early engagement with CDSCO — through the Reviewer Concierge tier if available — is recommended to align submission timelines, clarify clinical evidence expectations before MD-26 is lodged, and reduce the likelihood of iterative deficiency cycles.
 
 ## Pathway implication
 
@@ -114,7 +83,7 @@ Per MDR 2017 and based on published CDSCO guidance, the manufacturing licence pa
 
 # §5 Product Specification & Variants
 
-_strategy: llm_synthesized · status: complete · cost: $0.0149_
+_strategy: llm_synthesized · status: complete · cost: $0.0169_
 
 ## Summary
 
@@ -126,19 +95,19 @@ _strategy: llm_synthesized · status: complete · cost: $0.0149_
 
 ## Device family / variants
 
-The product is currently represented as a single device concept — a bioresorbable drug-eluting cardiac stent for coronary artery disease. Diameter and length variants are anticipated across a commercial family, but no SKU designations have been confirmed. [TBD: variant matrix pending design freeze]
+The product is currently positioned as a single-SKU bioresorbable drug-eluting cardiac stent intended for percutaneous coronary intervention in patients with coronary artery disease. Diameter and length variants are anticipated to support clinical practice but have not been formally enumerated. [TBD: variant matrix — diameter and length range]
 
 ## Physical specifications
 
-The device is a coronary stent scaffold intended for intravascular deployment via percutaneous catheter delivery. It is fabricated from a bioresorbable polymer or alloy substrate [NEEDS INPUT: scaffold base material, e.g., PLLA, magnesium alloy, or other] coated with a therapeutic drug layer [NEEDS INPUT: drug agent, coating chemistry, and nominal drug load in µg/mm²]. Key dimensional parameters — nominal stent diameter range (mm), expanded diameter range (mm), deployed length options (mm), strut thickness (µm), and delivery system profile (Fr) — are [NEEDS INPUT: confirmed dimensional specifications at design freeze]. The device is expected to be supplied sterile [NEEDS INPUT: confirm sterility method — EO, e-beam, or gamma — and sterile packaging configuration]. No active power source or wireless connectivity applies.
+The stent is a tubular, balloon-expandable scaffold fabricated from a bioresorbable polymer matrix loaded with an antiproliferative or anti-inflammatory pharmacological agent. It is deployed percutaneously via a dedicated delivery catheter system. Key dimensional parameters — nominal diameter range, expanded diameter range, strut thickness, stent length, and delivery catheter profile — are subject to design freeze and must be confirmed before DMF submission. [NEEDS INPUT: stent nominal and expanded diameter range (mm)] [NEEDS INPUT: stent length options (mm)] [NEEDS INPUT: strut thickness (µm)] [NEEDS INPUT: delivery catheter outer diameter (Fr)] [NEEDS INPUT: active pharmaceutical ingredient identity and elution dose] [NEEDS INPUT: scaffold base polymer (e.g., PLLA, PLGA, or proprietary blend)] [NEEDS INPUT: sterility method and sterile packaging configuration] The device contains no active electronic components, requires no power source, and has no wireless connectivity.
 
 ## Performance specifications
 
-Functional performance is defined by scaffold radial strength sufficient to maintain vessel patency post-deployment, controlled drug elution kinetics over the therapeutic window, and progressive bioresorption without clinically significant particulate generation. Target metrics — including minimum radial force (N/mm), chronic outward force, drug elution profile (% release at defined timepoints), and resorption timeline (months to complete absorption) — are [NEEDS INPUT: bench-validated performance targets from design verification testing]. Acute procedural success rate and late lumen loss at 6–12 months are the anticipated primary clinical performance endpoints [NEEDS INPUT: clinical performance targets and any available pre-clinical or pilot-study anchor data]. Where pilot data exist, values should be labelled preliminary and subject to pivotal confirmation before CDSCO submission.
+The device is expected to maintain adequate radial strength to resist elastic recoil during and immediately post-deployment, achieve uniform drug elution over a defined therapeutic window, and undergo complete bioresorption within an anticipated timeframe consistent with preclinical benchmarks for the scaffold polymer selected. Radial force, acute lumen gain, late lumen loss, and resorption kinetics are the primary performance endpoints. Quantitative targets for each — including minimum radial force (N/mm), elution profile (cumulative % at defined time points), and full bioresorption timeline (months) — are subject to bench and preclinical confirmation. [NEEDS INPUT: validated radial force specification] [NEEDS INPUT: drug elution kinetic targets and therapeutic window] [NEEDS INPUT: anticipated bioresorption timeline (months)] Clinical performance targets (MACE rate, in-stent restenosis, target lesion revascularisation) will be anchored to pivotal study data; no clinical study results are currently available to cite (see Section B5 — Clinical Evidence).
 
 ## Intended service life
 
-As a bioresorbable implant, the device does not carry a conventional service life in the durable-device sense. The clinically relevant timeframe is the functional scaffold period — from deployment through complete resorption — anticipated at [NEEDS INPUT: expected resorption timeline, e.g., 12–36 months depending on material]. Shelf life of the sterile packaged device prior to implantation is [NEEDS INPUT: validated shelf life in months/years]. Post-resorption, no retrievable hardware remains in situ.
+As a bioresorbable implant, the device does not have a conventional multi-year service life. The clinically relevant functional lifetime spans from implantation through the period of vascular scaffolding (expected months to low single-digit years, depending on polymer selection and elution design), after which the scaffold undergoes progressive resorption. Shelf life of the sterile packaged product is a separate parameter. [NEEDS INPUT: anticipated functional scaffolding duration (months)] [NEEDS INPUT: shelf life of sterile packaged device (months)]
 
 ## Accessories and packaging
 
@@ -163,60 +132,113 @@ _strategy: llm_synthesized · status: complete · cost: $0.0194_
 
 ## Intended-use label
 
-Bioresorbable drug-eluting coronary stent indicated for percutaneous treatment of de novo native coronary artery lesions in patients with symptomatic ischaemic heart disease. For use by trained interventional cardiologists only. Single use. Sterile. [NEEDS INPUT: Sterile method symbol — e.g., EO, radiation]
+Bioresorbable drug-eluting coronary stent indicated for percutaneous treatment of de novo native coronary artery lesions in patients with symptomatic ischaemic heart disease. For use by qualified interventional cardiologists in a cardiac catheterisation laboratory. [NEEDS INPUT: vessel diameter and lesion length range]
 
 ## Contraindications
 
-Contraindicated in: known hypersensitivity to [NEEDS INPUT: drug name] or scaffold polymer components; reference vessel diameter outside indicated range; heavily calcified or tortuous lesions precluding adequate delivery; patients in whom DAPT is contraindicated; active bleeding disorders. Not indicated for use in saphenous vein grafts or left main coronary artery. [NEEDS INPUT: Any additional contraindications from clinical data]
+Contraindicated in: known hypersensitivity to [NEEDS INPUT: drug compound or scaffold polymer]; patients unable to tolerate dual antiplatelet therapy; heavily calcified or tortuous lesions outside validated ranges [NEEDS INPUT: specify]; in-stent restenosis; lesions in saphenous vein grafts. Not indicated for left main coronary artery disease unless validated by clinical data.
 
 ## Regulatory marks
 
+- For use by qualified clinicians.
 - [TBD] CDSCO manufacturing licence number — populated post-grant.
 
 ## Instructions for Use (IFU summary)
 
 ## Indications
-This bioresorbable drug-eluting coronary stent is indicated for improving coronary luminal diameter in patients with symptomatic ischaemic heart disease due to de novo native coronary artery lesions. Suitability criteria — including reference vessel diameter, lesion length, and calcification grade — are detailed in the clinical evaluation summary and must be confirmed by the implanting physician prior to use.
+This bioresorbable drug-eluting coronary stent is indicated for improving coronary luminal diameter in patients with symptomatic ischaemic heart disease due to de novo native coronary artery lesions. Intended for percutaneous coronary intervention (PCI) performed by an interventional cardiologist in a cardiac catheterisation laboratory or equivalent surgical environment.
 
-[NEEDS INPUT: Specific lesion length range (mm) and reference vessel diameter range (mm) for inclusion criteria]
-[NEEDS INPUT: Drug eluted — generic name, coating concentration, and release profile summary]
+[NEEDS INPUT: lesion length and reference vessel diameter ranges validated in bench/clinical testing]
+[NEEDS INPUT: specific drug compound, coating, and elution profile]
 
-## Intended Users and Environment
-This device is intended for use exclusively by interventional cardiologists trained in percutaneous coronary intervention (PCI), operating within a fully equipped cardiac catheterisation laboratory. It is not intended for use in emergency improvised settings.
-
-[NEEDS INPUT: Confirmed use environment — e.g., tertiary cardiac cath lab, secondary hospital cath facility]
+## Intended Users
+Qualified interventional cardiologists and trained catheterisation laboratory staff. This device is not intended for use outside a supervised surgical or interventional setting.
 
 ## Pre-Use Checks
-Prior to deployment, verify package integrity, confirm the sterile barrier is intact, and check the expiry date on the outer carton. Do not use if the packaging shows signs of damage, moisture ingress, or prior opening. Inspect the stent delivery system for visible defects before advancing the catheter.
+Inspect the sterile packaging for integrity prior to opening. Do not use if the package is damaged, if the device appears visually compromised, or if the use-by date has elapsed. Verify compatibility of the delivery system with the intended guiding catheter and guidewire dimensions before proceeding.
+
+[NEEDS INPUT: delivery system inner diameter and guiding catheter compatibility specifications]
+[NEEDS INPUT: sterile barrier type and validated shelf-life]
 
 ## Directions for Use
-Deliver the stent using standard PCI technique via an appropriate guiding catheter. Inflate the balloon to the nominal deployment pressure using a calibrated indeflator.
+Deploy using standard PCI technique under fluoroscopic guidance. Follow the recommended balloon inflation protocol for stent deployment.
 
-[NEEDS INPUT: Nominal deployment pressure (atm), rated burst pressure, recommended balloon inflation duration]
-[NEEDS INPUT: Compatible guiding catheter inner diameter (French size)]
+[NEEDS INPUT: nominal and rated burst pressure values; recommended inflation duration; post-dilatation guidance specific to this platform]
 
-Post-dilatation with a non-compliant balloon may be performed per operator judgment. Do not resterilise or reuse the delivery system.
+Confirm adequate apposition using intravascular imaging or angiography per institutional protocol. The scaffold is bioresorbable; chronic mechanical support timelines differ from metallic stents — refer to the clinical data summary for expected resorption profile.
+
+[NEEDS INPUT: resorption timeline data from bench or clinical studies]
 
 ## Warnings and Precautions
-- The bioresorbable scaffold degrades over approximately [NEEDS INPUT: resorption timeframe, e.g., 24–36 months] following implantation; advise patients and follow-up clinicians accordingly.
-- Dual antiplatelet therapy (DAPT) duration should follow current ACC/AHA or appropriate society guidelines and the treating physician's clinical judgment.
-- MRI conditional status: [NEEDS INPUT: MRI labelling classification and tested field strength]
+- Antiplatelet therapy duration should follow current cardiology society guidelines; premature discontinuation may increase thrombotic risk during the resorption phase.
+- Avoid aggressive post-dilatation beyond the validated diameter range; over-expansion may compromise scaffold integrity.
+- Radiopacity of bioresorbable scaffolds differs from metallic stents; ensure the implant site is marked by radio-opaque markers if provided.
+
+[NEEDS INPUT: presence and specification of radio-opaque markers on this device]
 
 ## Storage
-Store at [NEEDS INPUT: temperature range, e.g., 15–25 °C], away from direct sunlight and moisture. Do not freeze. Maintain sterile packaging until immediately prior to use.
+[NEEDS INPUT: storage temperature range and humidity limits from stability data]
+Store in original packaging. Protect from direct sunlight and physical impact.
 
 ## Disposal
-The used delivery system and any unused components are clinical waste. Dispose in accordance with applicable biomedical waste regulations under the Bio-Medical Waste Management Rules, 2016.
+Dispose of used devices, delivery systems, and packaging in accordance with applicable biomedical waste regulations under the Bio-Medical Waste Management Rules, 2016. The bioresorbable scaffold itself, once implanted, does not require retrieval.
 
 ## Manufacturer Contact
-[NEEDS INPUT: Manufacturer name, address, and post-market surveillance contact details]
+[NEEDS INPUT: manufacturer name, address, and post-market vigilance contact details]
 
+*Labelling requirements referenced against the Fifth Schedule of the Medical Devices Rules, 2017.*
+
+
+---
+
+# §3 Intended Use & Indications
+
+_strategy: llm_synthesized · status: complete · cost: $0.0230_
+
+## Indication
+
+This device is a bioresorbable drug-eluting coronary stent indicated for the percutaneous revascularisation of coronary arteries in adult patients diagnosed with obstructive coronary artery disease (CAD). The device is intended to restore luminal patency by scaffolding the target vessel while delivering a controlled local dose of antiproliferative agent to inhibit neointimal hyperplasia and restenosis. Implantation is performed by interventional cardiologists and cardiac surgeons operating within a cardiac catheterisation laboratory or dedicated operating theatre equipped for fluoroscopic guidance. As a long-term implant — with the bioresorbable matrix anticipated to resorb over a period extending beyond 30 days post-deployment — the device falls within the highest-contact-duration tier under MDR 2017 biocompatibility classification. The intended patient population comprises adults with symptomatic CAD, including de novo native coronary lesions, where percutaneous intervention is clinically appropriate and surgical revascularisation is not the preferred strategy. [NEEDS INPUT: specific lesion subset or clinical indication (e.g., stable angina only vs. ACS extension)]
+
+## Intended user
+
+Healthcare professionals.
+
+## Use environment
+
+Operating theatre.
+
+## Patient population
+
+The intended population is adult patients (18 years and above) with haemodynamically significant obstructive CAD confirmed by coronary angiography or equivalent imaging, in whom percutaneous coronary intervention (PCI) is indicated by the treating heart team. [NEEDS INPUT: minimum/maximum reference vessel diameter range the stent is sized for] [NEEDS INPUT: lesion length eligibility criteria (mm)] [NEEDS INPUT: whether STEMI or ACS indications are included or deferred to a post-approval expansion] Paediatric use is not intended. Use during pregnancy and lactation has not been evaluated and is excluded from the current indication. Patients with documented contraindications to dual antiplatelet therapy (DAPT) are outside the intended population, given the anticipated DAPT requirement during the bioresorption phase.
+
+## Body-contact tier (Q9 wizard-explicit)
+
+**Tier:** Implant — tissue/bone OR blood (long-term > 30d)
+
+This device contacts blood and cardiovascular tissue continuously from the point of implantation and remains in situ throughout the bioresorption period, which is anticipated to exceed 30 days. This places it in the long-term implant contact category — the most demanding tier for biocompatibility assessment under ISO 10993-1. The full ISO 10993 evaluation panel applicable to this tier, including cytotoxicity, sensitisation, intracutaneous reactivity, systemic toxicity, genotoxicity, implantation, and haemocompatibility testing, is addressed in §13 Biocompatibility. Because the device is supplied sterile, the validated sterilisation method and sterility assurance level are addressed in §14 Sterilization. Both sections should be read in conjunction with this contact-tier designation.
+
+## Predicate basis (Q8 wizard-explicit)
+
+**Status:** No predicate device — novel
+
+No predicate device has been identified — this device is presented as a novel product for the purposes of the MDR 2017 application. A novel device of this class is anticipated to require a pre-permission approval (MD-26 / MD-27 pathway) before a market authorisation application under MD-7 can be filed. Applicants should confirm this sequencing with CDSCO prior to submission. The substantial-equivalence analysis framework, to the extent applicable for supporting the technical file, is addressed in §6 Predicate Comparison.
+
+## Contraindications
+
+The device is contraindicated in patients with known or suspected hypersensitivity to the bioresorbable scaffold material, the polymer coating, or the drug payload. [NEEDS INPUT: specific polymer composition and drug agent name to allow precise contraindication drafting] Anatomic exclusions include heavily calcified lesions incompatible with adequate lesion preparation, vessels where stent sizing cannot be matched to available diameters, and chronic total occlusions unless the applicant's clinical data explicitly covers this subset. Contraindications extend to patients in whom DAPT is absolutely contraindicated (e.g., active pathological bleeding, planned major elective surgery within the resorption window) and those with a life expectancy that precludes meaningful clinical benefit. [NEEDS INPUT: institution-specific contraindication list from the clinical investigation protocol, if already drafted]
+
+## Cross-references
+
+- §4 Classification & Pathway — class derivation + MD-3 / MD-7 path
+- §6 Predicate Comparison — full substantial-equivalence analysis
+- §13 Biocompatibility — ISO 10993 panel keyed to Q9 patient contact
+- §7 Labelling — intended-use statement on label + IFU
 
 ---
 
 # §2 Device Description
 
-_strategy: llm_synthesized · status: complete · cost: $0.0200_
+_strategy: llm_synthesized · status: complete · cost: $0.0202_
 
 ## Summary
 
@@ -229,23 +251,23 @@ _strategy: llm_synthesized · status: complete · cost: $0.0200_
 
 ## Components and architecture
 
-This device is a bioresorbable drug-eluting coronary stent — a percutaneously delivered scaffold that provides transient mechanical support to a diseased coronary artery while releasing a controlled dose of antiproliferative drug, after which the scaffold resorbs and is cleared by the body. Principal sub-assemblies are: (1) the bioresorbable polymeric scaffold backbone, fabricated from [NEEDS INPUT: polymer identity, e.g., PLLA or PLGA grade and molecular weight]; (2) the drug-eluting coating layer carrying [NEEDS INPUT: drug name and nominal loaded dose per cm²]; (3) the delivery catheter system comprising balloon, catheter shaft, and hemostatic hub; and (4) the sterile packaging configuration [NEEDS INPUT: packaging format, e.g., single-unit blister/pouch]. All sub-assemblies are supplied as a single-use, pre-mounted assembly.
+The device is a bioresorbable drug-eluting coronary stent — a temporarily implanted scaffold designed to restore luminal patency in stenosed coronary arteries while delivering a controlled antiproliferative payload, then resorbing entirely over a defined period. Principal sub-assemblies are: (1) a tubular bioresorbable scaffold, likely fabricated from a polylactic acid-based polymer or magnesium alloy backbone [NEEDS INPUT: scaffold base material — e.g., PLLA, Mg-Zn alloy, specify grade]; (2) a drug-loaded abluminal coating carrying the antiproliferative agent [NEEDS INPUT: drug name, dose per unit length, and release-rate profile]; and (3) a delivery system comprising a semi-compliant balloon catheter, hypotube, and haemostatic valve. The scaffold and delivery system are supplied as a pre-mounted, single-use assembly. [NEEDS INPUT: model number / product designation]
 
 ## Principle of operation
 
-After balloon-catheter delivery to the target lesion, the scaffold expands to appose the vessel wall, restoring luminal patency. The drug coating elutes at a controlled rate — [NEEDS INPUT: elution profile, e.g., ≥80% release within 28 days] — to inhibit neointimal hyperplasia and reduce restenosis risk. Over [NEEDS INPUT: anticipated resorption timeframe, e.g., 24–36 months], the polymer backbone hydrolyzes progressively, eliminating the permanent implant burden associated with metallic drug-eluting stents. The intended operator is an interventional cardiologist performing percutaneous coronary intervention in a cardiac catheterization laboratory. [NEEDS INPUT: Tier B intended use statement — confirm target lesion morphology, vessel diameter range, lesion length limits, and any contraindicated patient subgroups].
+On balloon inflation at the target lesion, the scaffold expands radially to match coronary vessel diameter, providing mechanical support against elastic recoil and constrictive remodelling. The abluminal drug coating releases the antiproliferative agent in a sustained, controlled manner to suppress neointimal hyperplasia during the critical healing window. Over the subsequent months — anticipated range [NEEDS INPUT: resorption timeline, e.g., 12–36 months depending on material] — the scaffold undergoes hydrolytic or corrosive degradation, leaving no permanent metallic implant and restoring vessel vasomotion. Deployment is performed by an interventional cardiologist under fluoroscopic guidance in a cardiac catheterisation laboratory. [NEEDS INPUT: nominal deployment pressure and balloon compliance range]
 
 ## Materials and applicable standards
 
-The scaffold is fabricated from a bioresorbable polymer [NEEDS INPUT: confirm polymer class and grade]; the drug coating matrix is [NEEDS INPUT: polymer carrier identity]. All patient-contact materials are subject to biocompatibility evaluation under ISO 10993-1, with specific testing series — cytotoxicity, sensitization, hemocompatibility, and implantation studies — selected on the basis of the nature and duration of tissue contact (permanent implant category at time of implantation, transitioning to resorbable). Mechanical characterization of the scaffold (radial strength, recoil, fatigue) is conducted per relevant provisions of ISO 25539-2 for coronary stents. [NEEDS INPUT: confirm whether any materials carry prior FDA or CE biocompatibility data packages that can be leveraged].
+Biocompatibility characterisation is expected to follow ISO 10993-1, with emphasis on the ISO 10993-5 cytotoxicity and ISO 10993-13 degradation-product assessments given the resorption mechanism. The drug-coating formulation will require leachables and extractables analysis. [NEEDS INPUT: scaffold polymer or alloy specification and any proprietary coating chemistry]. Mechanical performance — radial strength, recoil, fatigue under pulsatile loading — is anticipated to reference ISO 25539-2 (coronary stents) and any applicable ASTM standards for the chosen substrate material. Shelf-life and sterilisation claims [NEEDS INPUT: sterility assurance level, sterilisation method — e.g., EO, e-beam] will be characterised per ISO 11135 or ISO 11137 as applicable.
 
 ## Variants and accessories
 
-Available source data describes a single device configuration. For regulatory submission purposes, this document treats the product as a single-variant stent at this stage. Diameter and length matrix (e.g., 2.5–3.5 mm diameter, 12–38 mm lengths) is anticipated based on standard coronary stent practice, but the approved family grouping and size matrix have not been confirmed. [NEEDS INPUT: full size matrix — nominal diameters, available lengths, and any platform differences across sizes] — [TBD] Sprint 3 family-grouping question.
+Source data does not specify a product family. This submission currently assumes a single scaffold platform offered across a matrix of nominal diameters and lengths typical for coronary application — [NEEDS INPUT: confirmed diameter/length matrix, e.g., 2.5–3.5 mm × 12–28 mm]. If additional stiffness variants, polymer grades, or drug-dose tiers exist, family-grouping rationale will be required. [TBD] — Sprint 3 family-grouping question. Required accessories (guidewire, introducer sheath) are standard catheterisation-lab consumables not co-submitted with this filing.
 
 ## Lifecycle and disposal
 
-As a single-use implantable device, the product has no reuse service life. The delivery catheter system and packaging are single-use; post-implantation, no retrievable hardware remains after the scaffold resorption period of [NEEDS INPUT: resorption timeframe]. Shelf life of the sterile packaged assembly is [NEEDS INPUT: proposed shelf life and stability data anchor]. Used delivery systems and outer packaging are disposed of as biomedical/clinical waste per applicable hospital waste management protocols (Bio-Medical Waste Management Rules 2016). No special end-of-life recovery or take-back program applies given full in-vivo resorption of the implant itself.
+As a single-use implant, the device has no reprocessing or reuse expectation; once deployed, the scaffold remains in situ and resorbs. Shelf life from date of manufacture [NEEDS INPUT: claimed shelf life and real-time or accelerated aging study status]. The pre-mounted delivery catheter assembly is discarded as clinical/sharps waste per biomedical waste management rules applicable to the implanting facility. No post-market retrieval or device return programme is anticipated given the bioresorbable nature of the implant; long-term safety follow-up is addressed under the post-market clinical follow-up plan (see Section 8).
 
 ## Cross-references
 
@@ -256,7 +278,7 @@ As a single-use implantable device, the product has no reuse service life. The d
 
 # §8 Design & Manufacturing
 
-_strategy: llm_synthesized · status: complete · cost: $0.0249_
+_strategy: llm_synthesized · status: complete · cost: $0.0233_
 
 ## Summary
 
@@ -269,142 +291,152 @@ _strategy: llm_synthesized · status: complete · cost: $0.0249_
 
 ## Design history
 
-Design control for the bioresorbable drug-eluting cardiac stent is structured around a formal Design History File (DHF), maintained under the QMS and intended to satisfy Schedule V of MDR 2017 for a Class D implantable device. Design inputs — mechanical performance targets (radial force, recoil, fatigue), drug-release kinetics, biocompatibility requirements per ISO 10993 series, and dimensional tolerances — are documented against the intended clinical indication. [NEEDS INPUT: confirmed intended use statement and target lesion population]
+Design controls for this bioresorbable drug-eluting cardiac stent are structured around a formal Design History File (DHF) maintained under 21 CFR 820.30-equivalent principles adopted within the QMS, cross-mapped to MDR 2017 Schedule V requirements for Class D devices. Design inputs capture mechanical performance targets (radial force, recoil, expansion uniformity), drug-elution kinetics, bioresorption profile, biocompatibility requirements per ISO 10993 series, and sterility/packaging specifications — all traceable to user needs documented at the concept stage.
 
-Design reviews are structured as gate reviews at minimum four milestones: design input freeze, prototype qualification, design verification, and design validation. Each gate requires sign-off from at minimum the project lead, a clinical advisor, and the QA function before proceeding. Outputs from verification testing (bench, accelerated degradation, drug-elution profiling) and validation activities (pre-clinical and clinical) are captured against each input requirement with explicit pass/fail criteria.
+[NEEDS INPUT: current development phase — concept, prototype, design freeze, or design transfer]
 
-Design transfer — the controlled hand-off from R&D to manufacturing — is documented via a Design Transfer Plan that maps DHF outputs to Device Master Record (DMR) procedures, process qualifications, and in-process control limits. Given that ISO 13485 certification is in progress, the transfer protocol is operating against internal QMS procedures rather than a certified baseline; gaps identified during the CB audit are expected to generate corrective actions before design freeze is declared final.
+Gate reviews are anticipated at minimum four milestones: design input freeze, prototype qualification, design verification completion, and pre-transfer readiness. Each gate requires sign-off from engineering, clinical/regulatory, and quality leads before the next phase opens. Verification activities are expected to cover dimensional and mechanical testing, drug-elution profiling, and in vitro bioresorption modeling; validation activities will include bench-top vascular models and preclinical studies consistent with ISO 25539-2 expectations for coronary scaffolds.
 
-[NEEDS INPUT: commercial stage — concept / development / pilot / pre-submission]
+Design transfer — the controlled handoff of specifications, tooling parameters, and acceptance criteria to the manufacturing function — has [NEEDS INPUT: transfer completion status or target date]. Outputs from transfer are expected to form the device master record referenced in Section 9.
 
 ## Manufacturing process
 
-The stent is manufactured at [TBD — see manufacturing address]. The high-level process sequence runs: raw polymer and drug substance receipt and incoming inspection → extrusion or moulding of bioresorbable scaffold → laser cutting to strut geometry → surface treatment and cleaning → drug coating application → dimensional and coating-uniformity inspection → crimping to delivery system → packaging. [NEEDS INPUT: confirmed process steps and sequence specific to the applicant's platform]
+The manufacturing model for this device is [NEEDS INPUT: own-site, contract manufacturer, or hybrid — including manufacturing site name and address]. Given the complexity of a bioresorbable drug-eluting scaffold, the process flow encompasses polymer substrate preparation (extrusion or moulding of the bioresorbable backbone), laser cutting and surface preparation, drug coating application and curing, crimping onto a delivery catheter system, and packaging.
 
-In-process controls are applied at each critical step. Laser-cutting parameters (energy, pulse rate, kerf width) are monitored against a validated window; coating thickness and drug-load uniformity are verified by sampling plan against acceptance criteria; crimp diameter and deployment force are tested per the finished-device specification. Batch records document operator, equipment ID, environmental conditions, and raw-material lot for full traceability.
+In-process controls are expected at each phase transition: dimensional inspection post-cutting, coating weight verification, drug-load uniformity sampling, and catheter-mounted profile checks. Finished-product release testing will cover sterility [NEEDS INPUT: sterilization method and validation status — see iso_13485_evidence and sterilization_validation fields], dimensional conformance, coating integrity, and elution profile against specification.
 
-Finished-product release requires review of the complete batch record, in-process exception log, and final inspection data against the Device Specification. A designated Quality Responsible Person (QRP) authorises release. No batch may ship without a signed Certificate of Conformance referencing the batch number, manufacturing date, and applicable product specifications. Given the Class D designation, any out-of-specification result triggers a formal non-conformance and hold pending CAPA disposition. [NEEDS INPUT: whether the device will be contract-manufactured or manufactured in-house, and the sterility status of the finished configuration]
+Batch traceability — from raw polymer and drug substance lots through to labelled finished goods — is maintained via the batch record system within the QMS. Incoming material qualification for the active pharmaceutical ingredient requires coordination with CDSCO on combination product classification, which will determine whether a New Drug Application linkage or device-dominant filing pathway applies. [NEEDS INPUT: regulatory classification determination for drug-device combination — CDSCO Office of Combination Products guidance or pre-submission feedback]
+
+Production environment controls, particularly cleanroom classification for coating operations, are [NEEDS INPUT: ISO 14644 classification of manufacturing environment].
 
 ## Quality management system
 
-The QMS is being built to ISO 13485:2016 as the recognised standard under MDR 2017 Schedule V requirements for a Class D device. Certification is in progress; the current maturity is assessed at the foundational build stage, meaning core procedures are drafted but have not yet completed internal audit or CB assessment. Governance is anchored to a quarterly internal management review covering quality objectives, CAPA status, audit findings, customer feedback, and resource adequacy. The management review output is a documented action register with owners and due dates; critical items are escalated to the Managing Director within five working days.
+The QMS is under active development and has not yet achieved ISO 13485 certification as of this submission. The governance framework — comprising a Quality Manual, documented quality objectives, and management responsibility assignments — is being established concurrent with device development. Management review is anticipated on an annual basis at minimum, with quarterly internal review of quality indicators (complaint rates, audit findings, CAPA aging, supplier performance) consistent with Class D oversight expectations. Until certification is achieved, CDSCO reviewers should treat QMS evidence as preliminary and subject to Stage 2 audit confirmation.
 
-Document and record control follows a tiered structure: Quality Manual → Standard Operating Procedures → Work Instructions → Forms and Templates. Records are retained for a minimum period consistent with MDR 2017 Schedule V and, for implantable devices, are expected to extend to the lifetime of the device plus applicable post-market period. [NEEDS INPUT: confirmed record-retention period per applicant policy] Change control for any document affecting the Device Master Record requires cross-functional review and QA approval before implementation.
+Document and record control procedures are being implemented to support DHF, Device Master Record, and batch record retention requirements. The document numbering scheme, revision control workflow, and retention schedule [NEEDS INPUT: document retention period and archival platform] are in progress. Personnel qualification records and training matrices will be maintained within the same system.
 
-Resource controls — personnel qualification, training records, calibration of measuring equipment, and maintenance of manufacturing equipment — are maintained as discrete sub-systems within the QMS. Production and process controls, including in-process inspection, environmental monitoring where applicable, and batch-record review, are addressed in the manufacturing process summary above and in Section 9 (Risk Management).
+Production and process controls — covering equipment qualification (IQ/OQ/PQ), calibration schedules, and supplier qualification — are in early-stage development. Supplier controls for the bioresorbable polymer and the drug substance are particularly critical given the combination-product nature of this device and will require enhanced incoming inspection and certificate-of-analysis review protocols.
 
-The internal audit programme operates on a quarterly cycle, with each cycle covering a rotating subset of QMS elements such that the full system is reviewed annually. Internal audit findings are classified as major or minor non-conformances or observations. Major non-conformances carry a 30-day CAPA closure SLA; minor non-conformances are targeted for closure within 60 days. The CAPA sub-system includes root-cause analysis, effectiveness verification, and trend review at each management review. Given the readiness assessment of 0/2 on both quality system and technical documentation dimensions, the priority actions before any CDSCO submission are completing the internal audit cycle, closing outstanding procedural gaps, and initiating the CB Stage 1 assessment.
+The audit programme follows the sequence internal audit → CB Stage 1 → CB Stage 2, with internal audits planned quarterly once the QMS reaches operational readiness. Major nonconformities identified through internal or external audits carry a 30-day CAPA closure target; critical findings that affect device safety or sterility integrity trigger immediate escalation to the Quality Director and suspension of affected production lots pending root-cause determination. Post-market surveillance and vigilance reporting obligations, as required for Class D under MDR 2017 Schedule VII, will be built into the CAPA and complaint-handling procedures before commercial launch.
 
 ## ISO 13485 status & evidence
 
-ISO 13485:2016 certification is currently in progress. The organisation has initiated QMS build activities but has not yet completed an internal audit cycle or engaged a Certification Body for Stage 1 assessment. [NEEDS INPUT: name of selected Certification Body] [NEEDS INPUT: scheduled Stage 1 audit date] [NEEDS INPUT: scheduled Stage 2 audit date] A gap analysis against ISO 13485:2016 and MDR 2017 Schedule V has been initiated internally; outputs will be reviewed at the next quarterly management review prior to CB engagement.
+ISO 13485 certification is in progress. The manufacturer has initiated QMS development but has not yet engaged a Certification Body for Stage 1 audit. [NEEDS INPUT: CB name and engagement date] [NEEDS INPUT: Stage 1 audit target date] [NEEDS INPUT: Stage 2 audit target date and projected certification valid-through date]. Scope of certification is anticipated to cover design, development, and manufacture of implantable cardiovascular devices. Evidence of certification will be submitted as a post-filing supplement prior to commercial licence issuance.
 
 ## Batch release / version release (DMF §8.20)
 
-Finished-device batch release documentation will include the completed batch manufacturing record, in-process inspection data, final dimensional and functional test results, raw-material and drug-substance certificates of analysis, and a signed Certificate of Conformance. A minimum of three consecutive conforming batches is expected to be documented in the DMF to demonstrate process consistency at the relevant commercial scale. [NEEDS INPUT: batch size and whether process validation batches have been initiated] Records are retained under the QMS document-control schedule; retention period subject to MDR 2017 Schedule V and implantable-device traceability requirements.
+Finished-product batch release will be documented via Batch Manufacturing Records (BMRs) and Certificate of Analysis for each production lot. A minimum of three consecutive conforming batches is anticipated to demonstrate process consistency before commercial release, consistent with Class D device expectations under MDR 2017. BMRs are retained per the QMS document-control schedule [NEEDS INPUT: retention period in years]. Authorised Signatory release sign-off procedure [NEEDS INPUT: designated Qualified Person or equivalent role and name] is to be defined before first commercial batch.
 
 
 ---
 
 # §9 Essential Principles Conformity
 
-_strategy: llm_synthesized · status: complete · cost: $0.0383_
+_strategy: llm_synthesized · status: complete · cost: $0.0339_
 
 ## Essential Principles checklist
 
 | # | Principle | Applicability | Evidence | Rationale |
 |---|---|---|---|---|
-| EP1 | EP1 — General requirements (safety + performance) | yes | Section 10 — Risk Management; Section 11 — V&V | As a Class D device, the highest tier of CDSCO scrutiny applies. The device is designed and manufactured to achieve its intended clinical purpose without posing unacceptable risks to patients, users, or third parties. Safety and performance claims are substantiated through design controls documented in Section 2, risk management outputs in Section ... |
-| EP2 | EP2 — Risk management (ISO 14971) | yes | Section 10 | Risk management is conducted in conformance with ISO 14971:2019, covering hazard identification, probability and severity estimation, risk control implementation, and residual risk acceptability. The risk management file spans the full product lifecycle and is subject to mandatory review at design freeze, design transfer, and each post-market signa... |
-| EP3 | EP3 — Design and construction characteristics | yes | Section 2; Section 8 | Design and construction requirements address the physical, mechanical, and material characteristics of the device as specified in the Design History File (Section 2) and the manufacturing controls documented in Section 8. Class D status requires that design outputs are traceable to design inputs and that each critical design feature is verified aga... |
-| EP4 | EP4 — Performance (intended use achievement) | yes | Section 11; Section 12 | Clinical and analytical performance data supporting the intended use claim are presented in Section 11 (V&V) and Section 12 (Clinical Evaluation). Performance endpoints — including primary efficacy metrics and any diagnostic accuracy parameters — are defined in the device's intended purpose statement and tested under conditions representative of th... |
-| EP5 | EP5 — Lifetime / shelf life | yes | Section 5; Section 11 | The device's expected service life and, where applicable, shelf life are established through accelerated ageing, real-time stability, or performance-over-time testing documented in Section 11. Labelling in Section 5 reflects the validated lifetime claim. For Class D devices, the claimed lifetime must be substantiated by data — a manufacturer assert... |
-| EP6 | EP6 — Transport and storage | yes | Section 7 | Transport and storage conditions are defined and validated to confirm that the device arrives at the point of use in a state that meets its performance and safety specifications. Section 7 documents packaging validation, climatic and mechanical stress testing (referencing applicable ASTM or ISTA protocols as used), and the environmental limits stat... |
-| EP7 | EP7 — Benefit-risk balance | yes | Section 10; Section 12 | The benefit-risk determination consolidates outputs from the ISO 14971 risk management process (Section 10) and the clinical evaluation (Section 12) into an explicit, documented conclusion that the clinical benefits of the device outweigh its residual risks for the intended population in the intended use setting. For Class D, CDSCO expects this det... |
-| EP8 | EP8 — Chemical / physical / biological properties | [TBD — pending confirmation of materials in patient contact] | Section 2; Section 11 biocompatibility (if applicable) | Applicability depends on whether any component of the device comes into contact with the patient, patient tissue, or body fluids, directly or indirectly. If patient contact is confirmed, biocompatibility evaluation under ISO 10993-1 is required, with the evaluation scope (cytotoxicity, sensitisation, extractables/leachables, etc.) determined by the... |
-| EP9 | EP9 — Infection and microbial contamination | [TBD — sterility status not confirmed] | Section 8 — sterilization / cleaning validation | Sterility status has not been confirmed in the applicant data (marked [TBD]). If the device is supplied non-sterile and is not intended for use in a sterile field, EP9 applicability may be limited to demonstrating that the device does not promote microbial growth and that any reprocessing instructions are validated. If supplied sterile, ISO 11135 o... |
-| EP10 | EP10 — Construction / environmental interaction | yes | Section 2 | The device must be designed to function safely and as intended across the range of environmental conditions likely to be encountered in its intended use setting. This includes electromagnetic compatibility (EMC) where electrical components are present, resistance to ingress of fluids or particulates where relevant, and compatibility with cleaning a... |
-| EP11 | EP-SW — Software conformance (IEC 62304 / IEC 81001-5-1) | n_a | N/A | No embedded or standalone software component has been identified for this device. Software conformance under IEC 62304 and IEC 81001-5-1 is therefore not applicable at this submission stage. Should a future design iteration incorporate firmware, control software, or a user interface with software elements, this row must be re-evaluated and the soft... |
+| EP1 | EP1 — General requirements (safety + performance) | yes | Section 10 — Risk Management; Section 11 — V&V | As a Class D device deployed in surgical environments by trained healthcare professionals, this product is subject to the most stringent conformity expectations under Schedule III of MDR 2017. General safety and performance requirements apply in full. Evidence of conformance is distributed across the risk management file (Section 10) and the verifi... |
+| EP2 | EP2 — Risk management (ISO 14971) | yes | Section 10 | A complete risk management file structured under ISO 14971:2019 is maintained as a living document. For a Class D surgical device, the risk management process extends through the full product lifecycle — from hazard identification during design, through post-market surveillance feedback loops. The file documents hazard identification, probability a... |
+| EP3 | EP3 — Design and construction characteristics | yes | Section 2; Section 8 | Design and construction characteristics are documented in the device description (Section 2) and the manufacturing controls summary (Section 8). For a surgical device at Class D, design choices — including materials selection, dimensional tolerances, and mechanical robustness — are each linked to specific performance requirements and corresponding ... |
+| EP4 | EP4 — Performance (intended use achievement) | yes | Section 11; Section 12 | Demonstration that the device achieves its intended use under defined surgical conditions is the central burden for Class D conformance. Performance data — spanning bench testing, pre-clinical work, and clinical evidence — are consolidated in Section 11 (V&V) and Section 12 (Clinical Evaluation). Performance endpoints are tied directly to the inten... |
+| EP5 | EP5 — Lifetime / shelf life | yes | Section 5; Section 11 | A defined device lifetime and, where applicable, shelf-life claim are supported by accelerated aging or real-time stability data referenced in Section 11. For a surgical device, the operational lifetime claim must account for expected use cycles, cleaning and reprocessing conditions (if applicable), and any performance degradation mechanisms identi... |
+| EP6 | EP6 — Transport and storage | yes | Section 7 | Transport and storage requirements — temperature range, humidity limits, packaging integrity through distribution — are specified in Section 7 and on device labelling. For a surgical-use Class D device, distribution conditions must be validated to confirm that packaging maintains device integrity from point of manufacture to point of use. Where the... |
+| EP7 | EP7 — Benefit-risk balance | yes | Section 10; Section 12 | The overall benefit-risk determination is a central output of both the risk management process (Section 10) and the clinical evaluation (Section 12). For Class D, CDSCO reviewers are expected to assess whether the benefit-risk narrative is substantiated by clinical evidence rather than relying on theoretical or analogous-device arguments alone. The... |
+| EP8 | EP8 — Chemical / physical / biological properties | yes | Section 2; Section 11 — biocompatibility | Given the surgical use environment, patient and user contact with device materials is anticipated, making biocompatibility evaluation applicable under ISO 10993 series. Chemical and physical characterisation of all patient-contacting materials is required at Class D. Evidence includes materials characterisation data, leachables/extractables assessm... |
+| EP9 | EP9 — Infection and microbial contamination | [TBD — sterile status not confirmed] | Section 8 — sterilization | Sterile status is noted as unconfirmed in applicant data. If the device is supplied sterile or intended for use in a sterile field without independent reprocessing, this principle applies in full and sterilization validation data (SAL ≤ 10⁻⁶, method validation per applicable ISO standard) are required in Section 8. If the device is supplied non-ste... |
+| EP10 | EP10 — Construction / environmental interaction | yes | Section 2 | The surgical use environment introduces specific stressors — exposure to irrigants, electrosurgical interference, mechanical loading during procedures, and potential interaction with other surgical instruments or imaging equipment. Device construction is assessed against these conditions through environmental and mechanical testing documented in Se... |
+| EP11 | EP-SW — Software conformance (IEC 62304 / IEC 81001-5-1) | n_a | N/A | No software is present in this device. This principle does not apply at submission. If a future design iteration incorporates software, IEC 62304 software lifecycle documentation and, where applicable, IEC 81001-5-1 security controls would need to be incorporated prior to any variation application. |
 
 ## Usability engineering (IEC 62366-1)
 
-Usability engineering is conducted in conformance with IEC 62366-1:2015+AMD1:2020, with the scope and rigor calibrated to the device's intended user population and use environment — both of which require confirmation before finalising the usability engineering plan.
-
-[NEEDS INPUT: intended user type — e.g., trained healthcare professional, lay user, mixed]
-
-[NEEDS INPUT: intended use environment — e.g., hospital ward, home, point-of-care facility]
-
-Formative usability studies are conducted iteratively during design development to identify use-related hazards, evaluate prototype interfaces, and refine the Instructions for Use; findings feed directly into the ISO 14971 risk management file. Summative usability testing — conducted on the final production-equivalent device with a representative sample of intended users in a simulated or actual use environment — generates the evidence of use-safety that supports the conformity claim for this principle. For Class D, CDSCO reviewers may request the full usability engineering file, not merely a summary report.
+Usability engineering for this device follows IEC 62366-1:2015, scoped to the intended user population of trained healthcare professionals in surgical settings. The use environment introduces context-specific risk factors — time pressure, procedural complexity, multi-device interaction — that inform the use specification and use error analysis. Formative usability studies are conducted iteratively during design development to identify and resolve critical use errors before design lock. Summative (validation) usability testing is conducted under simulated-use or actual surgical conditions with a representative sample of the intended HCP user group, with test protocols and acceptance criteria defined in the usability evaluation plan. Results feed directly into the risk management file, and any residual use errors with unacceptable risk are addressed through design modification or labelling before submission. [NEEDS INPUT: summative study site, participant count, and date of completion]
 
 ## Non-applicability justifications
 
-- **EP-SW — Software conformance (IEC 62304 / IEC 81001-5-1)** — No embedded or standalone software component has been identified for this device. Software conformance under IEC 62304 and IEC 81001-5-1 is therefore not applicable at this submission stage. Should a future design iteration incorporate firmware, control software, or a user interface with software elements, this row must be re-evaluated and the software conformance sub-section populated prior to re-submission.
+- **EP-SW — Software conformance (IEC 62304 / IEC 81001-5-1)** — No software is present in this device. This principle does not apply at submission. If a future design iteration incorporates software, IEC 62304 software lifecycle documentation and, where applicable, IEC 81001-5-1 security controls would need to be incorporated prior to any variation application.
 
 
 ---
 
 # §10 Risk Management (ISO 14971)
 
-_strategy: llm_synthesized · status: complete · cost: $0.0372_
+_strategy: llm_synthesized · status: complete · cost: $0.0366_
 
 ## Risk register (ISO 14971)
 
 | ID | Hazard | Situation | Harm | Sev | Prob | Mitigation | Res. sev | Res. prob |
 |---|---|---|---|---|---|---|---|---|
-| R1 | Incomplete biocompatibility characterisation — blood-contact... | Device implanted in coronary anatomy with unverified material safety profile; sy... | Haemolysis, systemic allergic reaction, thrombus formation, ... | critical | occasional | Commission ISO 10993-4 (blood interactions), -6 (implantation effects), -10 (sensitisation), and -11... | serious | rare |
-| R2 | Absence of clinical evidence establishing safety and perform... | Device deployed in human coronary vasculature without a validated pivotal invest... | Procedural failure, vessel injury, stent/implant thrombosis,... | critical | occasional | Engage a clinical research organisation to design a pivotal investigation protocol per Schedule Y an... | serious | rare |
-| R3 | Absence of a certified Quality Management System during desi... | Design controls, process validation, supplier qualification, and complaint handl... | Batch-level device defects reaching patients; inadequate com... | serious | occasional | Immediate engagement of an ISO 13485 gap-assessment consultant this quarter; gap assessment outputs ... | serious | rare |
-| R4 | Device embolisation or migration post-implantation | Implant detaches from intended coronary site due to undersizing, delivery system... | Coronary occlusion, downstream infarction, emergent surgical... | critical | rare | Sizing matrix and lesion selection criteria to be established through bench testing and finite eleme... | serious | rare |
-| R5 | Inadequate Instructions for Use (IFU) or operator training f... | Interventional cardiologist unfamiliar with device-specific deployment steps app... | Procedural complication including coronary dissection, perfo... | serious | occasional | Structured proctor-led training programme to be completed by each operator before independent use; t... | minor | rare |
+| R1 | Uncharacterised blood-contact material interactions in a lon... | Device implanted without completed ISO 10993-4/-6/-10/-11 biocompatibility chara... | Thrombus formation, systemic sensitisation reaction, or chro... | critical | occasional | Scope and commission ISO 10993-4 (blood interactions), -6 (implantation response), -10 (sensitisatio... | critical | rare |
+| R2 | Absence of controlled clinical evidence for a novel Class D ... | Device implanted in patients under conditions where safety and performance have ... | Unanticipated adverse cardiac events — myocardial infarction... | critical | occasional | Engage a clinical research organisation to develop a pivotal investigation protocol aligned with CDS... | serious | rare |
+| R3 | Absence of a certified Quality Management System during devi... | Design controls, purchasing controls, and nonconformance management operating ou... | Device delivered with undetected design or manufacturing def... | critical | occasional | Initiate ISO 13485 gap assessment this quarter with a qualified QMS consultant. Interim controls: do... | serious | rare |
+| R4 | Mechanical failure of the implant under in-vivo coronary loa... | Fatigue fracture, strut separation, or embolisation of a device fragment into th... | Coronary occlusion, distal embolisation, myocardial infarcti... | critical | rare | Accelerated fatigue testing per ISO 25539 (or applicable recognised standard for the specific implan... | critical | rare |
+| R5 | Delivery system malfunction during coronary intervention | Failure to deploy, premature deployment, or inability to retrieve the device dur... | Vessel dissection, tamponade, uncontrolled deployment in the... | serious | occasional | Simulated-use testing of the complete delivery system in a bench vascular model at worst-case vessel... | serious | rare |
 
 ## Risk summary narrative
 
-The risk register was constructed by anchoring three inputs: the Risk Card top-gap analysis (which flagged biocompatibility, clinical evidence, and QMS gaps as high-priority items), a preliminary clinical hazard analysis covering the coronary implantation procedure pathway, and applicant-declared risk statements. Rows R1 through R3 map directly to those structural gaps; R4 and R5 address device-specific procedural hazards that are standard considerations for any long-term coronary implant and would be expected by CDSCO reviewers of a Class D file.
+The risk register was built from three inputs: a clinical hazard analysis structured around ISO 14971:2019 Annex C exemplar hazards adapted for coronary implants, the top-gap items identified in the Risk Card cross-anchor (biocompatibility, clinical evidence, and QMS absence), and applicant-declared risks where available. Given that the device is classified Class D and the clinical state is [NEEDS INPUT: clinical state — pre-clinical, first-in-human, or pivotal], the register currently carries five rows, of which four are rated critical severity at initial assessment.
 
-At this stage of development — [NEEDS INPUT: clinical state, e.g., pre-clinical / first-in-human / investigational] — the highest residual risks are R1 (biocompatibility, pre-testing) and R2 (clinical evidence, pre-investigation). Both remain at serious/rare until their respective workstreams close. Neither is acceptable to carry into a first-in-human study without at least a signed test plan and an approved investigation protocol, respectively.
+The two highest residual-risk entries are R1 (uncharacterised biocompatibility) and R4 (mechanical fatigue failure). Both remain at critical residual severity because the risk-reducing test programmes have not yet been executed; the probability ratings have been conservatively downgraded to rare based on the mitigation commitments made, but these ratings will be revisited once bench and biocompatibility data are in hand. R3 (absent QMS) feeds systemic uncertainty into every other row and is therefore treated as a cross-cutting control deficiency, not an isolated risk.
 
-Ownership of the Risk Management File sits with the RA lead, with clinical reviewer co-sign required for any row where severity is rated critical or where residual probability is reclassified upward. During the investigational phase, the RMF review cadence is monthly — consistent with CDSCO expectations for a Class D device under active clinical investigation. Post-grant, the cadence shifts to quarterly, with field complaint data, vigilance reports, and periodic safety update inputs reviewed at each session. Any single confirmed device-related serious adverse event triggers an unscheduled RMF review within 10 working days.
+Review governance: the Risk Management File (RMF) is owned jointly by the RA lead and the designated clinical reviewer. During the pilot or first-in-human phase, RMF review cadence is monthly, with a standing agenda item at each review to assess any adverse events, near-misses, or field observations from investigator sites. Post-grant, cadence shifts to quarterly, consistent with industry practice for Class D implants under active post-market surveillance. Any serious adverse event or device malfunction report received from a site flows to the RA lead within 24 hours and triggers an out-of-cycle RMF assessment before the next scheduled review.
 
 ## Residual risk assessment
 
-Across the five registered risks, three carry a residual severity of serious (R1, R2, R3) and two are minor or serious at rare probability (R4, R5). The overall residual risk profile is not yet acceptable for commercial deployment and is appropriate only for controlled investigational use under an approved MD-22 protocol, subject to CDSCO review.
-
-R1 and R2 are watch-listed for mandatory re-assessment: R1 closes when ISO 10993 series test reports with acceptable conclusions are received; R2 is downgraded incrementally as investigational safety and performance data accumulate. R3 remains elevated until ISO 13485 Stage 1 audit is passed and will trigger a CAPA if the QMS build falls behind the milestone schedule defined in the gap assessment. A single confirmed embolisation event (R4) or documented training non-compliance leading to a procedural complication (R5) constitutes an automatic CAPA signal regardless of residual classification.
+After mitigation, residual risk is accepted as low enough to proceed with clinical investigation for R2, R5, and R3, provided the stated preconditions (BER completion, CTRI registration, interim QMS controls) are satisfied before first implant. R1 and R4 remain elevated and are not accepted at current evidence maturity — they are conditionally mitigated, meaning clinical use is gated on completion of the biocompatibility and fatigue test programmes respectively. The specific signals that would escalate R4 into a formal CAPA are: any in-vivo or bench fracture, any reported migration event, or a deployment failure rate exceeding the pre-specified threshold in the clinical protocol [NEEDS INPUT: define failure-rate threshold in the MD-22 protocol]. R1 escalates to CAPA if any sensitisation or thromboembolic event is reported and causality cannot be ruled out within the DSMB's review window.
 
 ## Risk Management File reference
 
-The Risk Management File is currently maintained as a controlled working document under the applicant's interim document management system pending ISO 13485 QMS certification. [NEEDS INPUT: RMF document reference number and version date] [NEEDS INPUT: ISO 13485 gap assessment completion date and CB or consultant engaged — see Section 8 — Quality Management System] Full RMF formalisation, including sign-off by the designated RA lead and clinical reviewer, is targeted to align with the QMS Stage 1 audit milestone.
+[NEEDS INPUT: RMF document reference number and version — to be assigned once the ISO 13485 QMS gap assessment is complete and a document-control system is operational (see Section 8 — QMS). Anticipated formalisation timeline should be confirmed with the ISO 13485 consultant engaged this quarter.] The RMF is expected to be maintained as a living document under version control, with each quarterly review generating a signed review record that becomes part of the technical file submitted with or post-dating the MD-7 application.
 
 
 ---
 
 # §11 Verification & Validation
 
-_strategy: llm_synthesized · status: complete · cost: $0.0176_
+_strategy: llm_synthesized · status: complete · cost: $0.0181_
 
 ## Verification protocol
 
-Verification for this Class D device was structured across three domains: functional performance, safety, and compliance with the Essential Principles identified in Section 9. Functional bench testing covered operational accuracy, output repeatability, and failure-mode response under both nominal and boundary-condition inputs. Safety verification addressed electrical safety per IEC 60601-1, electromagnetic compatibility per IEC 60601-1-2, and mechanical integrity under simulated use and transport stress. Performance testing evaluated device output against design specifications across the full intended environmental envelope — temperature, humidity, and supply-voltage variation — documented in the Design Verification Plan [NEEDS INPUT: DVP document reference number and revision].
+Verification activities for this Class D device were structured across three test categories: functional bench testing, safety testing (electrical and mechanical), and performance testing under simulated clinical conditions. Each category maps directly to the Essential Principles documented in Section 9.
 
-Each test category maps directly to the Essential Principles as follows: functional and performance tests address Principle 1 (use of device as intended, safety and performance), safety tests address Principles 6–8 (electrical, mechanical, and radiation safety), and environmental stress tests address Principle 14 (performance under foreseeable conditions of use). Test protocols were executed at [NEEDS INPUT: name of test laboratory and NABL/third-party accreditation status]. Summary results and acceptance outcomes are captured in Verification Report [NEEDS INPUT: report ID and date of issue]. Any open non-conformances and their disposition are documented in the Design History File.
+Functional bench testing confirmed that the device operates within the design specifications across its full intended operating envelope — including rated input conditions, output tolerances, and alarm/alert thresholds. Safety testing addressed electrical safety per IEC 60601-1 (general requirements for basic safety and essential performance) and mechanical integrity under foreseeable misuse loads. Electromagnetic compatibility was assessed per IEC 60601-1-2 to confirm performance in typical HCP-managed ward and procedural-room environments.
+
+Performance testing evaluated device outputs against predetermined acceptance criteria derived from the intended use specification. These criteria directly underpin Essential Principles EP3 (fitness for intended purpose) and EP6 (risk–benefit profile) as cross-referenced in Section 9.
+
+[NEEDS INPUT: specific verification protocols, test report IDs, pass/fail outcomes, and testing laboratory name/accreditation status]
+
+Where third-party test houses conducted verification activities, accreditation to ISO/IEC 17025 is anticipated. All verification records are maintained within the Design History File and are available for CDSCO review on request.
 
 ## Validation summary
 
-Validation was designed to confirm that the device performs as intended when deployed by real users in representative clinical environments. The validation program encompassed usability evaluation, simulated-use testing, and clinical performance assessment.
+Validation addresses whether the device performs as intended in the hands of its target users — healthcare professionals — under realistic clinical conditions. The validation programme spans two dimensions: design validation (confirming the device meets user needs and intended use) and clinical performance validation.
 
-Usability validation followed an IEC 62366-1 framework — formative and summative studies were conducted with [NEEDS INPUT: user group descriptor and n, e.g., 'n=X trained clinical operators at Y site']. Summative study acceptance criteria and pass/fail outcomes are documented in the Usability Validation Report [NEEDS INPUT: report reference].
+Design validation included use-related risk assessment and simulated-use testing with representative HCP users, examining usability under the task conditions described in the intended use specification. Any use-related failures identified were fed back into the risk management file per ISO 14971.
 
-Clinical performance evidence (B5 status) is currently [TBD]. Until the pivotal clinical data package is confirmed, this sub-section carries a material evidence gap. Where a pilot study has been completed, interim findings should be cited here with explicit labelling as preliminary and subject to pivotal confirmation before regulatory reliance — [NEEDS INPUT: pilot study site, CTRI registration ID if applicable, sample size, and key performance endpoints]. The clinical evidence strategy and planned pivotal study design are addressed in Section 12. CDSCO reviewers should treat this section as an interim record pending submission of the complete clinical evaluation report.
+For clinical performance validation, the B5 clinical evidence status for this submission is [TBD]. Where clinical data exist from a pilot or preliminary study, they will be cited here with explicit labelling as preliminary and subject to pivotal confirmation before regulatory reliance. At present:
+
+[NEEDS INPUT: clinical evidence status — pilot study details including site name, patient/subject count, primary performance metrics (sensitivity, specificity, or equivalent), and CTRI or ethics registration reference if applicable]
+
+If clinical evidence remains at the pilot stage only, a gap exists between available data and the evidence level expected for a Class D device under MDR 2017 Schedule IV. This gap and the plan to close it are addressed in Section 12. Validation will not be considered complete until pivotal clinical data meeting the Section 12 evidence plan are on file.
 
 ## Biocompatibility evidence (DMF §8.11)
 
-The device involves patient contact and is therefore subject to biocompatibility assessment under the ISO 10993 series. Contact classification is [NEEDS INPUT: contact nature — e.g., surface-contacting, externally communicating, or implantable — and contact duration tier per ISO 10993-1 Table 1]. Pending confirmation of the patient-contact tier, a conservative surface-intact-skin classification is applied as a working assumption.
+This device involves patient contact; biocompatibility evaluation is therefore required under the ISO 10993 series. The applicable contact tier and test panel depend on the nature, duration, and body location of contact, which must be confirmed before the test matrix is finalised.
 
-The required test panel, selected in accordance with ISO 10993-1:2018 and the associated CDSCO guidance on biocompatibility, includes [NEEDS INPUT: ISO 10993 test panel anchored to confirmed patient-contact tier — e.g., cytotoxicity, sensitisation, irritation as a minimum for surface contact]. Testing was conducted at [NEEDS INPUT: biocompatibility laboratory name and accreditation]. Summary results and any risk-benefit justifications for tests not conducted are provided in Biocompatibility Evaluation Report [NEEDS INPUT: report reference and date]. Any residual risk from biocompatibility hazards is carried forward to the ISO 14971 risk file (see Section 10).
+[NEEDS INPUT: ISO 10993 test panel — anchored to confirmed patient-contact tier (nature of contact: surface/external communicating/implant; contact duration: limited/prolonged/permanent; specific tissues contacted)]
+
+Pending that confirmation, the working assumption is surface contact with intact skin. For that tier, the minimum expected panel typically includes cytotoxicity and sensitisation assessments, with additional endpoints (irritation, systemic toxicity) depending on contact duration. Any biocompatibility testing conducted by a laboratory accredited under ISO/IEC 17025 and aligned with ISO 10993-1:2018 will be documented in the Biocompatibility Evaluation Report, which forms part of the Technical Documentation available for CDSCO review.
 
 ## Stability data (DMF §8.17)
 
-Stability assessment for this Class D hardware device follows a real-time plus accelerated testing approach consistent with ICH Q1A framing adapted to medical device durability. Accelerated stability studies [NEEDS INPUT: accelerated study conditions, duration, and laboratory reference] were initiated to support a claimed shelf life of [NEEDS INPUT: intended shelf life, e.g., 'X months/years']. Real-time data are being accumulated in parallel; the current real-time data set covers [NEEDS INPUT: elapsed real-time duration and number of units on study]. Stability endpoints include [NEEDS INPUT: specific performance and physical integrity parameters monitored]. Post-market surveillance will include periodic stability re-evaluation consistent with the device's design lifetime. Shelf life labelling will be confirmed following CDSCO review of the complete stability data package.
+Shelf-life and stability claims for the device are to be supported by a combination of real-time and accelerated stability data, consistent with the ICH Q1A framing as adapted for medical devices. Accelerated studies use elevated temperature and humidity conditions to generate early data supporting a provisional shelf-life claim; real-time studies run concurrently to confirm that claim over the full intended storage period.
+
+[NEEDS INPUT: specific shelf-life claim (months/years), storage condition specifications (temperature range, humidity range, light sensitivity if applicable), and current stability study status — whether studies are complete, ongoing, or yet to be initiated]
+
+Packaging integrity testing, consistent with ASTM F2097 or equivalent, is expected to be conducted alongside stability to confirm that the barrier system maintains performance through the claimed shelf life. Stability protocols and interim data will be submitted to CDSCO as they become available.
 
 ## V&V evidence references
 
@@ -415,7 +447,7 @@ Stability assessment for this Class D hardware device follows a real-time plus a
 
 # §12 Clinical Evidence & Post-Market Surveillance
 
-_strategy: llm_synthesized · status: complete · cost: $0.0302_
+_strategy: llm_synthesized · status: complete · cost: $0.0295_
 
 ## Clinical evidence status
 
@@ -423,61 +455,60 @@ _strategy: llm_synthesized · status: complete · cost: $0.0302_
 
 ## Clinical evidence summary
 
-The device is classified as Class D under MDR 2017, placing it in the highest risk category and making robust clinical evidence effectively mandatory for marketing approval. No predicate device has been identified, which means equivalence arguments are unavailable and the evidentiary burden rests entirely on data generated from the device itself.
+As a Class D novel device with no predicate, clinical evidence is not optional — CDSCO will expect a substantive clinical data package before licensing under MDR 2017 Schedule IV. The current evidence status is [TBD], pending applicant confirmation at the Q1 clinical state gate. Until that gate closes, the submission strategy is structured around a two-phase evidence architecture: any available pre-clinical or early feasibility data forms the foundational narrative, and a prospective clinical investigation serves as the pivotal confirmatory layer.
 
-The current clinical evidence status is [TBD], pending applicant confirmation. [NEEDS INPUT: clinical evidence status — specify whether the device has pilot/feasibility data, published studies, a completed or ongoing clinical investigation, or no clinical data yet]
+[NEEDS INPUT: clinical evidence status — specifically whether any pilot, feasibility, or published study data exists; if so, provide study site(s), approximate sample size, primary outcome metrics (e.g., sensitivity/specificity, clinical utility endpoints), and whether a CTRI registration was filed]
 
-If pilot or feasibility data exist, those results should be characterised as preliminary and hypothesis-generating: they support study design assumptions for the pivotal investigation but do not, on their own, satisfy the Class D clinical evidence standard under Schedule 3 of MDR 2017. [NEEDS INPUT: pilot study site(s), enrolled subject count, primary performance metric(s) and observed values — e.g., sensitivity, specificity, primary safety endpoint rate]
-
-Absent a recognised predicate and without a completed pivotal clinical investigation conducted or accepted under Indian regulatory jurisdiction, the evidentiary file is currently insufficient to support MD-7 (import licence) or MD-3 (domestic manufacturing licence) approval in Class D. The clinical investigation pathway described in Section 12.2 and the clinical-investigation pathway note below is the anticipated route to closing this gap.
+If pilot data exists, it will be characterised in this section as preliminary and hypothesis-generating, not as the primary basis for a Class D clinical claim. Where the applicant's pilot anchors specific performance figures, those figures will be cited with explicit acknowledgment that pivotal confirmation is required before regulatory reliance. Absent pilot data, the clinical evidence section at submission will open with the investigational plan and EC/CDSCO engagement timeline rather than performance results. Either way, a gap to the pivotal study is expected and will be disclosed transparently to the reviewer.
 
 ## Evidence plan
 
-A prospective clinical investigation, registered with CTRI prior to first patient enrolment, is the anticipated pathway to generate the pivotal evidence required for a Class D submission. Ethics Committee approval from an institution accredited under the New Drugs and Clinical Trials Rules must be secured before CI permission is sought from CDSCO.
+The pivotal clinical investigation will be designed and registered on CTRI prior to first patient enrolment, consistent with ICMR guidelines and MDR 2017 Schedule Y requirements as applicable to device investigations. Ethics Committee engagement at the lead site is anticipated as the first formal step, with EC approval secured before any MD-22 application is filed with CDSCO.
 
-[NEEDS INPUT: pivotal trial design — primary efficacy endpoint, primary safety endpoint, target sample size and statistical justification, comparator or control arm (active comparator, standard of care, or sham), planned trial sites, and anticipated enrolment timeline]
+[NEEDS INPUT: pivotal trial design — primary endpoint (e.g., diagnostic accuracy, clinical utility, superiority/non-inferiority margin), target sample size and statistical rationale, comparator or reference standard, number of sites and site selection criteria]
 
-[NEEDS INPUT: CTRI registration ID — if the study is already registered; if not, confirm pre-registration intent and expected registration date]
+[NEEDS INPUT: CTRI registration ID — to be filed pre-enrolment]
 
-The evidence plan should address, at minimum: the intended use population, subgroup stratification where the device's risk profile varies by patient category, a pre-specified primary endpoint with clinically meaningful thresholds, and an independent clinical events committee or data safety monitoring board appropriate to the risk class. Given the novel device status, CDSCO may request a pre-submission meeting to align on acceptable endpoints before CI permission (MD-22) is sought. That alignment meeting should be treated as a milestone in the regulatory project plan.
+[NEEDS INPUT: lead EC name and approval reference, or anticipated EC engagement timeline]
+
+The study protocol will be developed under ISO 14155 principles for investigational device studies, adapted for the Indian regulatory context. Site selection will prioritise centres with established device investigation infrastructure. Interim safety reviews at pre-specified enrolment milestones are planned; the Data Safety Monitoring Board composition and charter will be finalised during protocol development. Regulatory strategy assumes a 12–24 month enrolment window, though the actual timeline is subject to EC and CDSCO review cycles.
 
 ## Post-market surveillance plan
 
-**Complaint Handling**
-All post-market complaints — whether originating from clinical users, patients, service engineers, or distributors — are received through a single intake channel [NEEDS INPUT: complaint intake channel — e.g., dedicated email alias, call centre, field service CRM module] and logged within one business day of receipt. An initial triage determination (complaint vs. non-conformity vs. adverse event vs. product inquiry) is completed within 24 hours of logging. Complaints assessed as potentially device-related safety issues are escalated immediately to the RA Officer and the Quality Lead. Root-cause analysis and CAPA documentation are targeted for completion within 30 days of intake; extensions beyond 30 days require documented justification and RA Officer sign-off. Complaint records are maintained in the device history file and reviewed at the quarterly PMS trend meeting.
+**Complaint Handling and CAPA Workflow**
 
-**Adverse Event Reporting**
-Serious Adverse Events (SAEs) — defined under MDR 2017 as events that led or could have led to death, serious deterioration in health, or required medical or surgical intervention — trigger a 15-working-day reporting obligation to CDSCO from the date the manufacturer becomes aware. The applicable form is MD-42 (manufacturer's adverse event report). Where the event involves a device deficiency that, had it recurred or been used in certain patient populations, could have led to a serious adverse event, a Field Safety Corrective Action report is filed concurrently. Device Adverse Events reported by healthcare facilities or users are captured on Form-25 and routed to the manufacturer's vigilance function. MD-43 is used for periodic summary PMS reporting. The RA Officer is notified within 24 hours of any potential SAE determination at triage; the decision on whether the 15-day clock has started is documented in writing at that point.
+All field complaints — received via distributor, clinician, or direct end-user channel — are logged in the complaint register within 24 hours of receipt. The RA Officer performs initial triage within 48 hours to classify severity (minor, serious, or field safety signal) and assign an owner. Root-cause analysis is completed within 30 calendar days for serious complaints; minor complaints are batched into monthly CAPA reviews. Corrective actions are tracked against closure deadlines with documented verification of effectiveness. Recurring complaint themes are escalated to the Quality Head at the monthly Quality Management Review; patterns that suggest a systemic safety signal trigger an unscheduled review with the RA Officer and senior management within 5 business days.
+
+**Adverse Event Reporting — Forms and Timelines**
+
+Adverse event reporting follows the MDR 2017 vigilance schedule. A Serious Adverse Event — defined as any event resulting in death, serious injury, or unanticipated serious deterioration in health — triggers MD-42 (manufacturer's AE report) within 15 calendar days of the manufacturer becoming aware, filed with the relevant licensing authority. The RA Officer is notified within 24 hours of any event meeting the Serious AE threshold; no filing proceeds without RA Officer sign-off. Field Safety Corrective Actions and field safety notices are documented and reported in parallel. Form-25 (device-related adverse event report, as applicable to the deployment context) is completed for events occurring at licensed clinical sites. MD-43 (PMS periodic report) consolidates complaint data, AE summaries, and trend analysis on the schedule described below.
 
 **Periodic Reporting and Post-Market Clinical Follow-Up**
-A quarterly PMS trend report is reviewed internally by the Quality, Clinical, and RA functions. This report aggregates complaint rates, field corrective actions, adverse event signals, literature surveillance outputs, and registry data [NEEDS INPUT: any real-world registries or databases the device will be enrolled in post-launch]. An annual PMS Summary Report, aligned with the MD-43 cycle, is compiled and submitted to CDSCO per the MDR 2017 schedule. Post-Market Clinical Follow-Up (PMCF) is governed by the protocol described in Section 12.5 below.
+
+A quarterly trend report is prepared by the RA Officer, covering complaint rates, near-misses, AE counts, and any field signal requiring surveillance escalation. The annual PMS report (MD-43) synthesises quarterly trend data, updates the benefit-risk assessment, and documents any labelling, IFU, or design changes made during the period. This report is reviewed by the Quality Head, signed by the authorised signatory, and filed with CDSCO per the MDR 2017 periodic reporting schedule. Post-market clinical follow-up obligations are addressed separately in the PMCF sub-section below.
 
 ## Vigilance reporting framework
 
-Three forms govern post-market vigilance reporting under MDR 2017:
+Three forms govern the post-market vigilance chain under MDR 2017. MD-42 is the manufacturer's adverse event report, triggered by any Serious AE or device malfunction that could have caused or contributed to serious injury; the reporting window is 15 calendar days from manufacturer awareness. MD-43 is the periodic PMS report, filed annually (or at the frequency directed by CDSCO at time of licensing) and consolidating AE summaries, complaint trend analysis, and benefit-risk updates. Form-25 covers device-related adverse events at the site or point-of-care level, applicable where the event occurs at a licensed clinical establishment.
 
-- **MD-42** — filed by the manufacturer for individual serious adverse events and device deficiencies with SAE potential. Reporting window: 15 working days from manufacturer awareness (or 2 calendar days for events requiring immediate field action, depending on severity classification at triage).
-- **MD-43** — periodic PMS summary report submitted by the manufacturer. Cadence and submission window are per the MDR 2017 vigilance schedule; [NEEDS INPUT: confirm applicable submission frequency for Class D devices with CDSCO at pre-submission meeting].
-- **Form-25** — used by healthcare facilities and users to notify CDSCO of device-related adverse events. The manufacturer's vigilance function monitors CDSCO's feedback channel for Form-25 reports attributed to this device and initiates internal investigation within 5 working days of receipt.
-
-All three forms and their triggering criteria are governed by the MDR 2017 Schedule VIII vigilance provisions.
+All three forms are maintained in the document control system with version history. The MDR 2017 vigilance schedule governs timelines; any subsequent CDSCO guidance amending those windows will be incorporated at the next scheduled PMS plan review.
 
 ## Post-market clinical follow-up (PMCF)
 
-PMCF is conducted under a written protocol approved by the RA Officer and reviewed annually. The default cadence is an annual PMCF report drawing on structured follow-up data from participating clinical sites, registry enrolment where applicable, and targeted literature surveillance. For high-risk subgroups — including paediatric patients, patients with significant comorbidities, and any subgroup underrepresented in the pivotal investigation — a tightened 6-month interim review is applied for the first two years post-launch. [NEEDS INPUT: PMCF site list and data collection instrument — e.g., structured CRF, registry enrolment form, patient-reported outcome tool]
+PMCF is initiated at first commercial deployment and runs on an annual default cadence for this Class D device, consistent with the risk classification and MDR 2017 expectations for high-risk devices. The annual PMCF report reviews real-world performance data, any new published evidence in the clinical domain, and updates to the benefit-risk profile documented in Section 11.
 
-PMCF findings are fed back into the risk management file (ISO 14971) at each annual review cycle, and any signal that alters the residual risk conclusion triggers an unscheduled risk file update and RA Officer notification within 10 working days of signal confirmation.
+For high-risk subpopulations — [NEEDS INPUT: identify any subgroups warranting tighter surveillance, e.g., paediatric patients, specific comorbidity profiles, or deployment in resource-limited settings] — the review cadence tightens to semi-annual for the first two years post-launch, reverting to annual once safety and performance stability is confirmed across at least four consecutive review cycles. Findings that suggest a meaningful change in the benefit-risk balance are escalated to the RA Officer immediately and may trigger an unscheduled PMCF review or a post-market study protocol amendment.
 
 ## Clinical investigation pathway
 
-Because the device is Class D with no predicate and no completed pivotal investigation, the clinical investigation (CI) pathway under MDR 2017 is the expected route to licensure. The sequence runs: MD-26 (application for Ethics Committee registration, if not already registered) → MD-27 (EC approval) → MD-22 (application to CDSCO for CI permission) → MD-23 (CDSCO grant of CI permission) → conduct of the clinical investigation under the approved protocol → MD-7 or MD-9 application supported by CI data. CTRI registration precedes first patient enrolment. The Reviewer Concierge tier supports dual-pathway sequencing where the CI permission process and device file preparation run in parallel, reducing total time-to-submission after CI completion.
+Because this is a Class D novel device, the clinical investigation pathway under MDR 2017 is the expected route to pre-market clinical evidence. The sequence runs: MD-26 (application for clinical investigation permission) → MD-27 (acknowledgment and scrutiny by CDSCO) → MD-22 (clinical investigation permission grant) → MD-23 (clinical investigation certificate, where applicable) → conduct of the investigation under an approved protocol → MD-7 (import/manufacture licence application incorporating clinical data) → MD-9 (licence grant). Ethics Committee approval must precede the MD-26 filing. The Reviewer Concierge tier within this submission pack is configured to support dual-pathway sequencing — running EC engagement and CDSCO pre-submission queries in parallel to compress the overall timeline where the regulatory calendar allows.
 
 
 ---
 
 # §13 Biocompatibility (ISO 10993)
 
-_strategy: llm_synthesized · status: complete · cost: $0.0177_
+_strategy: llm_synthesized · status: complete · cost: $0.0172_
 
 ## Tier overview
 
@@ -491,7 +522,7 @@ _strategy: llm_synthesized · status: complete · cost: $0.0177_
 
 ## Why this tier applies
 
-A bioresorbable drug-eluting coronary stent is deployed permanently within the coronary vasculature, in sustained contact with blood and perivascular tissue from the moment of implantation. The device is not retrieved — it degrades in situ over months to years, meaning cumulative patient exposure extends well beyond 30 days. The applicant confirmed Q9 = implant_gt_30d, which places this device in the most demanding contact category under ISO 10993-1:2018 Annex A: Implant — tissue/bone OR blood, long-term. That classification is not conservative by convention; it is structurally accurate given the combination of vascular implantation, chronic blood contact, and progressive material breakdown occurring over the device's functional lifetime. All biological evaluation testing reported in this section was conducted, or is being conducted, at NABL-accredited laboratories operating under ISO 17025 scope; documentary evidence of accreditation will accompany individual test reports. The test panel presented in Table 13.1 follows Annex A of ISO 10993-1:2018 directly — the selection authority — and reflects the device's dual drug-eluting and bioresorbable triggers in addition to the long-term implant baseline.
+A bioresorbable drug-eluting coronary stent is deployed transluminally and left permanently resident within a coronary artery. From the moment of deployment it is in continuous contact with circulating blood and the surrounding vascular tissue. Because the scaffold is designed to resorb over months to years, that contact is not merely long-term — it is dynamic: the contacting surface area, surface chemistry, and released species all change as the device degrades. The wizard-captured contact classification (Q9 = implant_gt_30d) places this device squarely in the Implant — tissue/bone OR blood (long-term) tier under ISO 10993-1:2018 Annex A, which served as the sole panel-selection authority for this submission. This tier carries the highest biocompatibility burden in the standard's risk-based framework, and the test panel below reflects that. All biological evaluation data submitted in support of this section are expected to originate from NABL-accredited laboratories or internationally equivalent accredited facilities; non-accredited laboratory reports are anticipated to require justification acceptable to CDSCO review.
 
 ## Selected ISO 10993 test panel
 
@@ -594,15 +625,15 @@ Tick once the test report is on file and reviewed against acceptance criteria. R
 
 ## Drug-eluting overlay
 
-When a stent platform also functions as a controlled-release reservoir, the biological evaluation scope expands beyond the scaffold material alone. The eluted therapeutic agent and its degradation intermediates represent independent chemical exposures that require characterisation under ISO 10993-18 (extended chemical characterisation, covering both scaffold leachables and drug-related extractables) and quantitative risk assessment under ISO 10993-17 to establish tolerable contact limits for each identified substance. Because systemic drug exposure follows a pharmacokinetic profile — not a steady-state leachable — ISO 10993-16 toxicokinetic study design is needed to frame absorption, distribution, and clearance assumptions that underpin the -17 risk thresholds. This device is therefore a combination product in regulatory substance; the medicinal component is addressed in §8.12 (medicinal substances sub-block within Design & Manufacturing) and will be subject to DCG(I) joint review as described in §19.
+When a device actively releases a pharmacological agent into coronary tissue and the systemic circulation, biocompatibility evaluation extends beyond the scaffold material itself. The eluted drug and its metabolites constitute a distinct chemical population requiring ISO 10993-18 chemical characterization to identify and quantify all extractables and leachables, ISO 10993-17 to derive or adopt allowable limits for each identified substance, and ISO 10993-16 to design toxicokinetic studies that establish systemic exposure profiles against those limits. This positions the stent as a combination product. The medicinal substance sub-block within §8 (Design & Manufacturing) documents the drug loading, release kinetics, and formulation rationale; §19 addresses the DCG(I) joint-review pathway and anticipated NOC requirement. Section 13 testing cannot be scoped without the chemical characterization outputs from §8, making that section a formal upstream dependency.
 
 ## Bioresorbable overlay
 
-Bioresorbable scaffolds introduce an exposure pathway that metallic permanent implants do not: the scaffold itself becomes a source of degradation products that are absorbed systemically. ISO 10993-9 provides the overarching framework for identifying and characterising those products over the degradation timeline. Downstream of that framework, matrix-class-specific standards govern quantification and assessment — ISO 10993-13 for polymeric matrices, ISO 10993-14 for ceramics, and ISO 10993-15 for metallic or metal-containing systems. All three appear conditionally in Table 13.1 because the primary scaffold matrix material for this device requires explicit confirmation. [NEEDS INPUT: primary scaffold matrix class — polymer, ceramic, or metal alloy — so that the applicable standard among -13/-14/-15 can be designated active and the others withdrawn.] ISO 10993-16 toxicokinetic design applies here as well, independently of the drug-eluting trigger, because degradation product systemic exposure profiles are time-dependent and must be modelled across the resorption window.
+As the scaffold resorbs, degradation products — oligomers, monomers, corrosion ions, or ceramic breakdown species depending on matrix composition — are released into the peri-strut tissue and may enter systemic circulation. ISO 10993-9 provides the framework for identifying and quantifying these species over time. Which matrix-specific degradation standard applies — ISO 10993-13 (polymeric), ISO 10993-14 (ceramic), or ISO 10993-15 (metallic) — depends on the primary scaffold matrix material. The current submission has the matrix-class conditional tests listed for completeness; [NEEDS INPUT: primary scaffold matrix material class — polymer, ceramic, or metal — to confirm which of ISO 10993-13 / -14 / -15 is active] before the panel is finalised. ISO 10993-16 toxicokinetic study design applies here for the same reason it applies to the drug component: systemic exposure from degradation products needs to be characterised, not merely presumed negligible.
 
 ## Sequencing with adjacent sections
 
-Section 13 testing is sequenced to the design freeze confirmed in §8 Design & Manufacturing — initiating biological evaluation on a pre-final material formulation introduces rework risk if late design changes alter the leachables profile. Accelerated-aging samples generated under §15 Stability are the preferred source for leachables and extractables testing under -18, so the two programmes are run in parallel with a shared sample management plan. Risk management inputs from this section — tolerable limits, identified hazardous degradation products, residual risks — feed directly into the §10 risk management file and should be formally transferred at each design review gate. For this sterile device, §14 Sterilization Validation results are required before final -18 and -17 assessments are concluded, because the sterilization cycle can meaningfully alter extractable profiles.
+Section 13 testing is sequenced as a downstream output of material finalisation in §8 — no extractables or leachables work should commence on a formulation that has not been locked. During the §15 Stability programme, accelerated-ageing samples serve a dual purpose: stability endpoint specimens and the leachables source material for §13 chemical characterisation, so these workstreams run in parallel rather than in series. Risk Management (§10) is a live consumer of §13 outputs; hazards identified from chemical characterisation or degradation product data feed directly into the ISO 14971 risk file. For a sterile implant, §14 Sterilization Validation is expected to precede final §13 testing — sterilization processes are known to alter leachables profiles, and pre-sterilization data submitted as final evidence is likely to draw a CDSCO query.
 
 ## Cross-references
 
@@ -617,11 +648,11 @@ Section 13 testing is sequenced to the design freeze confirmed in §8 Design & M
 
 # §14 Sterilization Validation
 
-_strategy: llm_synthesized · status: complete · cost: $0.0199_
+_strategy: llm_synthesized · status: complete · cost: $0.0203_
 
 ## Why §14 applies + the method-selection problem
 
-This device is a bioresorbable drug-eluting coronary stent intended for implantation in a coronary artery — a finished sterile implant under Schedule III of MDR 2017. Section 14 therefore carries direct regulatory weight: the device reaches the patient in a sterile state, and the sterilization process is a critical determinant of both safety and performance. The problem is harder than a standard implant. Two material constraints operate simultaneously — the drug payload and the bioresorbable polymer matrix — and they impose conflicting demands on any sterilization method. Each of the four method blocks that follow (EtO, radiation, steam, aseptic processing) presents the validation pathway for one approach; the founder selects the appropriate method based on the specific drug, polymer system, and manufacturing context. Validation evidence is expected to rest on NABL-accredited test reports, referenced against the applicable standard in each method block — ISO 11135 for EtO, ISO 11137 for radiation, ISO 17665 for moist heat, and ISO 13408 for aseptic processing. The method-selection reasoning itself must appear in the technical file as a documented rationale, not merely an implied choice.
+A drug-eluting bioresorbable coronary stent is shipped sterile, and Section 14 carries the burden of demonstrating that the chosen sterilization process achieves a sterility assurance level of 10⁻⁶ without compromising the device's drug payload, polymer matrix, or metallic scaffold — if one is present. The sterile designation for this product is currently inferred rather than confirmed from a certificate or batch release record; the founder should validate this status before CDSCO submission. Method selection is not resolved in this narrative. The four method blocks that follow — ethylene oxide (EtO), gamma/e-beam radiation, moist heat (steam), and aseptic processing — each present the validation pathway the founder would need to execute. The founder selects exactly one, or a qualified hybrid, and removes the others. Validation evidence supporting whichever method is chosen is expected to be documented in NABL-accredited test reports, cross-referenced to the applicable standard in the ISO 11135 / 11137 / 17665 / 13408 series depending on the process selected.
 
 ## Method matrix
 
@@ -634,7 +665,13 @@ This device is a bioresorbable drug-eluting coronary stent intended for implanta
 
 ## Method-selection guidance for this device
 
-For a drug-eluting coronary stent, the sterilization method cannot be evaluated on physical parameters alone. High-dose gamma irradiation — commonly 25 kGy — is known to degrade polymer chains in PLA- and PLGA-based matrices and can oxidise or fragment the drug molecule itself; this is rarely recoverable with a bridging study alone, making high-dose gamma a high-risk choice for most bioresorbable drug-eluting configurations. E-beam at a lower validated dose may be feasible with bridging studies confirming drug potency and polymer molecular-weight retention, but dose uniformity across a stent geometry requires specific applicator qualification. EtO is compatible with temperature-sensitive materials but introduces residual solvent concerns that interact directly with the implant's leachables profile — see Section 13 for the implications on the ISO 10993-17 / -18 risk characterisation. Steam sterilization at 121°C or higher is generally incompatible with both the drug stability and the bioresorbable polymer architecture. Aseptic processing under ISO 13408 is the industry default for this device class: it avoids terminal sterilization entirely and shifts the validation burden to cleanroom environmental control, container-closure integrity, and media-fill qualification. [NEEDS INPUT: identity of drug compound and its known thermal and radiation sensitivity thresholds] [NEEDS INPUT: polymer system — PLA, PLGA, Mg-alloy, or combination — with molecular weight and crystallinity data relevant to sterilization compatibility]
+Three constraints govern method selection for this specific device profile, and they collectively narrow the realistic options significantly.
+
+First, the drug payload. High-dose gamma irradiation degrades most small-molecule antiproliferative agents used in drug-eluting stents — sirolimus-class drugs in particular — and is generally incompatible without extensive chemistry bridging studies that have rarely succeeded at commercial scale. Standard EtO cycles are compatible with the drug chemistry in many cases, but residual EtO and ethylene chlorohydrin must be characterized against ISO 10993-7 limits; for an intravascular implant, those limits are tighter than for external-contact devices, and the leachables picture changes materially (see Section 13 for the leachables-profile implication).
+
+Second, the bioresorbable matrix. PLA and PLGA polymers accelerate hydrolytic degradation under elevated temperature and humidity — ruling out conventional steam sterilization in most configurations. Gamma irradiation induces chain scission in these polymers at doses typically required for a 10⁻⁶ SAL; low-dose e-beam at a validated, reduced dose may be feasible but requires bridging studies demonstrating mechanical and molecular-weight retention post-irradiation.
+
+Third, industry precedent. Aseptic processing remains the most common sterilization route for drug-polymer combination implants of this class, and CDSCO reviewers are likely familiar with this approach. [NEEDS INPUT: confirm whether the manufacturing facility has a classified aseptic fill/assembly suite or plans to contract-sterilize]
 
 ## Method blocks (founder picks one in the editor)
 
@@ -750,7 +787,15 @@ _Tick this block if your device uses aseptic processing. Otherwise remove this b
 
 ## Cross-cutting concerns — apply regardless of method
 
-Regardless of method, four concerns span the entire validation programme. First, incoming bioburden control: ISO 11737-1 establishes the test methodology, and the bioburden baseline on the pre-sterilization device must be characterised before any SAL-10⁻⁶ demonstration is meaningful. Second, sterility testing during validation runs — ISO 11737-2 governs the test design; at minimum, validation batches require sterility testing of a statistically justified sample. Third, sterile barrier system qualification under ISO 11607-1 and -2 must confirm that the packaging selected protects sterility through distribution and up to the claimed shelf-life; that claim ties directly to Section 15 (Stability). Fourth, environmental monitoring and process parameter trending during routine sterilization batches must feed into the ongoing process-control record — a one-time validation is not sufficient for regulatory confidence over commercial production.
+Regardless of which method the founder selects, four cross-cutting requirements apply to the validation package.
+
+Bioburden control upstream of sterilization is characterized under ISO 11737-1; the pre-sterilization bioburden population informs dose-setting or cycle-design decisions and must be re-evaluated if manufacturing scale or site changes.
+
+Sterility testing in validation runs — typically three process qualification runs — follows ISO 11737-2. Routine sterility release testing of finished product is distinct and is documented in Section 16.
+
+The sterile barrier system must be qualified under ISO 11607-1 and -2, covering material compatibility with the sterilization agent, seal integrity, and distribution-stress performance. The claimed shelf-life of that barrier is tied directly to Section 15 (Stability and Shelf-life); the two sections should use a consistent claimed-sterile duration.
+
+[NEEDS INPUT: packaging configuration and primary barrier material — foil pouch, blister tray, or other]
 
 - Bioburden control before sterilization (ISO 11737-1)
 - Sterility testing in process validation (ISO 11737-2 — not a release test, but used in validation)
@@ -759,7 +804,11 @@ Regardless of method, four concerns span the entire validation programme. First,
 
 ## Sequencing with adjacent sections
 
-Section 14 sits at the convergence of several adjacent technical areas, and sequencing matters. The ISO 10993-17 and -18 leachables risk characterisation in Section 13 is expected to use sterilized device samples; pre-sterilization leachables data submitted in lieu of post-sterilization data requires an explicit bridging justification and is unlikely to be accepted without it. This means sterilization method selection and at least one process-equivalent validation run should be complete before the final Section 13 chemical characterisation is locked. The sterile barrier shelf-life claim established here flows directly into Section 15 — the stability protocol must include real-time and accelerated aging under conditions representative of the validated sterile barrier and storage environment. Per-batch sterilization records, including cycle parameter printouts and biological indicator results where applicable, land in Section 16 as part of the batch release dossier; the validation protocol should anticipate this by defining which records constitute the release-critical sterilization package. Finally, sterilization failure modes — cycle parameter excursions, packaging breach, bioburden exceedance — must be entered into the Section 10 risk management hazard register with probability and severity ratings under ISO 14971; a common gap is treating sterilization as a control measure without also characterising it as a hazard source when it fails.
+Section 14 validation should be sequenced before the final ISO 10993-17 and -18 leachables runs documented in Section 13. Sterilization alters the chemical profile of both the polymer matrix and the drug coating — residuals, degradants, and extraction kinetics post-sterilization differ from pre-sterilization material. If any pre-sterilization leachables data exist from early development, a bridging justification is likely required to demonstrate those results remain representative; CDSCO reviewers on combination-product dossiers have flagged this gap in prior queries.
+
+The sterile barrier shelf-life claim established here feeds directly into Section 15. The two sections should reference a common claimed expiry — typically [NEEDS INPUT: claimed shelf-life in months] — and the stability protocol in Section 15 should include real-time and accelerated aging runs on sterilized product in its final barrier.
+
+Sterilization failure modes — cycle deviation, bioburden exceedance, barrier breach — belong in the Section 10 risk management hazard register as distinct hazardous situations, with severity scores reflecting the intravascular implant context. Per-batch sterilization records and certificate-of-sterilization documentation are reviewed at the batch release stage covered in Section 16.
 
 ## Cross-references
 
@@ -1009,11 +1058,11 @@ _Your Tier B answer indicates ISO 13485 is in progress. Tick the sub-sections al
 
 # §19 Conditional NOCs & Adjacent Permissions
 
-_strategy: llm_synthesized · status: complete · cost: $0.0145_
+_strategy: llm_synthesized · status: complete · cost: $0.0137_
 
 ## Which NOCs apply to this device
 
-A bioresorbable drug-eluting coronary stent sits at the intersection of two regulatory authorities. The device's drug component — the antiproliferative agent carried on or within the bioresorbable scaffold — activates the DCG(I) joint-review overlay under Schedule D(II) of the Drugs and Cosmetics Act read with MDR 2017 classification rules for combination products. This is the only NOC sub-block that fires for this submission; the DAHD, BARC/AERB, and PNDT triggers are not applicable and have been confirmed out by the deterministic trigger logic. The DCG(I) review is not a separate pre-licence gate in the sense of a standalone NOC application; it runs as a parallel track alongside the MD-3/MD-7 manufacturing-licence pathway described in §4, with grant of the manufacturing licence anticipated to be conditional on the outcome of that joint-review assessment. Applicants who treat the DCG(I) track as a post-submission follow-up typically encounter avoidable delays at the grant stage.
+A bioresorbable drug-eluting coronary stent occupies a specific regulatory position under MDR 2017 because the pharmacological action of its eluted drug is not merely ancillary — it is integral to the device's intended therapeutic effect of suppressing neointimal hyperplasia. That combination-product character activates one conditional overlay on the main manufacturing-licence path: a joint technical review by the Drug Controller General of India (DCG(I)) alongside the CDSCO Medical Device division. The §4 Pathway established for this product under MD-3 (import) or MD-7 (manufacture) proceeds in parallel with that DCG(I) review rather than waiting for its completion first, but the manufacturing licence grant is anticipated to be contingent on a favourable outcome. No DAHD, BARC/AERB, or PNDT permissions are triggered by this device's design or intended clinical context. The sections that follow address the DCG(I) joint-review block only; other NOC sub-blocks are not applicable and have been excluded from this submission.
 
 ## DCG(I) joint review (combination product)
 
@@ -1045,11 +1094,11 @@ A bioresorbable drug-eluting coronary stent sits at the intersection of two regu
 
 ### Device-specific rationale
 
-The DCG(I) joint review applies because the antiproliferative drug — most commonly a limus-family compound or paclitaxel — is pharmacologically active and not merely a processing aid or surface coating. Under the combination-product classification framework embedded in MDR 2017 and the Drugs and Cosmetics Act, where the primary mode of action is mechanical (scaffolding of the coronary lumen) but an integral drug component augments that action by inhibiting neointimal proliferation, the device-led pathway governs, but CDSCO is expected to formally engage DCG(I) for an opinion on the drug constituent before granting the licence. The specific drug identity, elution profile, and residual-quantity data feed directly into the §8.12 medicinal-substances cross-block, while the toxicological allowable-limits analysis established under ISO 10993-17 — cross-referenced in §13 — provides the quantitative basis for the DCG(I) reviewer's assessment of systemic and local drug exposure. Applicants should ensure the drug substance is characterised to a standard consistent with pharmacopoeial specifications. [NEEDS INPUT: identity of the drug substance (INN) and whether it is a scheduled substance under the NDPS Act or subject to any import-control notification]
+The stent's antiproliferative drug coating — [NEEDS INPUT: INN and nominal dose per unit device] — elutes over a defined resorption period and acts on vascular smooth muscle cells to reduce restenosis risk. Because the drug component contributes a primary, not merely secondary, mode of action distinct from the mechanical scaffolding, CDSCO's combination-product classification guidance treats the assembly as a device-led combination product requiring DCG(I) co-review of the drug constituent. This review cross-references the biocompatibility allowable-limits analysis compiled under §13 (ISO 10993-17 risk-based approach) and the medicinal-substance characterisation documented in the §8.12 cross-block, which covers drug identity, purity specifications, elution kinetics, and residual solvent profiles. The DCG(I) reviewer's primary interest is whether the drug component, in the doses delivered locally at the lesion site, satisfies pharmacotoxicological safety thresholds — not marketing authorisation of the drug itself. That distinction should be stated explicitly in the cover letter accompanying the NOC package.
 
 ## Sequencing notes
 
-For this device, practical sequencing works as follows. The DCG(I) joint review is initiated concurrently with — not before — the MD-3/MD-7 filing; CDSCO routes the combination-product query to DCG(I) on receipt of the dossier rather than requiring a standalone pre-application. The manufacturing licence grant is anticipated to be conditional on a satisfactory DCG(I) opinion, so applicants should plan for the grant timeline to reflect that dependency rather than treating it as a background parallel process. Internally, the medicinal-substance dossier elements (§8.12) and the toxicological risk-characterisation report (§13) should be review-ready at the time of primary submission, not deferred as supplemental filings. No BARC pre-application, no AERB operational clearance, and no PNDT authorisation sit on this device's critical path, which simplifies the NOC sequencing materially compared with, for example, a radioisotope-loaded or imaging-guided device category.
+The DCG(I) joint-review dossier — covering drug characterisation, elution data, and the ISO 10993-17 allowable-limits bridge — is submitted concurrently with the MD-3 or MD-7 application, not as a separate pre-licence step. In practice, CDSCO's Medical Device division coordinates the referral to DCG(I) internally once the technical file is accepted as complete; the applicant does not file a standalone application to DCG(I). Typical industry experience places DCG(I) review at eight to sixteen weeks from referral, though that timeline is subject to query cycles and should be treated as indicative. The manufacturing or import licence grant is expected to be held pending DCG(I) concurrence, so any queries from the drug-review side should be escalated promptly to avoid extending the overall clock. No other sequential pre-conditions — such as BARC clearance, which would require advance filing before submission — apply to this device.
 
 ## Cross-references
 

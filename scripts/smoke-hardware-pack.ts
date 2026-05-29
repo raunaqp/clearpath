@@ -37,8 +37,10 @@ type SmokeCase = { id: string; pass: boolean; card: ReadinessCard };
 
 const STENT_WIZARD: WizardAnswers = {
   persona: "manufacturer_hardware",
+  q3: "hcps", // interventional cardiologists
   q8: "no", // novel — no predicate
   q9: "implant_gt_30d",
+  b2_use_environment: "surgical", // cath lab (procedural environment)
   b6_iso_13485_status: "in_progress",
 };
 
@@ -74,7 +76,116 @@ function assert(name: string, cond: boolean, detail?: string): void {
   checks.push({ name, pass: cond, detail });
 }
 
+// ────────────────────────────────────────────────────────────────────
+// SaMD-leak detector — gate vs mention
+// ────────────────────────────────────────────────────────────────────
+
+const SAMD_TERMS = /\b(IEC\s*62304|ACP|PCCP|IEC\s*81001-5-1)\b/i;
+
+/** Sentence-level negation markers that turn a SaMD term into an
+ *  explicit "not applicable" / "no" mention. When any of these appear
+ *  in the same sentence as the term, the sentence is a MENTION not a
+ *  GATE. */
+const NEGATION_MARKERS =
+  /\b(no|not|non[-\s]?applicable|n[\/_]a|n\.\s?a\.?|without|absence\s+of|does\s+not|do\s+not|isn't|aren't|won't|out\s+of\s+scope|exclud(?:e|ed|es))\b/i;
+
+/** Sentence-level hypothetical/conditional markers — the term is being
+ *  raised as a what-if rather than asserted as a requirement. */
+const HYPOTHETICAL_MARKERS =
+  /\b(if|when|should|would|future|in\s+the\s+event|conditional\s+on|hypothetic|may\s+apply|might\s+apply)\b/i;
+
+/** Sentence-level gate markers — words that turn a SaMD-term mention
+ *  into an assertion that the term IS a regulatory requirement. */
+const GATE_MARKERS =
+  /\b(required|mandatory|shall|must|is\s+filed|is\s+to\s+be\s+filed|are\s+filed|are\s+to\s+be\s+filed|filed\s+alongside|expected\s+to\s+be\s+filed|need(?:s|ed)?\s+to\s+file|developed\s+per|established\s+per|comply\s+with|compliance\s+with|in\s+accordance\s+with|conform(?:ance|ed)?\s+to|certif(?:y|ied|ication)\s+(?:to|against))\b/i;
+
+/** Sentence-level scan for SaMD-gate LEAKS. Returns the sentences that
+ *  represent a leak (regulatory assertion of a SaMD-only requirement on
+ *  a hardware pack). Sentences that explicitly disclaim applicability
+ *  or that frame the term as hypothetical are NOT counted as leaks.
+ *
+ *  Splitting heuristic: terminator punctuation (. ! ?) or hard line
+ *  breaks (newline followed by bullet/heading). Doesn't try to be
+ *  linguistically perfect — false positives are addressable by
+ *  founder review; false negatives would be the actual leak. */
+export function detectSamdGateLeak(content: string): string[] {
+  const sentences = content.split(/(?<=[.!?])\s+|\n+(?=[*\-#]|\s*\n)/);
+  const leaks: string[] = [];
+  for (const raw of sentences) {
+    const sentence = raw.trim();
+    if (!SAMD_TERMS.test(sentence)) continue;
+    if (NEGATION_MARKERS.test(sentence)) continue;
+    if (HYPOTHETICAL_MARKERS.test(sentence)) continue;
+    if (GATE_MARKERS.test(sentence)) leaks.push(sentence);
+  }
+  return leaks;
+}
+
+/** Inline unit tests for detectSamdGateLeak — run before any smoke
+ *  assertions land. If these fail, the regex is mis-tuned and would
+ *  produce false positives or false negatives across the pack. */
+function runSamdLeakDetectorTests(): void {
+  const cases: Array<{ name: string; input: string; expectLeak: boolean }> = [
+    {
+      // The current §9 EP-SW dump — correct N/A output for a no-software
+      // device. Must PASS (no leak detected).
+      name: "current §9 EP-SW n/a phrasing → not a leak",
+      input:
+        "n_a, no IEC 62304 software development lifecycle documentation or IEC 81001-5-1 health software security controls are required.",
+      expectLeak: false,
+    },
+    {
+      // Synthetic gate from a SaMD §8 leak — what we DO want to catch.
+      // Must FAIL (leak detected).
+      name: "synthetic gate 'IEC 62304 software lifecycle is required' → IS a leak",
+      input: "IEC 62304 software lifecycle is required for this device.",
+      expectLeak: true,
+    },
+    // Additional supporting cases — internal sanity, not founder-named.
+    {
+      name: "hypothetical 'if future adds software, IEC 62304 would apply' → not a leak",
+      input:
+        "If a future iteration adds embedded software, IEC 62304 would apply.",
+      expectLeak: false,
+    },
+    {
+      name: "gate 'ACP must be filed alongside MD-7' → IS a leak",
+      input: "An ACP must be filed alongside MD-7.",
+      expectLeak: true,
+    },
+    {
+      name: "negation 'IEC 81001-5-1 not applicable' → not a leak",
+      input:
+        "IEC 81001-5-1 health-software security controls are not applicable to this device.",
+      expectLeak: false,
+    },
+  ];
+  for (const c of cases) {
+    const leaks = detectSamdGateLeak(c.input);
+    const detected = leaks.length > 0;
+    const pass = detected === c.expectLeak;
+    console.log(
+      `  ${pass ? "✓" : "✗"} [detector test] ${c.name} — ${
+        pass ? "ok" : `expected leak=${c.expectLeak}, got ${detected}`
+      }`
+    );
+    if (!pass) {
+      console.error(
+        `[detector test FAIL] ${c.name}\n    input: ${c.input}\n    leaks: ${JSON.stringify(leaks)}`
+      );
+      process.exit(2);
+    }
+  }
+}
+
 async function main(): Promise<void> {
+  // Gate everything else on the SaMD-leak detector unit tests passing.
+  // If the detector is mis-tuned, the §8/§9 leak gate is unreliable —
+  // worth catching before any LLM cost is spent.
+  console.log("\n=== SaMD-leak detector unit tests ===");
+  runSamdLeakDetectorTests();
+  console.log("  (detector tests pass)");
+
   // Load .env.local so ANTHROPIC_API_KEY is available for §13's Sonnet
   // narrative call. Skip when running offline (the deterministic
   // skeleton fallback will fire).
@@ -175,19 +286,87 @@ async function main(): Promise<void> {
     );
   }
 
-  // 6. No software-gate leak across stub + deterministic content.
-  //    Stent has software_in_device='No' inferred — IEC 62304 / ACP / 81001
-  //    must not appear in any rendered section. (SaMD §11 V&V isn't run for
-  //    hardware persona; §4 hardware overlay also avoids it. Once §6 / §8 /
-  //    §11 hardware overlays land Day 5, this guard validates them too.)
-  const softwareGateRegex = /\b(IEC\s*62304|ACP|PCCP|IEC\s*81001-5-1)\b/i;
-  const leakingSections = sections.filter((s) =>
-    softwareGateRegex.test(s.content)
+  // 5b. §3 hardware overlay — strips SaMD framing (IMDRF / Q1×Q2 /
+  //     AI/ML autonomous-diagnosis disclaimer / ACP). Grounds in Q9
+  //     body-contact + Q8 predicate.
+  const s3 = byKey.get("03_intended_use");
+  assert("§3 intended use present", s3 !== undefined);
+  if (s3) {
+    // SaMD-framing leak: explicit phrases that gave the SaMD path away.
+    assert(
+      "§3 does NOT use IMDRF SaMD significance dimension language",
+      !/IMDRF\s+SaMD\s+significance|significance\s+dimension/i.test(s3.content)
+    );
+    assert(
+      "§3 does NOT reference Q1×Q2 matrix or 'decision influence' framing",
+      !/Q1.{0,5}Q2|decision[\s-]influence|significance\s*×\s*situation/i.test(s3.content)
+    );
+    assert(
+      "§3 does NOT carry the AI/ML autonomous-diagnosis disclaimer",
+      !/autonomous\s+diagnosis|clinician\s+remains\s+the\s+(?:responsible\s+)?decision-?maker/i.test(s3.content)
+    );
+    assert(
+      "§3 does NOT reference Algorithm Change Protocol (ACP / PCCP)",
+      !/Algorithm\s+Change\s+Protocol|\bACP\b|\bPCCP\b/i.test(s3.content)
+    );
+    // Hardware-specific framing: Q9 body-contact section + Q8 predicate
+    assert(
+      "§3 emits a 'Body-contact tier' section grounded in Q9",
+      /##\s+Body-contact\s+tier/i.test(s3.content) &&
+        /implant\s*—\s*tissue\/bone/i.test(s3.content)
+    );
+    assert(
+      "§3 emits a 'Predicate basis' section grounded in Q8",
+      /##\s+Predicate\s+basis/i.test(s3.content) &&
+        /novel|No\s+predicate\s+device/i.test(s3.content)
+    );
+    // MD-26 / MD-27 callout (q8=no)
+    assert(
+      "§3 surfaces MD-26 / MD-27 pre-permission (q8=no novel)",
+      /MD-26|MD-27/.test(s3.content)
+    );
+    // Cross-references to other hardware sections
+    assert(
+      "§3 cross-references §13 (biocompatibility from Q9)",
+      /§13/.test(s3.content)
+    );
+    // Schedule-citation hallucination guard. Indian regulatory convention
+    // writes ordinals in full ("Fifth Schedule"), never Roman ("Schedule V").
+    // This guard catches the §3 hallucination we shipped previously
+    // ("Schedule III of MDR 2017") and any equivalent Roman-numeral form.
+    assert(
+      "§3 does NOT cite MDR Schedules in Roman-numeral form (anti-hallucination)",
+      !/\bSchedule\s+(I|II|III|IV|V|VI|VII|VIII|IX|X)\b/.test(s3.content)
+    );
+  }
+
+  // 6. SaMD software-gate leak detection — distinguishes GATES from
+  //    MENTIONS. A leak is when a section says "IEC 62304 required" /
+  //    "must be filed" / "shall be developed per" — a regulatory
+  //    requirement statement. A correct mention is "no IEC 62304
+  //    required" / "IEC 62304 not applicable" / "if a future iteration
+  //    adds software, IEC 62304 would apply" — explicitly disclaiming
+  //    applicability or framing as hypothetical.
+  //
+  //    Stent has software_in_device='No' inferred. §9 EP-SW row
+  //    correctly states "n_a, no IEC 62304 software development
+  //    lifecycle documentation or IEC 81001-5-1 health software
+  //    security controls are required." — that's GOOD output and must
+  //    not trip the assertion. SaMD §8 generator running on hardware
+  //    data may emit "IEC 62304 documentation is filed alongside…" —
+  //    that IS the leak.
+  const samdLeaks = sections.flatMap((s) =>
+    detectSamdGateLeak(s.content).map((leak) => ({
+      section_key: s.section_key,
+      sentence: leak,
+    }))
   );
   assert(
-    "no software-gate (IEC 62304 / ACP / 81001) leak in any section",
-    leakingSections.length === 0,
-    leakingSections.map((s) => s.section_key).join(", ")
+    "no software-gate LEAKS (gates only — explicit 'n/a' / hypothetical mentions are correct output)",
+    samdLeaks.length === 0,
+    samdLeaks
+      .map((l) => `${l.section_key}: ${l.sentence.slice(0, 120)}`)
+      .join(" || ")
   );
 
   // 7. §17 + §18 emit checklist markdown, not prose.
