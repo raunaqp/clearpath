@@ -1,16 +1,24 @@
 /**
- * Section 4 — Classification & Grouping.
+ * Section 4 — Classification & Grouping (SaMD) / Classification &
+ * Pathway (hardware).
  *
- * Maps to: DMF §8.3 Justification for the Medical Device Grouping.
- * Spec: docs/specs/draft-pack-document-matrix.md Section 4.
+ * SaMD path (Sprint 2 default): IMDRF significance × situation matrix
+ * → CDSCO class derivation, one Sonnet call for the rationale prose.
+ * Maps to DMF §8.3 Justification for the Medical Device Grouping.
  *
- * Strategy: most fields are `derived` deterministically from
- * readiness_card.classification. Only three fields require LLM
- * synthesis (imdrf_rationale, cdsco_rationale, grouping_statement).
- * One Sonnet 4.6 call covers all three in a single JSON response.
+ * Hardware path (Sprint 3 Day 4): deterministic. The synthesizer
+ * already computes cdsco_class for the hardware persona using bible
+ * §4 sub-case rules (contact + sterile + drug + radiation + measuring
+ * — see synthesizer-system-prompt.ts §275+). This generator emits a
+ * structured-markdown summary table + class-derivation walkthrough
+ * + pathway statement + conditional MD-26/27 callout when q8 = "no".
+ * Maps to bible §4 sub-case table (lines 167–173) + DMF §8.1, NOT
+ * §8.4 (matrix v2 reconciliation, 2026-05-29).
  *
- * Anchor section — generated first by the orchestrator. Other sections
- * cross-reference its classification + pathway outputs.
+ * Dispatch is by `wizard_answers.persona`. The exported
+ * `generateSection04` routes to the hardware variant when persona
+ * === "manufacturer_hardware"; everything else falls through to the
+ * SaMD path which is unchanged from Sprint 2.
  */
 
 import { z } from "zod";
@@ -27,9 +35,11 @@ import type {
   SourceData,
 } from "./types";
 import { sectionNumberFromKey } from "./types";
+import { softenCertainty } from "@/lib/engine/soften-certainty";
 
 const SECTION_KEY = "04_classification_grouping" as const;
-const TITLE = "Classification & Grouping";
+const TITLE_SAMD = "Classification & Grouping";
+const TITLE_HARDWARE = "Classification & Pathway";
 const MAX_TOKENS = 1200;
 
 const LlmSchema = z.object({
@@ -218,7 +228,7 @@ function formatMarkdown(args: {
   return lines.join("\n");
 }
 
-export const generateSection04: SectionGenerator = async (
+const generateSection04Samd: SectionGenerator = async (
   sources: SourceData,
   opts: SectionOpts
 ) => {
@@ -276,7 +286,7 @@ export const generateSection04: SectionGenerator = async (
     return {
       section_key: SECTION_KEY,
       section_number: sectionNumberFromKey(SECTION_KEY),
-      title: TITLE,
+      title: TITLE_SAMD,
       content: `[Section ${sectionNumberFromKey(SECTION_KEY)} generation failed: ${msg}]`,
       citations: [],
       completion_status: "failed",
@@ -341,7 +351,7 @@ export const generateSection04: SectionGenerator = async (
   return {
     section_key: SECTION_KEY,
     section_number: sectionNumberFromKey(SECTION_KEY),
-    title: TITLE,
+    title: TITLE_SAMD,
     content,
     citations,
     completion_status: "complete",
@@ -357,4 +367,262 @@ export const generateSection04: SectionGenerator = async (
       usage,
     },
   };
+};
+
+// ────────────────────────────────────────────────────────────────────
+// Hardware variant — Sprint 3 Day 4
+// ────────────────────────────────────────────────────────────────────
+
+/** Bible §4 sub-case → form pair + authority + audit timing. Indexed
+ *  by cdsco_class, with the Class A "non-sterile non-measuring" carve-
+ *  out resolved by a flag because both Class A sub-cases share class="A".
+ *
+ *  Source: docs/specs/cdsco-regulatory-forms-reference.md lines 167-173
+ *  and lines 326-330 (class-specific variations). */
+type HardwareSubCase = {
+  pathway_label: string;
+  authority: string;
+  forms: ReadonlyArray<string>;
+  audit_timing: string;
+};
+
+function hardwareSubCase(args: {
+  cdscoClass: "A" | "B" | "C" | "D" | null;
+  sterileLikely: boolean;
+  measuringLikely: boolean;
+}): HardwareSubCase {
+  if (args.cdscoClass === "A" && !args.sterileLikely && !args.measuringLikely) {
+    return {
+      pathway_label: "Portal self-notification (no MD form pair)",
+      authority: "State Licensing Authority — portal registration",
+      forms: [],
+      audit_timing: "No audit pre-grant; system-generated registration number",
+    };
+  }
+  if (args.cdscoClass === "A") {
+    return {
+      pathway_label: "MD-3 → MD-5 (Class A measuring/sterile)",
+      authority: "State Licensing Authority (SLA)",
+      forms: ["MD-3", "MD-5"],
+      audit_timing:
+        "Notified-Body audit within 120 days post-grant (no pre-grant audit)",
+    };
+  }
+  if (args.cdscoClass === "B") {
+    return {
+      pathway_label: "MD-3 → MD-5",
+      authority: "State Licensing Authority (SLA)",
+      forms: ["MD-3", "MD-5"],
+      audit_timing:
+        "Notified-Body QMS audit within 90 days of application (pre-grant)",
+    };
+  }
+  if (args.cdscoClass === "C") {
+    return {
+      pathway_label: "MD-7 → MD-9",
+      authority: "Central Licensing Authority (CDSCO HQ / Zonal)",
+      forms: ["MD-7", "MD-9"],
+      audit_timing:
+        "CDSCO MD Officer team inspection within 60 days of application (pre-grant)",
+    };
+  }
+  if (args.cdscoClass === "D") {
+    return {
+      pathway_label: "MD-7 → MD-9 (heightened scrutiny)",
+      authority: "Central Licensing Authority (CDSCO HQ / Zonal)",
+      forms: ["MD-7", "MD-9"],
+      audit_timing:
+        "Same as Class C, plus line-by-line Essential Principles examination and effectively-mandatory clinical evidence",
+    };
+  }
+  return {
+    pathway_label: "[Pathway pending — class undetermined]",
+    authority: "[TBD — class undetermined]",
+    forms: [],
+    audit_timing: "[TBD]",
+  };
+}
+
+/** Look up an inference-marker value by field name. Hardware markers
+ *  are human English (e.g., "Yes (drug-eluting)") — parse with
+ *  affirmative/negative regex like section-gating does. Returns null
+ *  when the marker isn't present. */
+function findMarker(
+  sources: SourceData,
+  field: string
+): { value: string; status: string } | null {
+  const m = (sources.readiness_card.inference_markers ?? []).find(
+    (x) => x.field === field
+  );
+  return m ? { value: m.value, status: m.status } : null;
+}
+
+function isAffirmative(v: string): boolean {
+  return /^\s*yes\b/i.test(v);
+}
+
+function buildHardwareContent(sources: SourceData): string {
+  const cls = sources.readiness_card.classification;
+  const wa = sources.wizard_answers;
+
+  const sterileMarker = findMarker(sources, "sterile");
+  const sterileLikely = sterileMarker !== null && isAffirmative(sterileMarker.value);
+  const measuringMarker = findMarker(sources, "measuring_function");
+  const measuringLikely =
+    measuringMarker !== null && isAffirmative(measuringMarker.value);
+  const drugMarker = findMarker(sources, "drug_content");
+  const radiationMarker = findMarker(sources, "ionising_radiation");
+  const contactValue = wa.q9 ?? "(Q9 not answered)";
+
+  const subcase = hardwareSubCase({
+    cdscoClass: cls.cdsco_class,
+    sterileLikely,
+    measuringLikely,
+  });
+
+  const novelByQ8 = wa.q8 === "no";
+
+  const lines: string[] = [];
+
+  lines.push("## Summary");
+  lines.push("");
+  lines.push("| Field | Value |");
+  lines.push("|---|---|");
+  lines.push(`| CDSCO class | ${cls.cdsco_class ?? "[TBD]"} |`);
+  lines.push(`| Class qualifier | ${cls.class_qualifier ?? "—"} |`);
+  lines.push(`| Manufacturing pathway | ${subcase.pathway_label} |`);
+  lines.push(`| Licensing authority | ${subcase.authority} |`);
+  lines.push(`| Audit timing | ${subcase.audit_timing} |`);
+  lines.push(
+    `| Patient contact (Q9) | ${contactValue} |`
+  );
+  lines.push(`| Sterile | ${sterileMarker?.value ?? "[Not inferred]"} |`);
+  lines.push(`| Drug content | ${drugMarker?.value ?? "[Not inferred]"} |`);
+  lines.push(`| Ionising radiation | ${radiationMarker?.value ?? "[Not inferred]"} |`);
+  lines.push(`| Measuring function | ${measuringMarker?.value ?? "[Not inferred]"} |`);
+  lines.push(`| Predicate (Q8) | ${wa.q8 ?? "(not answered)"} |`);
+  lines.push("");
+
+  lines.push("## Class derivation");
+  lines.push("");
+  lines.push(
+    softenCertainty(
+      `Per Bible §4 (medical device manufacturer — hardware persona), CDSCO class is derived from the device profile inputs above. The synthesizer applied the §4 sub-case rules to arrive at Class ${cls.cdsco_class ?? "[TBD]"}. The licensing authority and form pair follow directly from class (Bible §4 sub-case table, lines 167-173):`
+    )
+  );
+  lines.push("");
+  lines.push("- Class A (non-sterile, non-measuring) → SLA portal self-notification");
+  lines.push("- Class A (measuring or sterile) + Class B → MD-3 → MD-5 (SLA)");
+  lines.push("- Class C + Class D → MD-7 → MD-9 (CLA)");
+  lines.push("");
+  if (cls.cdsco_class === "D") {
+    lines.push(
+      softenCertainty(
+        "Class D adds heightened scrutiny: Essential Principles checklist examined line-by-line, and clinical evidence (§12 Clinical Evidence & PMS) is effectively mandatory even with a predicate."
+      )
+    );
+    lines.push("");
+  }
+
+  lines.push("## Pathway");
+  lines.push("");
+  lines.push(
+    softenCertainty(
+      `Manufacturing pathway: **${subcase.pathway_label}**. ${subcase.audit_timing}.`
+    )
+  );
+  lines.push("");
+
+  if (novelByQ8) {
+    lines.push("## MD-26 / MD-27 pre-permission required");
+    lines.push("");
+    lines.push(
+      softenCertainty(
+        "Per your Q8 answer, no predicate device exists in the Indian market for this device. MDR-2017 requires MD-26 pre-permission **before** the MD-3 / MD-7 manufacturing-licence application is filed; the grant arrives on Form MD-27. The §6 Predicate Comparison section walks through this in detail."
+      )
+    );
+    lines.push("");
+  }
+
+  lines.push("## Cross-references");
+  lines.push("");
+  lines.push("- §6 Predicate Comparison — substantial-equivalence analysis and MD-26/27 path detail");
+  lines.push("- §8 Design & Manufacturing — hardware BOM + process steps (no software lifecycle for pure-hardware devices)");
+  lines.push("- §10 Risk Management — ISO 14971 risk file (owns risk analysis; not duplicated here)");
+  lines.push("- §13 Biocompatibility — present when Q9 patient contact ≠ no_contact");
+  lines.push("- §14 Sterilization Validation — present when device is sterile");
+
+  return lines.join("\n");
+}
+
+const generateSection04Hardware: SectionGenerator = async (
+  sources: SourceData,
+  opts: SectionOpts
+) => {
+  const content = buildHardwareContent(sources);
+  return {
+    section_key: SECTION_KEY,
+    section_number: sectionNumberFromKey(SECTION_KEY),
+    title: TITLE_HARDWARE,
+    content,
+    citations: [
+      {
+        citation_id: "[1]",
+        source_doc: "MDR-2017 — Medical Devices Rules, 2017",
+        quote:
+          "Class A/B → State Licensing Authority on Form MD-3 → grant on MD-5; Class C/D → Central Licensing Authority on Form MD-7 → grant on MD-9.",
+        exact_reference: "Bible §4 sub-case table (lines 167–173)",
+      },
+      {
+        citation_id: "[2]",
+        source_doc: "MDR-2017 Fourth Schedule Appendix II",
+        quote: "Device Master File Executive Summary statement of class",
+        exact_reference: "DMF §8.1",
+      },
+      ...(sources.wizard_answers.q8 === "no"
+        ? [
+            {
+              citation_id: "[3]",
+              source_doc: "MDR-2017 Forms MD-26 / MD-27",
+              quote:
+                "Novel devices without an Indian predicate require MD-26 pre-permission before MD-7; grant is on MD-27.",
+              exact_reference: "Bible §4.B Block 6 + MD-7 checklist §11.0",
+            },
+          ]
+        : []),
+    ],
+    completion_status: "complete",
+    word_count: content.split(/\s+/).filter(Boolean).length,
+    meta: {
+      generation_strategy: "deterministic",
+      source_fields: [
+        "readiness_card.classification.cdsco_class",
+        "readiness_card.classification.class_qualifier",
+        "readiness_card.inference_markers.sterile",
+        "readiness_card.inference_markers.drug_content",
+        "readiness_card.inference_markers.ionising_radiation",
+        "readiness_card.inference_markers.measuring_function",
+        "wizard.q8",
+        "wizard.q9",
+      ],
+      model: null,
+      llm_cost_usd: null,
+      generated_at: new Date().toISOString(),
+      dry_run: opts.dry_run,
+      error_message: null,
+      usage: null,
+    },
+  };
+};
+
+// Dispatcher — persona-aware. The orchestrator imports this; SaMD
+// behaviour is unchanged from Sprint 2.
+export const generateSection04: SectionGenerator = async (
+  sources: SourceData,
+  opts: SectionOpts
+) => {
+  if (sources.wizard_answers.persona === "manufacturer_hardware") {
+    return generateSection04Hardware(sources, opts);
+  }
+  return generateSection04Samd(sources, opts);
 };
