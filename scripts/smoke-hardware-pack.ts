@@ -1,19 +1,21 @@
 /**
- * Sprint 3 Day 4 — hardware Submission Pack smoke harness (single case).
+ * Hardware Submission Pack smoke harness (drug-eluting stent case).
  *
- * Runs the hardware pack against the drug-eluting stent card from
- * `data/smoke/hardware-card-smoke.json` with dry_run=true (no DB writes,
- * no Opus consolidator). Asserts the gating + dispatch behaviour the
- * pack ships today.
+ * Day-4 first cut: deterministic generators + §13/§14/§19 stubs.
+ * Day-5 morning: §13 Biocompatibility (hybrid — deterministic tier
+ * matrix + Sonnet narrative); §14, §19 land as real generators next.
  *
- * Day 5 morning will extend this to all 3 hardware cases (stent + BP
- * cuff + glucometer) and add LLM-dependent assertions when §13/§14
- * generators land.
+ * Cost notes:
+ *   - §13 runs Sonnet — ~$0.02 per smoke run.
+ *   - §15/§16/§17/§18 are deterministic — $0.
+ *   - §14, §19 stubbed today — $0.
+ *   - §1 Opus consolidator skipped in dry-run — $0.
+ * Expected total per run: ~$0.02.
  *
- * Cost: $0 — Day 4 only deterministic generators run; §1 consolidator
- * is skipped in dry-run mode.
- *
- * Run: pnpm tsx scripts/smoke-hardware-pack.ts
+ * Run: pnpm tsx scripts/smoke-hardware-pack.ts [--dump <path>]
+ *   --dump <path>  Write §13 content + the full per-section breakdown
+ *                  to a markdown file so the founder can eyeball it
+ *                  before §14 work begins.
  */
 
 import * as fs from "node:fs";
@@ -73,6 +75,24 @@ function assert(name: string, cond: boolean, detail?: string): void {
 }
 
 async function main(): Promise<void> {
+  // Load .env.local so ANTHROPIC_API_KEY is available for §13's Sonnet
+  // narrative call. Skip when running offline (the deterministic
+  // skeleton fallback will fire).
+  const envPath = path.resolve(process.cwd(), ".env.local");
+  if (fs.existsSync(envPath)) {
+    for (const line of fs.readFileSync(envPath, "utf8").split("\n")) {
+      const m = line.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
+      if (m && !process.env[m[1]]) {
+        process.env[m[1]] = m[2].replace(/^"|"$/g, "");
+      }
+    }
+  }
+
+  const argv = process.argv.slice(2);
+  const dumpIdx = argv.indexOf("--dump");
+  const dumpPath =
+    dumpIdx >= 0 && argv[dumpIdx + 1] ? argv[dumpIdx + 1] : null;
+
   const stent = loadStentCard();
   const sources = buildSourceData(stent, STENT_WIZARD);
 
@@ -200,25 +220,193 @@ async function main(): Promise<void> {
     s18 !== undefined && /in progress/i.test(s18.content)
   );
 
-  // 8. §13 / §14 / §19 stubs are clearly marked as Day-5 pending.
-  for (const k of [
-    "13_biocompatibility",
-    "14_sterilization_validation",
-    "19_conditional_nocs",
-  ] as const) {
-    const s = byKey.get(k);
+  // 8. §13 — Day 5 morning real generator (hybrid).
+  //    Stent profile: q9=implant_gt_30d + drug_content="Yes (drug-eluting)"
+  //    + one-liner mentions "bioresorbable" → implant tier + drug-eluting
+  //    + bioresorbable add-ons all fire.
+  const s13 = byKey.get("13_biocompatibility");
+  assert("§13 biocomp present", s13 !== undefined);
+  if (s13) {
     assert(
-      `${k} stubbed for Day-5 (deterministic + pending)`,
-      s !== undefined &&
-        s.meta.generation_strategy === "deterministic" &&
-        s.completion_status === "pending" &&
-        /pending/i.test(s.content)
+      "§13 generation_strategy = llm_synthesized (hybrid: deterministic panel + Sonnet narrative)",
+      s13.meta.generation_strategy === "llm_synthesized"
+    );
+    // Panel coverage — deterministic. These rows must appear regardless
+    // of the LLM narrative succeeding or failing. Wrong-panel selection
+    // is the regulator-catchable content error the editor can't fix.
+    const panelMustHave: Array<[string, string]> = [
+      ["ISO 10993-5", "cytotoxicity baseline"],
+      ["ISO 10993-10", "skin sensitization"],
+      ["ISO 10993-23", "irritation"],
+      ["ISO 10993-6", "local effects after implantation (implant signal)"],
+      ["ISO 10993-11", "systemic toxicity (chronic implant)"],
+      ["ISO 10993-3", "genotoxicity / carcinogenicity (long-term contact)"],
+      ["ISO 10993-18", "chemical characterization (leachables)"],
+      ["ISO 10993-17", "allowable limits (drug-eluting requires)"],
+      ["ISO 10993-16", "toxicokinetic study (drug-eluting + bioresorbable)"],
+      ["ISO 10993-9", "degradation framework (bioresorbable signal)"],
+      ["ISO 10993-13", "polymeric degradation (bioresorbable signal)"],
+    ];
+    for (const [part, why] of panelMustHave) {
+      assert(
+        `§13 panel includes ${part} — ${why}`,
+        s13.content.includes(part)
+      );
+    }
+    // Add-on section headings
+    assert(
+      "§13 has 'Drug-eluting overlay' heading (drug_content trigger fired)",
+      /##\s+Drug-eluting overlay/.test(s13.content)
+    );
+    assert(
+      "§13 has 'Bioresorbable overlay' heading (one-liner bioresorbable keyword)",
+      /##\s+Bioresorbable overlay/.test(s13.content)
+    );
+    // Cross-references the founder will read
+    assert(
+      "§13 references NABL-accredited lab evidence",
+      /NABL/i.test(s13.content)
+    );
+    assert(
+      "§13 cross-references §8.12 medicinal substances + §19 DCG(I)",
+      /§8\.12|§19/.test(s13.content) || /DCG\(I\)/i.test(s13.content)
+    );
+    // SaMD-framing leak guard — §13 is hardware-only; no IMDRF / Q1×Q2 /
+    // SaMD draft framing should appear.
+    assert(
+      "§13 does NOT use SaMD framing (IMDRF / Q1×Q2 / SaMD Draft)",
+      !/IMDRF|Q1.{0,5}Q2|SaMD\s+Draft/i.test(s13.content)
     );
   }
 
-  // 9. Total cost = $0 (no LLM in any section; §1 skipped in dry-run).
+  // 9. §14 Sterilization — Day-5 morning real generator (hybrid).
+  //    Stent profile: sterile marker present + drug-eluting + bioresorbable.
+  //    All four method blocks must surface (founder picks); method-
+  //    selection guidance for drug-eluting + bioresorbable triggers.
+  const s14 = byKey.get("14_sterilization_validation");
+  assert("§14 sterilization present", s14 !== undefined);
+  if (s14) {
+    assert(
+      "§14 generation_strategy = llm_synthesized (hybrid)",
+      s14.meta.generation_strategy === "llm_synthesized"
+    );
+    // All four method blocks rendered (deterministic — the blast-radius
+    // safe path when method signal is absent)
+    for (const method of [
+      "Ethylene oxide (EtO)",
+      "Radiation (gamma / e-beam / X-ray)",
+      "Steam / moist heat (autoclave)",
+      "Aseptic processing",
+    ] as const) {
+      assert(
+        `§14 emits ${method} method block`,
+        s14.content.includes(method)
+      );
+    }
+    // Primary standards cited
+    for (const std of ["ISO 11135", "ISO 11137", "ISO 17665", "ISO 13408"] as const) {
+      assert(`§14 cites ${std}`, s14.content.includes(std));
+    }
+    // Cross-cutting: ISO 11737 (bioburden + validation sterility) +
+    // ISO 11607 (sterile barrier) + 10993-7 (EtO residuals)
+    for (const std of ["ISO 11737", "ISO 11607", "ISO 10993-7"] as const) {
+      assert(`§14 cites cross-cutting ${std}`, s14.content.includes(std));
+    }
+    // Drug-eluting + bioresorbable method-selection guidance section
+    assert(
+      "§14 surfaces method-selection guidance for drug-eluting + bioresorbable triggers",
+      /Method-selection guidance for this device/.test(s14.content)
+    );
+    // Sequencing with §13 (leachables-profile change)
+    assert(
+      "§14 references the sterilization-changes-leachables sequencing with §13",
+      /leachables/i.test(s14.content) && /§13/.test(s14.content)
+    );
+    // SaMD-framing leak guard
+    assert(
+      "§14 does NOT use SaMD framing (IMDRF / Q1×Q2 / SaMD Draft)",
+      !/IMDRF|Q1.{0,5}Q2|SaMD\s+Draft/i.test(s14.content)
+    );
+    // NABL-accredited lab reference
+    assert(
+      "§14 references NABL-accredited validation evidence",
+      /NABL/i.test(s14.content)
+    );
+  }
+
+  // §19 Conditional NOCs — Day-5 morning real generator (hybrid).
+  //    Stent profile: only drug_content trigger fires → ONLY DCG(I)
+  //    sub-block emitted; DAHD / BARC / PNDT cleanly suppressed.
+  const s19 = byKey.get("19_conditional_nocs");
+  assert("§19 conditional NOCs present", s19 !== undefined);
+  if (s19) {
+    assert(
+      "§19 generation_strategy = llm_synthesized (hybrid)",
+      s19.meta.generation_strategy === "llm_synthesized"
+    );
+    // DCG(I) MUST be emitted for the drug-eluting stent.
+    assert(
+      "§19 emits DCG(I) joint review block (drug_content trigger)",
+      /DCG\(I\)\s+joint\s+review/i.test(s19.content)
+    );
+    // The other three NOCs MUST be cleanly suppressed for this profile.
+    assert(
+      "§19 does NOT emit DAHD NOC block (no veterinary trigger)",
+      !/##\s+DAHD\s+NOC/i.test(s19.content)
+    );
+    assert(
+      "§19 does NOT emit BARC + AERB block (no ionising-radiation trigger)",
+      !/##\s+BARC\s+NOC\s*\+\s*AERB/i.test(s19.content) &&
+        !/##\s+.*\bBARC\b/i.test(s19.content.replace(/^# §19.*/m, ""))
+    );
+    assert(
+      "§19 does NOT emit PNDT NOC block (no PNDT trigger)",
+      !/##\s+PNDT\s+NOC/i.test(s19.content) &&
+        !/PCPNDT\s+Act\s+compliance/i.test(s19.content)
+    );
+    // DCG(I) sub-block has its standard sub-headings
+    assert(
+      "§19 DCG(I) block has 'Evidence package' attestation rows",
+      /###\s+Evidence package/i.test(s19.content) &&
+        /^- \[ \]/m.test(s19.content)
+    );
+    assert(
+      "§19 DCG(I) block has 'Timeline placement' sub-heading",
+      /###\s+Timeline placement/i.test(s19.content)
+    );
+    // Cross-references for fired NOC
+    assert(
+      "§19 cross-references §8.12 medicinal substances + §13 ISO 10993-17",
+      /§8.*?medicinal\s+substances/i.test(s19.content) &&
+        /§13.*?10993-17/i.test(s19.content)
+    );
+    // Sequencing section
+    assert(
+      "§19 sequencing section present",
+      /##\s+Sequencing notes/i.test(s19.content)
+    );
+    // Drugs and Cosmetics Act citation
+    assert(
+      "§19 cites Drugs and Cosmetics Act 1940",
+      /Drugs\s+and\s+Cosmetics\s+Act\s+1940/.test(s19.content)
+    );
+    // SaMD-leak guard
+    assert(
+      "§19 does NOT use SaMD framing (IMDRF / Q1×Q2 / SaMD Draft)",
+      !/IMDRF|Q1.{0,5}Q2|SaMD\s+Draft/i.test(s19.content)
+    );
+  }
+
+  // 10. Total cost — SaMD §2–§12 generators each run Sonnet
+  //     (~$0.02 each) PLUS §13 narrative Sonnet (~$0.02). Once Day-5
+  //     afternoon overlays land for §6/§8/§11/§12, the cost drops as
+  //     overlay branches choose deterministic paths where applicable.
+  //     Cap loose enough to absorb Sonnet variance.
   const total = sections.reduce((sum, s) => sum + (s.meta.llm_cost_usd ?? 0), 0);
-  assert(`total LLM cost = $0 (got $${total.toFixed(4)})`, total === 0);
+  assert(
+    `total LLM cost reasonable (got $${total.toFixed(4)}; expect ~$0.20-$0.30 today, cap at $0.40)`,
+    total >= 0 && total < 0.4
+  );
 
   // 10. §1 consolidator skipped in dry-run.
   assert(
@@ -235,6 +423,43 @@ async function main(): Promise<void> {
     if (!c.pass) failed++;
   }
   console.log(`\n  ${failed === 0 ? "ALL PASS ✓" : `${failed} / ${checks.length} FAILED ✗`}`);
+
+  // === Optional dump for founder eyeball ===
+  if (dumpPath) {
+    const lines: string[] = [
+      `# Hardware pack smoke output — ${stent.id} (${stent.card.meta.product_name})`,
+      "",
+      `Generated: ${new Date().toISOString()}`,
+      "",
+      `One-liner: ${sources.intake.one_liner}`,
+      "",
+      `Q8 predicate: ${STENT_WIZARD.q8}`,
+      `Q9 patient_contact: ${STENT_WIZARD.q9}`,
+      `B6 ISO 13485 status: ${STENT_WIZARD.b6_iso_13485_status}`,
+      "",
+      `Sections rendered: ${sections.length}`,
+      `Total LLM cost: $${sections.reduce((s, x) => s + (x.meta.llm_cost_usd ?? 0), 0).toFixed(4)}`,
+      `Assertions: ${checks.length - failed} pass / ${failed} fail`,
+      "",
+      "---",
+      "",
+    ];
+    for (const s of sections) {
+      lines.push(
+        `# §${s.section_number} ${s.title}`,
+        "",
+        `_strategy: ${s.meta.generation_strategy} · status: ${s.completion_status} · cost: $${(s.meta.llm_cost_usd ?? 0).toFixed(4)}${s.meta.error_message ? ` · ERROR: ${s.meta.error_message.replace(/\n/g, " ")}` : ""}_`,
+        "",
+        s.content,
+        "",
+        "---",
+        "",
+      );
+    }
+    fs.writeFileSync(dumpPath, lines.join("\n"));
+    console.log(`\n  Eyeball dump written to ${dumpPath}`);
+  }
+
   process.exit(failed === 0 ? 0 : 1);
 }
 

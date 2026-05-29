@@ -141,24 +141,27 @@ function calibratedTrigger(
   };
 }
 
-/** Direct value-based trigger for §19 NOC sub-blocks. No status
+/** Direct value-based triggers for §19 NOC sub-blocks. No status
  *  safeguard — wrong-included NOC is clean noise, not a safety issue.
- *  These triggers are intentionally narrower than calibratedTrigger. */
-function drugContentNocTrigger(sources: SourceData): boolean {
+ *  These triggers are intentionally narrower than calibratedTrigger.
+ *
+ *  Exported so `section-19-conditional-nocs.ts` consumes the same
+ *  trigger logic the gating predicate uses — single source of truth. */
+export function drugContentNocTrigger(sources: SourceData): boolean {
   const m = getMarker(sources, "drug_content");
   return m !== null && valueIsAffirmative(m.value);
 }
-function radiationNocTrigger(sources: SourceData): boolean {
+export function radiationNocTrigger(sources: SourceData): boolean {
   const m = getMarker(sources, "ionising_radiation");
   return m !== null && valueIsAffirmative(m.value);
 }
-function veterinaryNocTrigger(sources: SourceData): boolean {
+export function veterinaryNocTrigger(sources: SourceData): boolean {
   const m = getMarker(sources, "veterinary_use");
   if (m === null) return false;
   // Affirmative for veterinary requires NOT "humans only".
   return !/humans?\s*only/i.test(m.value);
 }
-function pndtNocTrigger(_sources: SourceData): boolean {
+export function pndtNocTrigger(_sources: SourceData): boolean {
   // Sprint 4 candidate. No pndt_in_scope marker today.
   return false;
 }

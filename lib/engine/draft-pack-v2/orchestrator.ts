@@ -38,7 +38,10 @@ import { generateSection12 } from "./section-12-clinical-pms";
 import { generateSection15 } from "./section-15-stability-data";
 import { generateSection16 } from "./section-16-batch-release";
 import { generateSection17 } from "./section-17-pmf-attestation";
+import { generateSection13 } from "./section-13-biocompatibility";
+import { generateSection14 } from "./section-14-sterilization";
 import { generateSection18 } from "./section-18-qms-attestation";
+import { generateSection19 } from "./section-19-conditional-nocs";
 
 const COST_GUARD_USD = 1.5;
 
@@ -74,9 +77,13 @@ const HARDWARE_GENERATORS: Partial<Record<SectionKey, SectionGenerator>> = {
   "16_batch_release": generateSection16,
   "17_pmf_attestation": generateSection17,
   "18_qms_attestation": generateSection18,
-  // §13, §14, §19 land Day-5 morning. Until then the dispatcher falls
-  // back to stubSection() which emits a clearly-marked "pending" row
-  // in the correct slot.
+  // Stream D — Day 5 morning (hybrid + LLM generators)
+  "13_biocompatibility": generateSection13,
+  "14_sterilization_validation": generateSection14,
+  "19_conditional_nocs": generateSection19,
+  // All hardware generators now registered. Day-5 afternoon work
+  // is hardware overlays inside the existing SaMD generators
+  // (§3, §6, §8, §11, §12), not new entries here.
 };
 
 /** Day-4 placeholder for a section whose real generator lands Day-5.
