@@ -35,6 +35,8 @@ import { ReadinessCardSchema } from "@/lib/schemas/readiness-card";
 import type { WizardAnswers } from "@/lib/wizard/types";
 import { generateReadinessReport } from "./readiness-report-v1-generator";
 import { ReadinessReportDocument } from "@/lib/pdf/readiness-report-template";
+import type { AiExtractedRow } from "@/lib/intake/ai-extract";
+import { shortDeviceName } from "@/lib/intake/short-device-name";
 
 const TIER1_REPORTS_BUCKET = "tier1_reports";
 const SIGNED_URL_TTL_SECONDS = 90 * 24 * 60 * 60; // 90 days
@@ -80,7 +82,9 @@ export async function triggerReadinessReportForOrder(
 
   const { data: assessment, error: aErr } = await supabase
     .from("assessments")
-    .select("id, name, email, one_liner, readiness_card, wizard_answers")
+    .select(
+      "id, name, email, one_liner, readiness_card, wizard_answers, ai_extracted"
+    )
     .eq("id", order.assessment_id)
     .maybeSingle();
 
@@ -103,8 +107,17 @@ export async function triggerReadinessReportForOrder(
   }
 
   const wizard = (assessment.wizard_answers as WizardAnswers | null) ?? {};
+  // Phase 2c Bug — the PDF hero used to render the full one_liner
+  // ("A bioresorbable cardiac stent for percutaneous coronary…") with
+  // an ellipsis. Derive a short device label preferring the pitch-
+  // extract's `device_name`, then a noun-phrase chopped from the curated
+  // one-liner, and only finally the raw one_liner / contact name as a
+  // last resort.
+  const aiRow = assessment.ai_extracted as AiExtractedRow | null;
+  const aiFields =
+    aiRow && aiRow.status === "complete" ? aiRow.fields : null;
   const productName =
-    (assessment.one_liner as string) ||
+    shortDeviceName(aiFields, (assessment.one_liner as string) || "") ||
     (assessment.name as string) ||
     "Your device";
   const companyName = (assessment.name as string) || "Your company";
@@ -246,6 +259,33 @@ export async function triggerReadinessReportForOrder(
     );
   }
 }
+
+/**
+ * Phase 2c — derive a short product label for the PDF report hero.
+ * The legacy code used the founder's full one_liner (20–300 chars)
+ * which the PDF then truncated mid-sentence with an ellipsis. The
+ * hero should display something a regulator-facing reader recognises
+ * as a name, not a half-sentence:
+ *
+ *   "A bioresorbable cardiac stent for…"         (legacy, broken)
+ *   →
+ *   "Bioresorbable Cardiac Stent"                (target)
+ *
+ * Source order:
+ *   1. Pitch-extract `device_name` — when the deck declared a clean
+ *      product label, use it verbatim (proper-noun capitalisation
+ *      preserved — e.g. "RetinaFlag DR", "CerviAI").
+ *   2. Pitch-extract `intended_use_one_liner` — curated short form,
+ *      typically already a good source for noun-phrase extraction.
+ *   3. The raw assessment `one_liner` — fallback.
+ *
+ * The noun-phrase chop strips the leading article ("A"/"An"/"The"),
+ * cuts at the first clause-break stop word ("for", "to", "that",
+ * "designed", etc.), caps at 5 words, and title-cases the result.
+ */
+// Extracted to `lib/intake/short-device-name.ts` (Day-5 EOD) — single
+// source of truth shared with regen-report-pdf, verify-short-device-
+// name, and generate-readiness-report-sample scripts.
 
 async function stampFailure(orderId: string, note: string): Promise<void> {
   // CAS to 'failed' only from 'generating' — never reverse a delivered

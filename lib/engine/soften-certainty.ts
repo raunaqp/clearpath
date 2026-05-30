@@ -43,17 +43,13 @@ export function softenCertainty(text: string): string {
     const re = new RegExp(escapeRegex(hard), "gi");
     out = out.replace(re, (matched) => matchLeadingCase(matched, soft));
   }
-  // Replace Unicode arrow glyphs that the built-in @react-pdf/renderer
-  // Helvetica font cannot render (they appeared as missing-glyph tofu
-  // boxes ⬚ in the deployed Tier 2 PDFs and as broken apostrophes
-  // in the Tier 1 PDFs). The ASCII " -> " preserves the directional
-  // sequence semantics that arrows carried in the source templates
-  // (e.g. "MD-26 -> MD-27 -> MD-7" reads as an ordered pathway).
-  // LLMs occasionally still emit arrows despite prompt guidance.
-  out = out.replace(/[→⇒⟶]/g, " -> ");
-  out = out.replace(/[←⇐]/g, " <- ");
-  // Collapse stray double-spaces produced when an arrow sat next to a space.
-  out = out.replace(/ {2,}/g, " ");
+  // Note: this used to rewrite Unicode arrows (→, ←) to ASCII as a
+  // workaround for missing glyphs in @react-pdf/renderer's built-in
+  // Helvetica/Times-Bold (WinAnsi encoding has no arrow glyphs). That
+  // workaround is no longer needed — `lib/pdf/fonts.ts` now registers
+  // IBM Plex Sans + Serif (full Unicode) for every PDF template, so
+  // arrows render correctly. Letting them through here also fixes the
+  // same Tier 2 tofu-box bug at its source.
   return out;
 }
 

@@ -4,7 +4,14 @@ import { getServiceClient } from "@/lib/supabase";
 import WizardClient from "@/components/wizard/WizardClient";
 import { QuestionContextPane } from "@/components/layout/QuestionContextPane";
 import { displayName } from "@/lib/wizard/display-name";
-import { totalSteps } from "@/lib/wizard/questions";
+import {
+  getNextVisibleStep,
+  getQuestionsForPersona,
+  getStepLabelsForPersona,
+  getVisibleOrdinal,
+  isStepVisibleFor,
+  totalSteps,
+} from "@/lib/wizard/questions";
 import type {
   ClinicalState,
   CommercialStage,
@@ -193,11 +200,6 @@ export default async function WizardStepPage({
   // non-devs find it (it just shows the extraction-derived suggestions).
   const forcePrefill = sp.force_prefill === "1";
   const step = parseInt(n, 10);
-  const total = totalSteps();
-
-  if (Number.isNaN(step) || step < 1 || step > total) {
-    return <NotFoundPanel message={`Question ${n} doesn't exist.`} />;
-  }
 
   const supabase = getServiceClient();
   const { data, error } = await supabase
@@ -221,6 +223,30 @@ export default async function WizardStepPage({
   // already set), so this is safe on resume too.
   if (!data.wizard_answers?.persona) {
     redirect(`/wizard/${id}/persona`);
+  }
+
+  // Phase 2c — total is persona-aware. Hardware founders see 7 questions
+  // (Q1, Q3, Q5, Q6, Q7 + Q8 predicate + Q9 patient-contact); SaMD /
+  // clinical-investigation founders see 7 (Q1-Q7). Q2 and Q4 are inferred
+  // for hardware persona; Q8/Q9 only render for hardware persona.
+  // Compute *after* the persona gate so persona is always defined.
+  const persona = data.wizard_answers.persona;
+  const total = totalSteps(persona);
+
+  if (Number.isNaN(step) || step < 1 || step > 9) {
+    return <NotFoundPanel message={`Question ${n} doesn't exist.`} />;
+  }
+
+  // Phase 2c — if the requested step isn't visible for this persona
+  // (e.g. hardware founder hitting q/2 or q/4 directly, or SaMD founder
+  // hitting q/8 or q/9), redirect to the next visible step. Resume-safe.
+  if (!isStepVisibleFor(step, persona)) {
+    const nextVisible = getNextVisibleStep(step - 1, persona);
+    if (nextVisible === null) {
+      // No visible question at or after this step → wizard is done.
+      redirect(`/assess/${id}`);
+    }
+    redirect(`/wizard/${id}/q/${nextVisible}`);
   }
 
   const meta = data.meta ?? {};
@@ -304,14 +330,18 @@ export default async function WizardStepPage({
   const allAnswersPrefilled = forcePrefill
     ? false
     : (() => {
-    const a = initialAnswers as Record<string, unknown>;
-    for (let i = 1; i <= total; i++) {
-      const v = a[`q${i}`];
-      if (v === undefined || v === null) return false;
-      if (Array.isArray(v) && v.length === 0) return false;
-    }
-    return true;
-  })();
+        // Phase 2c — walk only the VISIBLE questions for this persona.
+        // Hardware founders never have q2/q4, so checking 1..total
+        // contiguously would always fail for them.
+        const a = initialAnswers as Record<string, unknown>;
+        const visible = getQuestionsForPersona(persona);
+        for (const q of visible) {
+          const v = a[`q${q.step}`];
+          if (v === undefined || v === null) return false;
+          if (Array.isArray(v) && v.length === 0) return false;
+        }
+        return true;
+      })();
 
   // Two-pane on xl+ (1280px+): left = question card, right = context pane.
   // Below xl: single column with horizontal stepper. The 1024-1279 band
@@ -329,6 +359,7 @@ export default async function WizardStepPage({
               initialAnswers={initialAnswers}
               initialSkipped={initialSkipped}
               productType={data.product_type}
+              persona={persona}
               conflictEncountered={meta.conflict_detected === true}
               pdfCount={pdfCount}
               allAnswersPrefilled={allAnswersPrefilled}
@@ -337,7 +368,16 @@ export default async function WizardStepPage({
             />
           </div>
         </div>
-        <QuestionContextPane currentStep={step} totalSteps={total} />
+        <QuestionContextPane
+          currentStep={getVisibleOrdinal(step, persona)}
+          totalSteps={total}
+          labels={getStepLabelsForPersona(persona)}
+          frameworkCopy={
+            persona === "manufacturer_hardware"
+              ? "We're mapping your device against CDSCO MDR 2017's hardware classification (Class A/B/C/D), the Device Master File checklist (Appendix II, Fourth Schedule), and the form pair you'll likely need — MD-3/MD-5 (SLA) or MD-7/MD-9 (CLA)."
+              : "We're mapping your product against the IMDRF SaMD framework and CDSCO MDR 2017 classification rules. Each answer narrows the regulatory pathway and the forms you'll likely need."
+          }
+        />
       </div>
     </main>
   );

@@ -126,9 +126,21 @@ export default async function UpgradePage({
   // submission flag (meta.tier_b_completed_at), not on field presence.
   // Field-presence broke on refresh because save-on-blur populates b1
   // mid-edit. Customers with an existing order bypass this (past wizard).
+  //
+  // Phase 2c tier-picker fix — only the ₹2,499 Submission Workspace
+  // (draft_editor) needs the Tier B wizard's B1-B6 + C1/C2 intake.
+  // The ₹499 Readiness Report (draft_pack) is generated entirely from
+  // the readiness card + Tier A wizard answers, so it must NOT be
+  // gated on Tier B completion. Previously we redirected EVERY user
+  // to the wizard before showing the TierPicker, which hid the tier
+  // choice and made the main journey look like a ₹2,499-only path.
+  //
+  // New rule: the wizard redirect fires only after the customer has
+  // explicitly chosen draft_editor (selectedTier === "draft_editor").
+  // Without a tier choice, the TierPicker renders below.
   const tierBComplete = !!assessment.meta?.tier_b_completed_at;
-  if (!order && !tierBComplete) {
-    redirect(`/upgrade/${id}/wizard`);
+  if (selectedTier === "draft_editor" && !order && !tierBComplete) {
+    redirect(`/upgrade/${id}/wizard?tier=draft_editor`);
   }
 
   const cardHref = assessment.share_token ? `/c/${assessment.share_token}` : "/";

@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   CdscoClassEnum,
   ClassQualifierEnum,
+  InferenceMarkerSchema,
   ReadinessBandEnum,
   RiskLevelEnum,
   RecommendedPathEnum,
@@ -48,6 +49,12 @@ const MetaSchema = z.object({
   scoped_feature: z.string().nullable(),
   generated_at: z.string(),
   source_assessment_id: z.string(),
+  /** Phase 2c — carry the synthesizer's inference markers (e.g. for
+   *  hardware-persona reports) into the report payload so the PDF /
+   *  on-screen renderer can show the same "what we assumed" block as
+   *  the card. Optional / empty for SaMD / clinical-investigation
+   *  reports. */
+  inference_markers: z.array(InferenceMarkerSchema).optional(),
 });
 
 /**

@@ -31,6 +31,21 @@ export type DataSensitivity = "none" | "low" | "medium" | "high";
 
 export type ReviewStatus = "estimate" | "reviewed";
 
+/** Phase 2c — hardware-persona signals extracted from the card's
+ *  inference_markers + wizard answers. Used to gate hardware-only
+ *  reviewer priorities and lookup-table entries. Optional + defaulted
+ *  to safe SaMD-style values so existing SaMD persona reports stay
+ *  unchanged. */
+export type PatientContactTier =
+  | "no_contact"
+  | "surface_intact_skin"
+  | "surface_mucosal"
+  | "blood_path_indirect"
+  | "blood_path_direct"
+  | "invasive_transient_lt_24h"
+  | "invasive_long_term_30d"
+  | "implant_gt_30d";
+
 export interface ReviewerContext {
   cdsco_class: CdscoClass;
   class_qualifier: ClassQualifier;
@@ -42,6 +57,13 @@ export interface ReviewerContext {
   abdm_in_scope: boolean;
   use_environment_home: boolean;
   drives_or_diagnoses: boolean;
+
+  // Phase 2c — hardware-persona signals. All optional with safe defaults
+  // so SaMD/clinical-investigation reports continue to behave identically.
+  persona?: "manufacturer_samd" | "clinical_investigation_researcher" | "manufacturer_hardware";
+  patient_contact?: PatientContactTier;
+  sterile_inferred?: boolean;
+  software_in_device?: boolean;
 }
 
 export interface ReviewerPriority {
@@ -145,6 +167,56 @@ export const REVIEWER_PRIORITIES_LIBRARY: ReviewerPriority[] = [
     what_reviewers_look_for_seed:
       "For home-use or lay-user environments, reviewers typically ask for a usability file per IEC 62366-1 — formative + summative evaluations — and an IFU at a general-public reading level with explicit warnings about misuse modes.",
     triggers: (c) => c.use_environment_home,
+    weight: 6,
+    review_status: "estimate",
+  },
+
+  // Phase 2c — hardware-persona priorities. Triggers gate on the new
+  // persona / patient_contact / sterile_inferred / software_in_device
+  // signals so they only fire for hardware founders (and don't surface
+  // for SaMD reports).
+
+  {
+    key: "biocompatibility_tier",
+    title: "Biocompatibility tier matching patient contact",
+    what_reviewers_look_for_seed:
+      "Reviewers will likely cross-check the biocompatibility evidence against the ISO 10993-1 risk assessment for the device's contact tier — surface, mucosal, transient invasive, long-term invasive, or implant. Common test families: 10993-10 (sensitisation, irritation), 10993-4 (blood), 10993-6 (implantation), 10993-11 (systemic toxicity), 10993-17/-18 (leachables/extractables).",
+    triggers: (c) =>
+      c.persona === "manufacturer_hardware" &&
+      Boolean(c.patient_contact) &&
+      c.patient_contact !== "no_contact",
+    weight: 9,
+    review_status: "estimate",
+  },
+  {
+    key: "sterilization_method_validation",
+    title: "Sterilization method validation",
+    what_reviewers_look_for_seed:
+      "Reviewers typically expect a sterilization-validation file matching the method declared in the DMF — EtO (ISO 11135), gamma radiation (ISO 11137), steam autoclave (ISO 17665), or aseptic processing. SAL 10^-6 demonstration, bioburden, packaging-integrity validation, and re-validation triggers.",
+    triggers: (c) =>
+      c.persona === "manufacturer_hardware" && c.sterile_inferred === true,
+    weight: 8,
+    review_status: "estimate",
+  },
+  {
+    key: "plant_master_file_site",
+    title: "Plant Master File + site readiness",
+    what_reviewers_look_for_seed:
+      "The CDSCO MD Officer / Notified Body audit assesses the manufacturing site against the Plant Master File (Appendix I) — premises, equipment qualification, personnel, environmental conditions per Annexure A (Fifth Schedule), production controls, and storage. Pre-grant inspection for Class C/D within 60 days; for Class B within 90 days.",
+    triggers: (c) =>
+      c.persona === "manufacturer_hardware" &&
+      (c.cdsco_class === "B" || c.cdsco_class === "C" || c.cdsco_class === "D"),
+    weight: 7,
+    review_status: "estimate",
+  },
+  {
+    key: "bis_iec_conformance",
+    title: "BIS / IEC standards conformance",
+    what_reviewers_look_for_seed:
+      "Where a BIS Indian Standard or IEC harmonised standard exists for the device family (IEC 60601-series for electromedical, IEC 61010-series for measurement equipment, IS 13485 alignment), reviewers expect third-party test reports from a NABL/BIS-recognised lab, certificates, and a documented gap analysis for any deviations.",
+    triggers: (c) =>
+      c.persona === "manufacturer_hardware" &&
+      (c.cdsco_class === "B" || c.cdsco_class === "C" || c.cdsco_class === "D"),
     weight: 6,
     review_status: "estimate",
   },

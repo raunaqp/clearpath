@@ -1,0 +1,597 @@
+[
+  {
+    "id": "implant",
+    "pass": true,
+    "card": {
+      "meta": {
+        "company_name": "Unknown",
+        "product_name": "Drug-eluting coronary stent",
+        "scoped_feature": null,
+        "product_type": "product",
+        "generated_at": "2025-01-15T00:00:00Z",
+        "conflict_resolved": null
+      },
+      "classification": {
+        "medical_device_status": "is_medical_device",
+        "device_type": "Drug-eluting coronary stent (long-term implant, combination product)",
+        "imdrf_category": null,
+        "cdsco_class": "D",
+        "class_qualifier": null,
+        "ai_ml_flag": false,
+        "acp_required": false,
+        "export_only": false,
+        "novel_or_predicate": "has_predicate"
+      },
+      "readiness": {
+        "score": 1,
+        "band": "red",
+        "dimensions": {
+          "regulatory_clarity": 1,
+          "quality_system": 0,
+          "technical_docs": 0,
+          "clinical_evidence": 0,
+          "submission_maturity": 0
+        },
+        "note": "MVP stage with no detected QMS, technical documentation, clinical evidence, or CDSCO interaction. Class D implants typically need 24–36 months of foundational work before submission."
+      },
+      "risk": {
+        "level": "high",
+        "rationale": "Long-term coronary implant in a critical clinical state with drug-elution; among the highest-risk regulated device categories in India."
+      },
+      "timeline": {
+        "estimate_months_low": 24,
+        "estimate_months_high": 36,
+        "display": "24–36 months",
+        "anchor": "Class D implant via CLA (MD-7 → MD-9), with pivotal clinical investigation under MD-22 likely required even with an Indian predicate; combination-product review adds review cycles."
+      },
+      "regulations": {
+        "cdsco_mdr": {
+          "verdict": "required",
+          "rationale": "Long-term coronary implant with drug-elution; Class D under MDR 2017, central authority pathway.",
+          "forms": [
+            "MD-7",
+            "MD-9",
+            "MD-22"
+          ],
+          "pathway_note": "Likely MD-7 -> MD-9 manufacturing licence via CLA; pivotal clinical investigation under MD-22 typically expected before licence grant. Combination product (device + drug) generally triggers additional drug-side review coordination with CDSCO."
+        },
+        "cdsco_pharmacy": {
+          "verdict": "not_applicable",
+          "rationale": "Not a drug-retail / wholesale / e-pharmacy operation; the drug coating is regulated within the combination-device review under MDR, not via the D&C Act pharmacy regime."
+        },
+        "dpdp": {
+          "verdict": "required",
+          "rationale": "Patient health data (PHI) is processed during clinical investigation, registry, and post-market surveillance; DPDP applies. SDF designation unlikely at MVP scale."
+        },
+        "icmr": {
+          "verdict": "required",
+          "rationale": "Pivotal clinical investigation in a Class D implant will need Ethics Committee approval under ICMR 2017 guidelines and CTRI registration."
+        },
+        "abdm": {
+          "verdict": "conditional",
+          "rationale": "Hospital deployment may eventually involve ABHA linkage for implant registry / post-market follow-up, but ABDM is not a launch-gating requirement for the device itself."
+        },
+        "nabh": {
+          "verdict": "required_for_procurement",
+          "rationale": "Coronary stents are typically procured by tertiary cardiac-care hospitals; NABH-accredited buyers increasingly require vendor documentation aligned to NABH digital and quality standards."
+        },
+        "mci_telemed": {
+          "verdict": "not_applicable",
+          "rationale": "No teleconsultation feature; the device is implanted by interventional cardiologists in a cath-lab setting."
+        },
+        "irdai": {
+          "verdict": "not_applicable",
+          "rationale": "No insurance distribution or aggregation feature; reimbursement coding is handled by hospitals and payers, not by the manufacturer."
+        },
+        "nabl": {
+          "verdict": "conditional",
+          "rationale": "Bench testing (mechanical, drug release, biocompatibility) typically uses NABL-accredited or equivalently-recognised labs; you don't operate a lab directly, but your test partners likely need accreditation."
+        }
+      },
+      "top_gaps": [
+        {
+          "dim": "technical_docs",
+          "gap_title": "ISO 10993 blood-contact and implant biocompatibility evidence not documented",
+          "fix_action": "Scope ISO 10993-4 (blood interactions), -6 (implantation), -10 (sensitisation), and -11 (systemic toxicity) testing with a recognised lab; this is foundational for any MD-7 filing on a long-term blood-path implant.",
+          "severity": "high"
+        },
+        {
+          "dim": "clinical_evidence",
+          "gap_title": "No clinical evidence base for a Class D coronary implant",
+          "fix_action": "Engage a clinical-research organisation to design a pivotal investigation protocol (MD-22), identify investigator sites, and prepare an Ethics Committee + CTRI submission package.",
+          "severity": "high"
+        },
+        {
+          "dim": "quality_system",
+          "gap_title": "No ISO 13485 QMS detected",
+          "fix_action": "Engage an ISO 13485 consultant for a gap assessment this quarter; a certified QMS is effectively a precondition for MD-7 application and combination-product review.",
+          "severity": "high"
+        }
+      ],
+      "verdict": "Likely Class D drug-eluting implant — among the highest-risk device categories under MDR 2017. At MVP stage with no detected QMS, biocompatibility evidence, or clinical data, a realistic foundation-to-submission window is 24–36 months via CLA (MD-7/MD-9) with a pivotal clinical investigation (MD-22).",
+      "why_regulated": "A drug-eluting coronary stent is a long-term blood-contact implant that also delivers a drug; this combination places it in the highest CDSCO class (D) under MDR 2017, with central-authority review.",
+      "post_2025_samd_gap": false,
+      "tier0_card_tagline": "Class D coronary implant · 24–36 month foundation before submission",
+      "tier1_teaser": "₹499 unlocks the full DMF skeleton (biocompatibility, sterilisation, stability, drug-substance dossier), MD-7/MD-9 filing checklist, and a Class D clinical investigation playbook tailored to coronary stents.",
+      "tier2_teaser": "₹25K unlocks a draft DMF, MD-22 clinical investigation protocol scaffold, ISO 13485 + ISO 14971 implementation plan, and a CDSCO pre-submission meeting brief.",
+      "recommended_path": "clinical_investigation",
+      "inference_markers": [
+        {
+          "field": "info_significance",
+          "label": "Information role",
+          "value": "Diagnoses/treats (assumed)",
+          "status": "estimated",
+          "basis": "Inferred from device description — a stent physically treats coronary occlusion. Hardware founders don't answer Q2 directly.",
+          "correctable_at": "editor or by changing your one-liner"
+        },
+        {
+          "field": "year1_users_scale",
+          "label": "Year-1 users",
+          "value": "Under 10,000",
+          "status": "assumed",
+          "basis": "Hardware launches typically stay below 10 lakh users in Year 1. Correct in your editor if you expect scale that triggers DPDP SDF designation.",
+          "correctable_at": "editor"
+        },
+        {
+          "field": "sterile",
+          "label": "Sterile device",
+          "value": "Yes (assumed)",
+          "status": "estimated",
+          "basis": "Long-term implants with direct blood-path contact are sterile-supplied by default.",
+          "correctable_at": "editor §14"
+        },
+        {
+          "field": "drug_content",
+          "label": "Drug content",
+          "value": "Yes (drug-eluting)",
+          "status": "extracted",
+          "basis": "Device description explicitly states 'drug-eluting' — this is a combination product, triggering CDSCO drug-side review coordination on top of the device pathway.",
+          "correctable_at": "editor"
+        },
+        {
+          "field": "ionising_radiation",
+          "label": "Ionising radiation source",
+          "value": "No",
+          "status": "assumed",
+          "basis": "Coronary stents do not emit or contain ionising radiation. Confirm in editor if a radioactive variant applies.",
+          "correctable_at": "editor"
+        },
+        {
+          "field": "veterinary_use",
+          "label": "Intended population",
+          "value": "Humans only",
+          "status": "assumed",
+          "basis": "Assumed humans-only; if your device targets veterinary use, the path changes (DAHD NOC).",
+          "correctable_at": "editor"
+        },
+        {
+          "field": "manufacturing_location",
+          "label": "Manufacturing location",
+          "value": "India (assumed)",
+          "status": "assumed",
+          "basis": "No explicit address detected; defaulted to India. Correct if you manufacture abroad and intend to import (MD-14/MD-15).",
+          "correctable_at": "editor"
+        },
+        {
+          "field": "cdsco_class",
+          "label": "CDSCO class",
+          "value": "D",
+          "status": "estimated",
+          "basis": "Class D — derived from long-term implant contact (>30 days) + drug-elution (combination product). Either signal alone would lift this to Class C/D; together they anchor Class D.",
+          "correctable_at": "editor §4"
+        },
+        {
+          "field": "measuring_function",
+          "label": "Measuring function",
+          "value": "No",
+          "status": "estimated",
+          "basis": "A drug-eluting stent does not measure or display physiological parameters; it is a passive implant with controlled drug release.",
+          "correctable_at": "editor"
+        },
+        {
+          "field": "software_in_device",
+          "label": "Software component",
+          "value": "No",
+          "status": "estimated",
+          "basis": "No software/firmware/AI mentioned. IEC 62304 and SaMD-side documentation not surfaced as gaps.",
+          "correctable_at": "editor"
+        }
+      ]
+    }
+  },
+  {
+    "id": "accessory",
+    "pass": true,
+    "card": {
+      "meta": {
+        "company_name": "Unspecified",
+        "product_name": "Disposable BP Cuff Accessory",
+        "scoped_feature": null,
+        "product_type": "product",
+        "generated_at": "2025-01-15T00:00:00Z",
+        "conflict_resolved": null
+      },
+      "classification": {
+        "medical_device_status": "is_medical_device",
+        "device_type": "Disposable single-use blood pressure cuff accessory (non-electrical, non-sterile, intact-skin contact)",
+        "imdrf_category": null,
+        "cdsco_class": "A",
+        "class_qualifier": null,
+        "ai_ml_flag": false,
+        "acp_required": false,
+        "export_only": false,
+        "novel_or_predicate": "has_predicate"
+      },
+      "readiness": {
+        "score": 3,
+        "band": "amber",
+        "dimensions": {
+          "regulatory_clarity": 1,
+          "quality_system": 0,
+          "technical_docs": 1,
+          "clinical_evidence": 1,
+          "submission_maturity": 0
+        },
+        "note": "Class A non-sterile non-measuring accessory — lowest-risk CDSCO tier. Foundations (QMS, DMF) needed before SLA portal registration; clinical-evidence dimension scored lightly because indirect-vital-sign accessories typically need only equivalence claims, not new studies."
+      },
+      "risk": {
+        "level": "medium",
+        "rationale": "Regulated as a medical device accessory under CDSCO MDR 2017, but the lowest-risk class with intact-skin contact only, no sterility, no measuring function, and an Indian predicate available. Exposure is real but bounded."
+      },
+      "timeline": {
+        "estimate_months_low": 4,
+        "estimate_months_high": 8,
+        "display": "4–8 months",
+        "anchor": "Class A non-sterile non-measuring accessory; SLA portal self-notification path typically clears in 4–8 months including DMF assembly and ISO 13485 readiness."
+      },
+      "regulations": {
+        "cdsco_mdr": {
+          "verdict": "required",
+          "rationale": "Accessory to a notified medical device (BP monitor); regulated as Class A under MDR 2017. Lowest-risk tier with Indian predicate available.",
+          "forms": [],
+          "pathway_note": "Class A non-sterile non-measuring: SLA portal self-notification on cdscomdonline.gov.in; no MD-3/MD-5 application and no pre-grant audit. Indian predicate (Q8) means MD-26/MD-27 pre-permission likely not required."
+        },
+        "cdsco_pharmacy": {
+          "verdict": "not_applicable",
+          "rationale": "No drug sale, dispensing, or distribution."
+        },
+        "dpdp": {
+          "verdict": "not_applicable",
+          "rationale": "Physical disposable accessory with no personal data processing per Q6."
+        },
+        "icmr": {
+          "verdict": "not_applicable",
+          "rationale": "No AI/ML, no clinical validation study planned, no investigational claims."
+        },
+        "abdm": {
+          "verdict": "not_applicable",
+          "rationale": "No digital health record integration; Q5 confirms no ABDM/FHIR scope."
+        },
+        "nabh": {
+          "verdict": "required_for_procurement",
+          "rationale": "Sold to HCPs (Q3); NABH-accredited hospitals increasingly require NABH-compliant procurement documentation for consumables."
+        },
+        "mci_telemed": {
+          "verdict": "not_applicable",
+          "rationale": "No teleconsultation or RMP-facilitation feature."
+        },
+        "irdai": {
+          "verdict": "not_applicable",
+          "rationale": "No insurance distribution or aggregation."
+        },
+        "nabl": {
+          "verdict": "not_applicable",
+          "rationale": "No own lab operations, no IVD function."
+        }
+      },
+      "top_gaps": [
+        {
+          "dim": "quality_system",
+          "gap_title": "ISO 13485 QMS not evidenced",
+          "fix_action": "Engage an ISO 13485 consultant for a gap assessment scoped to a single-product Class A line; certification is expected by CDSCO at SLA portal registration even for Class A.",
+          "severity": "high"
+        },
+        {
+          "dim": "technical_docs",
+          "gap_title": "Device Master File (DMF) and Plant Master File (PMF) not assembled",
+          "fix_action": "Begin DMF assembly covering device description, materials (cuff fabric, tubing), biocompatibility rationale for intact-skin contact (ISO 10993-10 sensitisation), and labelling; PMF can follow once manufacturing site is finalised.",
+          "severity": "high"
+        },
+        {
+          "dim": "submission_maturity",
+          "gap_title": "No CDSCO SLA portal account or self-notification draft",
+          "fix_action": "Create a cdscomdonline.gov.in account this week and map the Class A self-notification checklist; for non-sterile non-measuring accessories this is the operative pathway, not MD-3.",
+          "severity": "medium"
+        }
+      ],
+      "verdict": "Likely regulated as a Class A medical device accessory under CDSCO MDR 2017 — the lowest-risk tier with a self-notification path and an Indian predicate already available. Foundations (ISO 13485, DMF) are the immediate gaps.",
+      "why_regulated": "A blood-pressure cuff is an accessory to a notified medical device, which brings it within MDR 2017 scope regardless of being non-electrical. Intact-skin contact, non-sterile, and non-measuring keep it at Class A — the floor of regulation, not the ceiling.",
+      "post_2025_samd_gap": false,
+      "tier0_card_tagline": "Class A accessory — lowest regulatory tier, but ISO 13485 + DMF still expected.",
+      "tier1_teaser": "₹499 unlocks the full DMF outline, ISO 10993-10 biocompatibility rationale template, and SLA portal self-notification checklist tailored to disposable accessories.",
+      "tier2_teaser": "₹25K unlocks the drafted Class A self-notification dossier, DMF/PMF skeletons, ISO 13485 scope-of-application document, and predicate-equivalence narrative ready for SLA portal upload.",
+      "recommended_path": "manufacturing_license",
+      "inference_markers": [
+        {
+          "field": "info_significance",
+          "label": "Information role",
+          "value": "Informs only (assumed)",
+          "status": "estimated",
+          "basis": "Inferred from your device description — a passive cuff accessory does not drive or diagnose. Hardware founders don't answer this directly.",
+          "correctable_at": "editor or by changing your one-liner"
+        },
+        {
+          "field": "year1_users_scale",
+          "label": "Year-1 users",
+          "value": "Under 10,000",
+          "status": "assumed",
+          "basis": "Hardware launches typically stay below 10 lakh users in Year 1. Correct in your editor if you expect scale that triggers DPDP SDF designation.",
+          "correctable_at": "editor"
+        },
+        {
+          "field": "sterile",
+          "label": "Sterile device",
+          "value": "No",
+          "status": "extracted",
+          "basis": "Stated explicitly in your one-liner: 'non-sterile'.",
+          "correctable_at": "editor §4"
+        },
+        {
+          "field": "drug_content",
+          "label": "Drug content",
+          "value": "No",
+          "status": "assumed",
+          "basis": "Most healthtech hardware contains no drug substance — confirm in your editor if your device is drug-eluting or drug-coated.",
+          "correctable_at": "editor §4"
+        },
+        {
+          "field": "ionising_radiation",
+          "label": "Ionising radiation",
+          "value": "No",
+          "status": "assumed",
+          "basis": "Most healthtech hardware does not use X-ray, CT, or radioactive sources — confirm in your editor if yours does.",
+          "correctable_at": "editor §4"
+        },
+        {
+          "field": "veterinary_use",
+          "label": "Veterinary use",
+          "value": "Humans only",
+          "status": "assumed",
+          "basis": "Assumed humans-only; if your device is for animals, that path uses DAHD NOC and you should correct this.",
+          "correctable_at": "editor §4"
+        },
+        {
+          "field": "manufacturing_location",
+          "label": "Manufacturing location",
+          "value": "India (assumed)",
+          "status": "assumed",
+          "basis": "No address detected; defaulted to India. Correct if you manufacture abroad — import path uses MD-14 instead.",
+          "correctable_at": "editor §2"
+        },
+        {
+          "field": "measuring_function",
+          "label": "Measuring function",
+          "value": "No",
+          "status": "estimated",
+          "basis": "A passive cuff accessory does not itself measure pressure — the connected monitor does. This keeps you in the lowest Class A sub-tier (self-notification only).",
+          "correctable_at": "editor §4"
+        },
+        {
+          "field": "software_in_device",
+          "label": "Software in device",
+          "value": "No",
+          "status": "estimated",
+          "basis": "No software, AI, or firmware language detected in your one-liner. Pure-hardware path applies; IEC 62304 and ACP scope skipped.",
+          "correctable_at": "editor §4"
+        },
+        {
+          "field": "cdsco_class",
+          "label": "CDSCO class",
+          "value": "A (non-sterile, non-measuring)",
+          "status": "estimated",
+          "basis": "Derived from intact-skin contact + non-sterile + non-measuring + no drug + no radiation. This is the lowest sub-tier of Class A and uses SLA portal self-notification rather than MD-3/MD-5.",
+          "correctable_at": "editor §4"
+        }
+      ]
+    }
+  },
+  {
+    "id": "connected_glucometer",
+    "pass": true,
+    "card": {
+      "meta": {
+        "company_name": "Unknown",
+        "product_name": "Bluetooth Blood Glucose Meter",
+        "scoped_feature": null,
+        "product_type": "hardware_software",
+        "generated_at": "2025-01-15T00:00:00Z",
+        "conflict_resolved": null
+      },
+      "classification": {
+        "medical_device_status": "is_medical_device",
+        "device_type": "Bluetooth-connected blood glucose meter (IVD) + companion app",
+        "imdrf_category": null,
+        "cdsco_class": "C",
+        "class_qualifier": "IVD",
+        "ai_ml_flag": false,
+        "acp_required": false,
+        "export_only": false,
+        "novel_or_predicate": "has_predicate"
+      },
+      "readiness": {
+        "score": 1,
+        "band": "red",
+        "dimensions": {
+          "regulatory_clarity": 1,
+          "quality_system": 0,
+          "technical_docs": 0,
+          "clinical_evidence": 0,
+          "submission_maturity": 0
+        },
+        "note": "MVP stage with no detected QMS, technical documentation, clinical evidence, or CDSCO interaction. Foundational work needed before submission."
+      },
+      "risk": {
+        "level": "high",
+        "rationale": "Class C IVD with direct blood-path contact and companion software syncing PHI to ABDM and clinics; clinical-management impact for diabetic patients."
+      },
+      "timeline": {
+        "estimate_months_low": 12,
+        "estimate_months_high": 18,
+        "display": "12–18 months",
+        "anchor": "Class C IVD via CLA (MD-7 → MD-9), with Indian predicate easing the substantial-equivalence narrative but bench + clinical performance evaluation still required."
+      },
+      "regulations": {
+        "cdsco_mdr": {
+          "verdict": "required",
+          "rationale": "Self-monitoring blood glucose meter is a notified IVD; Class C central-licensing pathway likely applies.",
+          "forms": [
+            "MD-7",
+            "MD-9"
+          ],
+          "pathway_note": "Indian international comparables exist, which generally eases the substantial-equivalence narrative; bench performance + clinical performance evaluation typically still required. Companion app inherits the device's class as SiMD."
+        },
+        "cdsco_pharmacy": {
+          "verdict": "not_applicable",
+          "rationale": "No drug sale, distribution, or dispensing."
+        },
+        "dpdp": {
+          "verdict": "required",
+          "rationale": "Processes patient health data (PHI) including glucose readings synced to ABDM and the clinic; sensitive personal data under DPDP. SDF designation depends on user scale."
+        },
+        "icmr": {
+          "verdict": "conditional",
+          "rationale": "No AI/ML component declared; ICMR AI guidelines do not apply, but EC-approved clinical performance evaluation for the IVD is typically required and follows ICMR ethical norms."
+        },
+        "abdm": {
+          "verdict": "required",
+          "rationale": "Explicit ABDM integration declared; HIP/HIU milestones (M1/M2/M3), FHIR R4, OAuth 2.0, and CERT-In Safe-to-Host certification typically apply."
+        },
+        "nabh": {
+          "verdict": "conditional",
+          "rationale": "Primary-care clinic integration may pull in NABH digital health expectations depending on customer mix; not a direct gating regulation for the device itself."
+        },
+        "mci_telemed": {
+          "verdict": "not_applicable",
+          "rationale": "No teleconsultation feature described; data sync to clinic is not equivalent to RMP-mediated remote consultation."
+        },
+        "irdai": {
+          "verdict": "not_applicable",
+          "rationale": "No insurance distribution, aggregation, or underwriting feature."
+        },
+        "nabl": {
+          "verdict": "required",
+          "rationale": "IVD performance evaluation typically requires NABL-accredited (ISO 15189) lab validation against the predicate device."
+        }
+      },
+      "top_gaps": [
+        {
+          "dim": "clinical_evidence",
+          "gap_title": "ISO 10993 biocompatibility evidence not documented",
+          "fix_action": "Scope ISO 10993-4 (blood contact) and ISO 10993-10 (sensitisation) testing with an NABL-accredited lab; lancet and test-strip materials carry blood-path-direct contact.",
+          "severity": "high"
+        },
+        {
+          "dim": "clinical_evidence",
+          "gap_title": "IVD clinical performance evaluation against Indian predicate not initiated",
+          "fix_action": "Design a comparative performance study against your declared Indian predicate (accuracy, precision, interference) at an NABH/NABL site under EC approval; this is likely required for MD-9.",
+          "severity": "high"
+        },
+        {
+          "dim": "quality_system",
+          "gap_title": "ISO 13485 QMS not detected",
+          "fix_action": "Engage an ISO 13485 consultant for a gap assessment this month; CDSCO Class C manufacturing license requires a functioning QMS at facility inspection.",
+          "severity": "high"
+        }
+      ],
+      "verdict": "Likely Class C IVD on the central CDSCO pathway with declared ABDM integration. Foundational gaps across QMS, biocompatibility, and clinical performance evaluation need to close before MD-7 filing. Since your product has a hardware component, state FDA approval may also apply depending on your manufacturing setup.",
+      "why_regulated": "A self-monitoring blood glucose meter directly measures a serious clinical parameter via blood contact and drives diabetic patients' day-to-day management decisions — squarely within CDSCO MDR 2017 as a notified IVD.",
+      "post_2025_samd_gap": false,
+      "tier0_card_tagline": "Class C IVD on the central pathway — Indian predicate helps, but biocomp + clinical evaluation are the long poles.",
+      "tier1_teaser": "₹499 unlocks the full DMF skeleton: MD-7/MD-9 form mapping, ISO 10993 test matrix scoped to your contact tier, predicate-comparison template, and ABDM milestone sequencing.",
+      "tier2_teaser": "₹25K unlocks a regulator-grade Draft Pack: pre-filled MD-7, biocompatibility test plan, IVD performance-evaluation protocol, ISO 13485 gap report, and DPDP+ABDM integration brief.",
+      "recommended_path": "manufacturing_license",
+      "inference_markers": [
+        {
+          "field": "info_significance",
+          "label": "Information role",
+          "value": "drives clinical management",
+          "status": "estimated",
+          "basis": "Inferred from your device description; hardware founders don't answer this directly. Glucose readings driving diabetes self-management.",
+          "correctable_at": "editor or by changing your one-liner"
+        },
+        {
+          "field": "year1_users_scale",
+          "label": "Year-1 users",
+          "value": "Under 10,000",
+          "status": "assumed",
+          "basis": "Hardware launches typically stay below 10 lakh users in Year 1. Correct in your editor if you expect scale that triggers DPDP SDF designation.",
+          "correctable_at": "editor"
+        },
+        {
+          "field": "sterile",
+          "label": "Sterile components",
+          "value": "Yes — lancets/test strips (assumed)",
+          "status": "estimated",
+          "basis": "Inferred from blood-path-direct patient contact via lancets and single-use test strips.",
+          "correctable_at": "editor §14"
+        },
+        {
+          "field": "drug_content",
+          "label": "Drug content",
+          "value": "No",
+          "status": "assumed",
+          "basis": "Most healthtech hardware contains no drug substance — confirm in your editor if your device is drug-eluting or drug-coated.",
+          "correctable_at": "editor"
+        },
+        {
+          "field": "ionising_radiation",
+          "label": "Ionising radiation",
+          "value": "No",
+          "status": "assumed",
+          "basis": "Most healthtech hardware does not use X-ray, CT, or radioactive sources — confirm in your editor if yours does.",
+          "correctable_at": "editor"
+        },
+        {
+          "field": "veterinary_use",
+          "label": "Intended use",
+          "value": "Humans only",
+          "status": "assumed",
+          "basis": "Assumed humans-only; if your device is for animals, that path uses DAHD NOC and you should correct this.",
+          "correctable_at": "editor"
+        },
+        {
+          "field": "manufacturing_location",
+          "label": "Manufacturing location",
+          "value": "India",
+          "status": "assumed",
+          "basis": "Default assumption; no facility address detected.",
+          "correctable_at": "editor"
+        },
+        {
+          "field": "measuring_function",
+          "label": "Measuring function",
+          "value": "Yes",
+          "status": "estimated",
+          "basis": "Device measures blood glucose — an active measuring medical device.",
+          "correctable_at": "editor"
+        },
+        {
+          "field": "software_in_device",
+          "label": "Software in device",
+          "value": "Yes (companion app + meter firmware)",
+          "status": "estimated",
+          "basis": "Bluetooth meter firmware plus a companion smartphone app syncing to ABDM.",
+          "correctable_at": "editor"
+        },
+        {
+          "field": "cdsco_class",
+          "label": "CDSCO class",
+          "value": "C",
+          "status": "estimated",
+          "basis": "Class C — derived from blood-path-direct contact (IVD with patient sampling), non-drug, non-radioactive; measuring function with clinical-management impact.",
+          "correctable_at": "editor §4"
+        }
+      ]
+    }
+  }
+]

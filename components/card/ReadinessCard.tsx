@@ -3,6 +3,7 @@ import type { CompletenessResult } from "@/lib/completeness/types";
 import Link from "next/link";
 import { ConciergeValueBlock } from "./ConciergeValueBlock";
 import { DocumentCompletenessBlock } from "./DocumentCompletenessBlock";
+import { InferenceMarkersBlock } from "./InferenceMarkersBlock";
 import { RegulationCountBadge } from "./RegulationCountBadge";
 import { RegulationSnapshot } from "./RegulationSnapshot";
 import { RiskBlock } from "./RiskBlock";
@@ -133,6 +134,13 @@ export function ReadinessCard({
             <TimelineCompactBlock timeline={card.timeline} />
           </div>
         </div>
+
+        {/* Phase 2c — inference markers (hardware persona). Surfaces
+            assumptions made about sterile / drug / radiation / mfg-loc
+            etc. before the founder reads the prose verdict — so a
+            wrong "non-drug" assumption can't slip past. Null-renders
+            for personas with no markers. */}
+        <InferenceMarkersBlock markers={card.inference_markers} />
 
         {/* 3. Verdict + Why regulated */}
         <div className="space-y-7 mb-7">

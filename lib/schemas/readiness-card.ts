@@ -154,6 +154,50 @@ const TopGapSchema = z.object({
   severity: SeverityEnum,
 });
 
+/**
+ * Phase 2c — inference markers.
+ *
+ * The hardware persona path uses "make assumptions, validate in editor":
+ * fields like sterile, drug content, ionising radiation, manufacturing
+ * location, veterinary use, measuring function, and sterilization mode
+ * are NOT asked up front. The synthesizer infers them and emits a marker
+ * here for each so the founder can see and correct.
+ *
+ * Markers MUST be surfaced prominently — at card, ₹499 report, and pack
+ * layers — per founder requirement: "a founder whose device DOES contain
+ * a drug must not miss that 'non-drug' was assumed."
+ *
+ * Used today by hardware persona only. SaMD / clinical-investigation
+ * personas leave the array empty.
+ */
+export const InferenceMarkerStatusEnum = z.enum([
+  "estimated", // computed from one or more wizard answers
+  "assumed", // defaulted because most products in this class are X
+  "extracted", // pulled from pitch-extract / URL content
+]);
+
+export const InferenceMarkerSchema = z.object({
+  /** Machine-readable field key — e.g., "sterile", "drug_content",
+   *  "ionising_radiation", "manufacturing_location", "veterinary_use",
+   *  "measuring_function", "sterilization_mode", "cdsco_class". */
+  field: z.string(),
+  /** Plain-language field label shown to the founder — e.g., "Sterile
+   *  device", "Drug content", "CDSCO risk class". */
+  label: z.string(),
+  /** The inferred value as a short user-visible string — e.g., "Yes",
+   *  "No drug content", "Class C". */
+  value: z.string(),
+  /** Status — drives the badge: [ESTIMATED] / [ASSUMED] / [EXTRACTED]. */
+  status: InferenceMarkerStatusEnum,
+  /** One short sentence explaining the basis of the inference, plain
+   *  language. Shown right under the value. */
+  basis: z.string(),
+  /** Where the founder can correct this — e.g., "wizard Q9", "editor
+   *  §14", "intake". Drives the "Tap to correct" affordance copy. */
+  correctable_at: z.string(),
+});
+export type InferenceMarker = z.infer<typeof InferenceMarkerSchema>;
+
 export const ReadinessCardSchema = z.object({
   meta: z.object({
     company_name: z.string(),
@@ -245,6 +289,14 @@ export const ReadinessCardSchema = z.object({
   /** Story 2.5 Phase 1 — see RecommendedPathEnum docs above. Optional
    * to keep older readiness_cards parseable; new emissions always set it. */
   recommended_path: RecommendedPathEnum.optional(),
+
+  /** Phase 2c — assumption / estimation markers surfaced on the card
+   * so the founder can spot incorrect inferences (e.g., the device
+   * actually IS drug-eluting but the synthesizer defaulted to non-drug).
+   * Optional and typically empty for SaMD / clinical-investigation
+   * personas; populated for manufacturer_hardware. Renderers MUST
+   * surface this prominently — never bury it. */
+  inference_markers: z.array(InferenceMarkerSchema).optional(),
 });
 
 export type ReadinessCard = z.infer<typeof ReadinessCardSchema>;

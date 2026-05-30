@@ -12,22 +12,43 @@
  * yet have a documented auto-delete job.
  */
 
-const STEP_LABELS: Record<number, string> = {
-  1: "Clinical state",
-  2: "Decision influence",
-  3: "Users",
-  4: "Year 1 scale",
-  5: "Integrations",
-  6: "Data types",
-  7: "Commercial stage",
-};
+/**
+ * Phase 2c — labels and "what we're checking" copy are now persona-aware.
+ * Callers pass:
+ *  - `currentOrdinal` = position among visible questions (1..total)
+ *  - `total` = count of visible questions
+ *  - `labels` = step labels ordered by visible ordinal
+ *  - `frameworkCopy` = the "what we're checking" body, different for
+ *    SaMD vs hardware
+ *
+ * For backward compatibility with callers that haven't been threaded
+ * through, `currentStep` / `totalSteps` still work — they're treated
+ * as currentOrdinal/total and the labels default to the SaMD set.
+ */
+
+const DEFAULT_LABELS = [
+  "Clinical state",
+  "Decision influence",
+  "Users",
+  "Year 1 scale",
+  "Integrations",
+  "Data types",
+  "Commercial stage",
+];
+
+const DEFAULT_FRAMEWORK_COPY =
+  "We're mapping your product against the IMDRF SaMD framework and CDSCO MDR 2017 classification rules. Each answer narrows the regulatory pathway and the forms you'll likely need.";
 
 export function QuestionContextPane({
   currentStep,
   totalSteps = 7,
+  labels = DEFAULT_LABELS,
+  frameworkCopy = DEFAULT_FRAMEWORK_COPY,
 }: {
   currentStep: number;
   totalSteps?: number;
+  labels?: string[];
+  frameworkCopy?: string;
 }) {
   const steps = Array.from({ length: totalSteps }, (_, i) => i + 1);
 
@@ -57,7 +78,7 @@ export function QuestionContextPane({
                         : "text-sm text-[#9CA3AF] leading-snug"
                   }
                 >
-                  {STEP_LABELS[n] ?? `Step ${n}`}
+                  {labels[n - 1] ?? `Step ${n}`}
                 </span>
               </li>
             );
@@ -69,11 +90,7 @@ export function QuestionContextPane({
         <p className="text-sm font-medium text-[#0E1411] mb-2">
           What we&apos;re checking
         </p>
-        <p className="text-sm text-[#6B7280] leading-relaxed">
-          We&apos;re mapping your product against the IMDRF SaMD framework
-          and CDSCO MDR 2017 classification rules. Each answer narrows the
-          regulatory pathway and the forms you&apos;ll likely need.
-        </p>
+        <p className="text-sm text-[#6B7280] leading-relaxed">{frameworkCopy}</p>
       </div>
 
       <div className="p-6 border-t border-[#E5E7EB]">

@@ -1,30 +1,33 @@
 "use client";
 
 /**
- * Sprint 3 Phase 1.1 Bug 2 — keep tier choice across back-navigation.
+ * Sprint 3 Phase 1.1 Bug 2 → Phase 2c tier-picker fix.
  *
- * The Cashfree JS SDK navigates the customer to a hosted checkout page.
- * Depending on the SDK version this can drop the `?tier=` query string
- * on browser-back, so the customer returns to /upgrade/[id] with the
- * tier picker re-shown — even though they had already picked.
+ * History: this used to mirror `?tier=` to sessionStorage and silently
+ * restore it on subsequent /upgrade/[id] visits — so a Cashfree round-
+ * trip that dropped `?tier=` on back-navigation still kept the
+ * customer on their chosen tier surface.
  *
- * This mirrors the URL's `tier` param to sessionStorage:
- *   • URL has tier → write it to sessionStorage
- *   • URL missing tier → if sessionStorage has one, replace the URL
+ * Phase 2c regression: the silent restore was hiding the TierPicker on
+ * the main "Generate my documents" entry. If a user (or a demo session)
+ * had ever clicked a tier card, the stored intent would re-route them
+ * past the picker on every subsequent visit, even when they explicitly
+ * came back to compare tiers.
  *
- * The explicit "Change tier" link adds ?change=1, which clears the
- * stored intent and skips the rehydration to avoid trapping the
- * customer in their previous choice.
+ * New behaviour: write-only. We still persist the current `?tier=` to
+ * sessionStorage (kept for future analytics / observability use), but
+ * we DO NOT silently restore from it. A Cashfree back-nav user who
+ * loses `?tier=` will re-pick on the TierPicker — acceptable trade-off
+ * because the alternative was hiding the main-journey picker entirely.
  *
  * Once the customer pays, the tier2_orders row's tier_choice column
  * becomes the source of truth — StatusPanel reads from there and this
  * sync is irrelevant.
  */
 import { useEffect } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 const STORAGE_KEY = "cp_tier_intent";
-const VALID = new Set(["draft_pack", "draft_editor"]);
 
 export function TierIntentSync({
   currentTier,
@@ -32,9 +35,7 @@ export function TierIntentSync({
   /** Server-resolved `?tier=` from page.tsx searchParams. */
   currentTier: "draft_pack" | "draft_editor" | null;
 }) {
-  const router = useRouter();
   const search = useSearchParams();
-  const pathname = usePathname();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -54,19 +55,11 @@ export function TierIntentSync({
       } catch {
         // ignore
       }
-      return;
     }
-
-    let stored: string | null = null;
-    try {
-      stored = sessionStorage.getItem(STORAGE_KEY);
-    } catch {
-      // ignore
-    }
-    if (stored && VALID.has(stored)) {
-      router.replace(`${pathname}?tier=${stored}`);
-    }
-  }, [currentTier, search, pathname, router]);
+    // Note: no read-and-restore path. Fresh visits without ?tier=
+    // always render the TierPicker so the customer can pick (or
+    // re-pick after a Cashfree back-navigation).
+  }, [currentTier, search]);
 
   return null;
 }

@@ -9,9 +9,12 @@ import {
 const bodySchema = z.object({
   assessment_id: z.string().uuid(),
   // Step 0 is reserved for the Phase 2a persona gate; 1–7 are the
-  // Tier A questions. The value is only used to scope analytics
-  // upstream — persistence is decoupled and writes through `answer`.
-  step: z.number().int().min(0).max(7),
+  // Tier A questions that apply to every persona; 8–9 are the Phase 2c
+  // hardware-persona suffix (predicate + patient-contact). The value
+  // is only used to scope analytics upstream — persistence is decoupled
+  // and writes through `answer`. The wizard UI gates step 8/9 by
+  // persona; the API stays permissive.
+  step: z.number().int().min(0).max(9),
   answer: WizardAnswersPartialSchema,
 });
 

@@ -15,7 +15,7 @@
  * regulated-product cases to showcase the engine's core value.
  */
 
-import type { WizardAnswers } from "@/lib/wizard/types";
+import type { Persona, WizardAnswers } from "@/lib/wizard/types";
 
 export type DemoPacket = {
   /** Stable ID — used in URL like /start?demo=cerviai */
@@ -32,10 +32,18 @@ export type DemoPacket = {
     one_liner: string;
     url: string;
   };
-  /** Pre-fills wizard answers so we land on the card in <30 seconds */
+  /** Phase C — persona must be set on every demo packet so the demo flow
+   *  bypasses the /wizard/[id]/persona fallback gate the same way a real
+   *  intake-with-persona submission does. */
+  persona: Persona;
+  /** Pre-fills wizard answers so we land on the card in <30 seconds.
+   *  q8/q9 are the Phase 2c hardware Tier A suffix — required for
+   *  manufacturer_hardware packets so the skip-to-card affordance
+   *  works; optional and unused for other personas. */
   wizard_answers: Required<
     Pick<WizardAnswers, "q1" | "q2" | "q3" | "q4" | "q5" | "q6" | "q7">
-  >;
+  > &
+    Pick<WizardAnswers, "q8" | "q9">;
   /** Expected outcome for sanity-checking demo */
   expected: {
     cdsco_class: "A" | "B" | "C" | "D" | null;
@@ -58,6 +66,7 @@ export const DEMO_PACKETS: DemoPacket[] = [
         "AI-powered cervical cancer screening from colposcopy images, deployed in primary care clinics.",
       url: "https://www.vyuhaa.com",
     },
+    persona: "manufacturer_samd",
     wizard_answers: {
       q1: "serious",
       q2: "diagnoses_treats",
@@ -86,6 +95,7 @@ export const DEMO_PACKETS: DemoPacket[] = [
         "AI clinical scribe — listens to doctor-patient consultations and drafts SOAP notes for clinician review. Sub-feature of Eka Care EHR platform.",
       url: "https://www.eka.care",
     },
+    persona: "manufacturer_samd",
     wizard_answers: {
       q1: "non_serious",
       q2: "drives",
@@ -114,6 +124,7 @@ export const DEMO_PACKETS: DemoPacket[] = [
         "Portable fundus camera (3nethra) for retinal disease screening at primary health centres. Class D ophthalmic device with CDSCO manufacturing license history.",
       url: "https://www.forushealth.com",
     },
+    persona: "manufacturer_hardware",
     wizard_answers: {
       q1: "serious",
       q2: "diagnoses_treats",
@@ -122,6 +133,12 @@ export const DEMO_PACKETS: DemoPacket[] = [
       q5: "hospital",
       q6: ["phi", "imaging"],
       q7: "filed",
+      // Phase 2c — hardware Tier A suffix. Forus 3nethra is a non-mydriatic
+      // fundus camera with an Indian CDSCO licence history; the chin /
+      // forehead rest touches intact skin during imaging but nothing
+      // invasive.
+      q8: "yes_indian",
+      q9: "surface_intact_skin",
     },
     expected: {
       cdsco_class: "D",

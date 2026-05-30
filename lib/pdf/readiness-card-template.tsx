@@ -7,6 +7,7 @@ import {
 } from "@react-pdf/renderer";
 import React from "react";
 import type { ReadinessCard } from "@/lib/schemas/readiness-card";
+import { PDF_FONT_SANS, PDF_FONT_SERIF } from "./fonts";
 
 // Brand tokens — kept aligned with draft-pack-template.
 const TEAL_DEEP = "#0F6E56";
@@ -51,6 +52,21 @@ const VERDICT_LABEL: Record<string, string> = {
   not_applicable: "n/a",
 };
 
+/**
+ * Phase 2c — inference-marker status badges. Mirrors the on-screen
+ * InferenceMarkersBlock. Each marker carries a status that drives the
+ * pill colour; the founder sees the same badge language across screen
+ * and PDF so the assumption can't slip past.
+ */
+const MARKER_BADGE: Record<
+  "estimated" | "assumed" | "extracted",
+  { bg: string; fg: string; label: string }
+> = {
+  estimated: { bg: "#FAEEDA", fg: AMBER, label: "ESTIMATED" },
+  assumed: { bg: "#FAECE7", fg: CORAL, label: "ASSUMED" },
+  extracted: { bg: "#E1F5EE", fg: TEAL_DEEP, label: "EXTRACTED" },
+};
+
 const REG_ORDER: ReadonlyArray<{
   key: keyof ReadinessCard["regulations"];
   label: string;
@@ -72,7 +88,7 @@ const styles = StyleSheet.create({
     paddingTop: 48,
     paddingBottom: 56,
     paddingHorizontal: 48,
-    fontFamily: "Helvetica",
+    fontFamily: PDF_FONT_SANS,
     fontSize: 10.5,
     lineHeight: 1.55,
     color: TEXT_DARK,
@@ -84,7 +100,7 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   brandMark: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 14,
     color: TEAL_DEEP,
     letterSpacing: 1.2,
@@ -110,7 +126,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   productName: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 24,
     color: TEXT_DARK,
     lineHeight: 1.15,
@@ -139,7 +155,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   scoreNumber: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 32,
     lineHeight: 1.05,
   },
@@ -168,11 +184,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderRadius: 999,
     fontSize: 9,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: PDF_FONT_SANS, fontWeight: "bold",
     letterSpacing: 0.4,
   },
   sectionHeader: {
-    fontFamily: "Times-Bold",
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
     fontSize: 13,
     color: TEAL_DEEP,
     marginTop: 14,
@@ -193,7 +209,7 @@ const styles = StyleSheet.create({
   },
   gapPill: {
     fontSize: 8,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: PDF_FONT_SANS, fontWeight: "bold",
     letterSpacing: 0.4,
     textTransform: "uppercase",
     paddingVertical: 2,
@@ -245,6 +261,83 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
     lineHeight: 1.5,
     marginTop: 10,
+  },
+  // Phase 2c — assumptions/estimates block. Mirrors the on-screen
+  // InferenceMarkersBlock so the founder sees the same content in PDF
+  // exports. Placed between the metric row and the Verdict so it can't
+  // be missed during a regulator walk-through.
+  markerSection: {
+    marginTop: 8,
+    marginBottom: 14,
+    padding: 12,
+    borderRadius: 6,
+    borderWidth: 0.5,
+    borderColor: "#E8D4A6",
+    backgroundColor: "#FCF8F1",
+  },
+  markerHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "baseline",
+    marginBottom: 4,
+  },
+  markerTitle: {
+    fontFamily: PDF_FONT_SERIF, fontWeight: "bold",
+    fontSize: 11,
+    color: TEXT_DARK,
+  },
+  markerCorrectHint: {
+    fontSize: 7.5,
+    color: AMBER,
+    letterSpacing: 1.0,
+    textTransform: "uppercase",
+  },
+  markerIntro: {
+    fontSize: 9,
+    color: TEXT_MUTED,
+    marginBottom: 8,
+    lineHeight: 1.45,
+  },
+  markerRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    paddingVertical: 4,
+  },
+  markerBadge: {
+    fontSize: 7,
+    fontFamily: PDF_FONT_SANS, fontWeight: "bold",
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
+    paddingVertical: 2,
+    paddingHorizontal: 5,
+    borderRadius: 3,
+    width: 56,
+    textAlign: "center",
+  },
+  markerBody: {
+    flex: 1,
+    fontSize: 9.5,
+  },
+  markerHeadline: {
+    fontFamily: PDF_FONT_SANS, fontWeight: "bold",
+    color: TEXT_DARK,
+  },
+  markerValue: {
+    color: TEXT_DARK,
+  },
+  markerBasis: {
+    fontSize: 8.5,
+    color: TEXT_MUTED,
+    marginTop: 1,
+    lineHeight: 1.4,
+  },
+  markerCorrectAt: {
+    fontSize: 8,
+    color: TEAL_DEEP,
+    marginTop: 2,
+    letterSpacing: 0.3,
+    textTransform: "uppercase",
   },
 });
 
@@ -363,6 +456,47 @@ export const ReadinessCardDocument = ({
           </View>
         </View>
 
+        {card.inference_markers && card.inference_markers.length > 0 && (
+          <View style={styles.markerSection} wrap={false}>
+            <View style={styles.markerHeaderRow}>
+              <Text style={styles.markerTitle}>
+                What we assumed about your device
+              </Text>
+              <Text style={styles.markerCorrectHint}>Correct in editor</Text>
+            </View>
+            <Text style={styles.markerIntro}>
+              We inferred the fields below from your wizard answers and
+              uploaded materials. Correct anything that's wrong &mdash; the
+              Submission Pack regenerates from your corrected values.
+            </Text>
+            {card.inference_markers.map((m, i) => {
+              const badge = MARKER_BADGE[m.status];
+              return (
+                <View key={`${m.field}-${i}`} style={styles.markerRow} wrap={false}>
+                  <Text
+                    style={[
+                      styles.markerBadge,
+                      { backgroundColor: badge.bg, color: badge.fg },
+                    ]}
+                  >
+                    {badge.label}
+                  </Text>
+                  <View style={styles.markerBody}>
+                    <Text>
+                      <Text style={styles.markerHeadline}>{m.label}</Text>
+                      <Text style={styles.markerValue}> — {m.value}</Text>
+                    </Text>
+                    <Text style={styles.markerBasis}>{m.basis}</Text>
+                    <Text style={styles.markerCorrectAt}>
+                      ↳ Correct at {m.correctable_at}
+                    </Text>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
+
         <Text style={styles.sectionHeader}>Verdict</Text>
         <Text style={styles.body}>{card.verdict}</Text>
 
@@ -399,7 +533,7 @@ export const ReadinessCardDocument = ({
                   {gap.severity}
                 </Text>
                 <View style={styles.gapBody}>
-                  <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 10 }}>
+                  <Text style={{ fontFamily: PDF_FONT_SANS, fontWeight: "bold", fontSize: 10 }}>
                     {gap.gap_title}
                   </Text>
                   <Text style={{ fontSize: 9.5, color: TEXT_MUTED, marginTop: 2 }}>
@@ -440,7 +574,7 @@ export const ReadinessCardDocument = ({
 
         <Text style={styles.sectionHeader}>Timeline</Text>
         <View style={styles.timelineBox}>
-          <Text style={{ fontFamily: "Helvetica-Bold", fontSize: 11 }}>
+          <Text style={{ fontFamily: PDF_FONT_SANS, fontWeight: "bold", fontSize: 11 }}>
             {card.timeline.display}
           </Text>
           <Text
