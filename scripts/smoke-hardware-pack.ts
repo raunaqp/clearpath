@@ -1,21 +1,29 @@
 /**
- * Hardware Submission Pack smoke harness (drug-eluting stent case).
+ * Hardware Submission Pack smoke harness.
  *
- * Day-4 first cut: deterministic generators + §13/§14/§19 stubs.
- * Day-5 morning: §13 Biocompatibility (hybrid — deterministic tier
- * matrix + Sonnet narrative); §14, §19 land as real generators next.
+ * Day-4 / Day-5 progression: deterministic generators (§4/§15/§16/§17/
+ * §18) + hybrid (deterministic seed + LLM narrative) generators
+ * (§13/§14/§19) + hardware overlays for SaMD-shared sections
+ * (§3/§6/§8/§11/§12).
  *
- * Cost notes:
- *   - §13 runs Sonnet — ~$0.02 per smoke run.
- *   - §15/§16/§17/§18 are deterministic — $0.
- *   - §14, §19 stubbed today — $0.
- *   - §1 Opus consolidator skipped in dry-run — $0.
- * Expected total per run: ~$0.02.
+ * Day-5 EOD: extended to iterate multiple device profiles, validating
+ * the bidirectional gating that the standing blast-radius rule
+ * promises. Profiles are first-class: pass `--device stent` (default)
+ * or `--device glucometer` or `--device all` to run one or both. New
+ * profiles (BP cuff, infusion set, sterile catheter, etc.) drop into
+ * the `PROFILES` registry in Sprint 4.
  *
- * Run: pnpm tsx scripts/smoke-hardware-pack.ts [--dump <path>]
- *   --dump <path>  Write §13 content + the full per-section breakdown
- *                  to a markdown file so the founder can eyeball it
- *                  before §14 work begins.
+ * Cost per profile: ~$0.30 dry-run (Sonnet across §2-§13/§14/§19,
+ * Opus §1 consolidator skipped in dry-run, deterministic §4/§15-§18
+ * at $0). Running `--device all` = ~$0.60.
+ *
+ * Run:
+ *   pnpm tsx scripts/smoke-hardware-pack.ts \
+ *     [--device stent | glucometer | all] \
+ *     [--dump <path>]
+ *
+ *   When `--device all` is used without an explicit --dump, dumps land
+ *   at `data/smoke/pack-smoke-<profile>-day5.md` per profile.
  */
 
 import * as fs from "node:fs";
@@ -35,36 +43,77 @@ const FIXTURE = path.resolve(
 
 type SmokeCase = { id: string; pass: boolean; card: ReadinessCard };
 
-const STENT_WIZARD: WizardAnswers = {
-  persona: "manufacturer_hardware",
-  q3: "hcps", // interventional cardiologists
-  q8: "no", // novel — no predicate
-  q9: "implant_gt_30d",
-  b2_use_environment: "surgical", // cath lab (procedural environment)
-  b6_iso_13485_status: "in_progress",
+type DeviceProfile = {
+  /** CLI value: --device <id>. */
+  id: "stent" | "glucometer";
+  /** Fixture id in hardware-card-smoke.json. */
+  fixture_id: string;
+  wizard: WizardAnswers;
+  /** Override the synthesizer one-liner — drives §13 bioresorbable
+   *  keyword scan, §3 device naming, etc. */
+  one_liner: string;
+  /** Default dump path when `--dump` is omitted in multi-profile runs. */
+  default_dump_path: string;
 };
 
-function loadStentCard(): SmokeCase {
+const PROFILES: Record<"stent" | "glucometer", DeviceProfile> = {
+  stent: {
+    id: "stent",
+    fixture_id: "implant",
+    wizard: {
+      persona: "manufacturer_hardware",
+      q3: "hcps", // interventional cardiologists
+      q8: "no", // novel — no predicate
+      q9: "implant_gt_30d",
+      b2_use_environment: "surgical", // cath lab
+      b6_iso_13485_status: "in_progress",
+    },
+    one_liner:
+      "A bioresorbable drug-eluting cardiac stent for coronary artery disease.",
+    default_dump_path: "data/smoke/pack-smoke-stent-day5.md",
+  },
+  glucometer: {
+    id: "glucometer",
+    // System-level Q9 per bible §324 — pick the deepest tier present
+    // in the device-as-supplied-to-patient. Glucometer + test strip
+    // + lancet system → blood_path_indirect (test strip blood contact
+    // is the system signal; lancet is a separately-released
+    // accessory in many filings).
+    fixture_id: "connected_glucometer",
+    wizard: {
+      persona: "manufacturer_hardware",
+      q3: "patients", // lay users
+      q8: "yes_indian", // commodity device class with Indian predicates
+      q9: "blood_path_indirect",
+      b2_use_environment: "home",
+      b6_iso_13485_status: "in_progress",
+    },
+    one_liner:
+      "A Bluetooth-connected blood glucose meter with companion app for self-monitoring of diabetes.",
+    default_dump_path: "data/smoke/pack-smoke-glucometer-day5.md",
+  },
+};
+
+function loadCase(fixtureId: string): SmokeCase {
   const all = JSON.parse(fs.readFileSync(FIXTURE, "utf8")) as SmokeCase[];
-  const stent = all.find((c) => c.id === "implant");
-  if (!stent) throw new Error(`No 'implant' case in ${FIXTURE}`);
-  return stent;
+  const c = all.find((x) => x.id === fixtureId);
+  if (!c) throw new Error(`No '${fixtureId}' case in ${FIXTURE}`);
+  return c;
 }
 
-function buildSourceData(c: SmokeCase, wizard: WizardAnswers): SourceData {
+function buildSourceData(c: SmokeCase, profile: DeviceProfile): SourceData {
   return {
-    assessment_id: `smoke-pack-${c.id}-${Date.now()}`,
+    assessment_id: `smoke-pack-${profile.id}-${Date.now()}`,
     order_id: null,
     intake: {
       name: c.card.meta.company_name,
       email: "smoke@example.com",
-      one_liner:
-        "A bioresorbable drug-eluting cardiac stent for coronary artery disease.",
+      one_liner: profile.one_liner,
       url: null,
       url_fetched_content: null,
       uploaded_docs: [],
     },
-    wizard_answers: wizard,
+    wizard_answers: profile.wizard,
     readiness_card: c.card,
     ai_extracted: null,
   };
@@ -201,17 +250,42 @@ async function main(): Promise<void> {
 
   const argv = process.argv.slice(2);
   const dumpIdx = argv.indexOf("--dump");
-  const dumpPath =
+  const explicitDumpPath =
     dumpIdx >= 0 && argv[dumpIdx + 1] ? argv[dumpIdx + 1] : null;
-
-  const stent = loadStentCard();
-  const sources = buildSourceData(stent, STENT_WIZARD);
+  const deviceIdx = argv.indexOf("--device");
+  const deviceArg =
+    deviceIdx >= 0 && argv[deviceIdx + 1] ? argv[deviceIdx + 1] : "stent";
+  if (
+    deviceArg !== "stent" &&
+    deviceArg !== "glucometer" &&
+    deviceArg !== "all"
+  ) {
+    console.error(
+      `--device must be one of: stent | glucometer | all (got '${deviceArg}')`
+    );
+    process.exit(2);
+  }
+  const profilesToRun: DeviceProfile[] =
+    deviceArg === "all"
+      ? [PROFILES.stent, PROFILES.glucometer]
+      : [PROFILES[deviceArg as "stent" | "glucometer"]];
+  if (explicitDumpPath && profilesToRun.length > 1) {
+    console.error(
+      "--dump <path> with --device all is ambiguous; either run one profile or omit --dump (per-profile defaults will be used)"
+    );
+    process.exit(2);
+  }
 
   const log = (m: string) => console.log("  " + m);
   const opts: SectionOpts = { dry_run: true, log };
 
-  console.log("\n=== Hardware pack smoke — drug-eluting stent (implant) ===");
-  const sections = await runHardwarePack(sources, opts, log, true);
+  for (const profile of profilesToRun) {
+    const dumpPath = explicitDumpPath ?? profile.default_dump_path;
+    const caseEntry = loadCase(profile.fixture_id);
+    const sources = buildSourceData(caseEntry, profile);
+
+    console.log(`\n=== Hardware pack smoke — ${profile.id} (${profile.fixture_id}) ===`);
+    const sections = await runHardwarePack(sources, opts, log, true);
 
   const byKey = new Map(sections.map((s) => [s.section_key, s]));
   const presentKeys = sections.map((s) => s.section_key);
@@ -226,9 +300,20 @@ async function main(): Promise<void> {
   }
 
   // === Assertions ===
+  // Profile-specific assertions branch by `profile.id`. Shared
+  // assertions (SaMD-leak detector + leak-gate + Roman-numeral guard +
+  // section count) ALSO run for every profile within their own
+  // sub-blocks — the LEAK GATE has to fire per-profile to catch a
+  // profile-specific leak.
+
+  if (profile.id === "stent") {
+  // STENT-ONLY assertions begin here. All §13/§14/§19 sub-block
+  // inclusion expectations + §6 novel-path + §11 software_vv-suppressed
+  // + §12 §8.16-included + §19 DCG(I) included are stent-specific.
+
   // 1. §13 biocomp INCLUDED (q9 implant_gt_30d → wizard-explicit)
   assert(
-    "§13 biocompatibility included (q9 implant_gt_30d)",
+    "[stent] §13 biocompatibility included (q9 implant_gt_30d)",
     byKey.has("13_biocompatibility")
   );
 
@@ -569,12 +654,13 @@ async function main(): Promise<void> {
       "§12 cross-references §3 (intended population)",
       /§3/.test(s12.content)
     );
-    // PMS framework — MD-42 / MD-43 / Form-25 forms cited
+    // PMS framework — MD-42 / MD-43 / Form 25 forms cited (LLM
+    // routinely emits the form name either hyphenated or spaced)
     assert(
-      "§12 cites MD-42 / MD-43 / Form-25 vigilance forms",
+      "[stent] §12 cites MD-42 / MD-43 / Form 25 vigilance forms",
       /MD-42/.test(s12.content) &&
         /MD-43/.test(s12.content) &&
-        /Form-25/.test(s12.content)
+        /Form[-\s]25/i.test(s12.content)
     );
     // No SaMD clinical framing
     assert(
@@ -844,12 +930,307 @@ async function main(): Promise<void> {
 
   // 10. §1 consolidator skipped in dry-run.
   assert(
-    "§1 consolidator absent in dry-run",
+    "[stent] §1 consolidator absent in dry-run",
     !byKey.has("01_executive_summary")
   );
 
-  // === Report ===
-  console.log(`\n=== Assertions ===`);
+  } // end if (profile.id === "stent")
+
+  // ────────────────────────────────────────────────────────────────
+  // GLUCOMETER profile assertions — Day-5 EOD bidirectional gating.
+  // Validates that the standing blast-radius rule + strict §19 NOC
+  // policy + §13 tier-swap fire correctly when the marker statuses
+  // are different from the stent case. Suppressing in one direction
+  // alone is a code smell; only bidirectional verification proves
+  // the gates evaluate the trigger, not stent-specific accidents.
+  // ────────────────────────────────────────────────────────────────
+  if (profile.id === "glucometer") {
+
+  // §13 biocompatibility still INCLUDED — Q9=blood_path_indirect is
+  // non-no_contact (wizard-explicit gate), but the underlying TIER
+  // swaps from implant to blood_path_indirect. The drug-eluting and
+  // bioresorbable add-ons should change behaviour vs. the stent.
+  assert(
+    "[glucometer] §13 biocompatibility included (q9 blood_path_indirect)",
+    byKey.has("13_biocompatibility")
+  );
+  const gluco_s13 = byKey.get("13_biocompatibility");
+  if (gluco_s13) {
+    assert(
+      "[glucometer] §13 base panel reflects blood_path_indirect tier (not implant)",
+      /External\s+communicating.*blood.*indirect/i.test(gluco_s13.content) &&
+        !/Implant.*tissue\/bone.*OR.*blood.*long-term/i.test(gluco_s13.content)
+    );
+    assert(
+      "[glucometer] §13 bioresorbable overlay SUPPRESSED (no keyword match)",
+      !/##\s+Bioresorbable\s+overlay/i.test(gluco_s13.content)
+    );
+    // Drug-eluting overlay in §13 currently uses local strict trigger
+    // (drugElutingTriggered); Sprint 4 may align it to calibrated.
+    // For now, expect SUPPRESSED on assumed-No.
+    assert(
+      "[glucometer] §13 drug-eluting overlay SUPPRESSED (local strict trigger on assumed-No)",
+      !/##\s+Drug-eluting\s+overlay/i.test(gluco_s13.content)
+    );
+  }
+
+  // §14 still INCLUDED (sterile=Yes estimated — strip/lancet sterility)
+  assert(
+    "[glucometer] §14 sterilization included (sterile=Yes estimated)",
+    byKey.has("14_sterilization_validation")
+  );
+
+  // §15-§18 always present
+  for (const k of [
+    "15_stability_data",
+    "16_batch_release",
+    "17_pmf_attestation",
+    "18_qms_attestation",
+  ] as const) {
+    assert(`[glucometer] ${k} always present`, byKey.has(k));
+  }
+
+  // §19 DCG(I) NOC SUPPRESSED — strict gating policy: drug_content="No"
+  // assumed status does NOT fire the NOC trigger (different policy
+  // from §8.12 sub-block which uses calibrated/safeguard rule).
+  assert(
+    "[glucometer] §19 conditional NOCs SUPPRESSED (no NOC trigger fires affirmatively)",
+    !byKey.has("19_conditional_nocs")
+  );
+
+  // §4 hardware overlay still active (deterministic) + Class C
+  const gluco_s4 = byKey.get("04_classification_grouping");
+  assert("[glucometer] §4 present", gluco_s4 !== undefined);
+  if (gluco_s4) {
+    assert(
+      "[glucometer] §4 title = 'Classification & Pathway' (hardware variant)",
+      gluco_s4.title === "Classification & Pathway"
+    );
+    // Glucometer Class C → MD-7 → MD-9
+    assert(
+      "[glucometer] §4 mentions MD-7 → MD-9 (Class C glucometer)",
+      /MD-7\s*→\s*MD-9/.test(gluco_s4.content)
+    );
+    // Q8=yes_indian → no MD-26/27 callout
+    assert(
+      "[glucometer] §4 does NOT surface MD-26/MD-27 (Q8=yes_indian, predicate exists)",
+      !/MD-26\s*→\s*MD-27|MD-26 \/ MD-27 pre-permission/i.test(gluco_s4.content)
+    );
+  }
+
+  // §3 hardware overlay still applies — Q9 body-contact section
+  // grounded in blood_path_indirect; Q8=yes_indian → no novel framing.
+  const gluco_s3 = byKey.get("03_intended_use");
+  assert("[glucometer] §3 present", gluco_s3 !== undefined);
+  if (gluco_s3) {
+    assert(
+      "[glucometer] §3 emits 'Body-contact tier' grounded in Q9 blood_path_indirect",
+      /##\s+Body-contact\s+tier/i.test(gluco_s3.content) &&
+        /blood.*indirect/i.test(gluco_s3.content)
+    );
+    assert(
+      "[glucometer] §3 does NOT surface MD-26/MD-27 (Q8=yes_indian)",
+      !/MD-26.*MD-27/i.test(gluco_s3.content)
+    );
+  }
+
+  // §6 has-predicate path (Q8=yes_indian, not novel)
+  const gluco_s6 = byKey.get("06_predicate_comparison");
+  assert("[glucometer] §6 present", gluco_s6 !== undefined);
+  if (gluco_s6) {
+    assert(
+      "[glucometer] §6 emits has-predicate path (Q8=yes_indian)",
+      /Indian\s+predicate\s+available/i.test(gluco_s6.content) ||
+        /substantial-equivalence/i.test(gluco_s6.content)
+    );
+    assert(
+      "[glucometer] §6 does NOT emit no-predicate / MD-26 framing",
+      !/No-predicate\s+declaration/i.test(gluco_s6.content) &&
+        !/MD-26\s*→\s*MD-27/i.test(gluco_s6.content)
+    );
+    assert(
+      "[glucometer] §6 does NOT carry Reviewer Concierge platform-marketing",
+      !/Reviewer\s+Concierge/i.test(gluco_s6.content)
+    );
+  }
+
+  // §8 — §8.12 medicinal substances sub-block code-gated INCLUDED
+  // with [ASSUMED YES] framing (drug_content=No status=assumed →
+  // safeguard fires). This is the calibrated-trigger fix.
+  const gluco_s8 = byKey.get("08_design_manufacturing");
+  assert("[glucometer] §8 present", gluco_s8 !== undefined);
+  if (gluco_s8) {
+    assert(
+      "[glucometer] §8 §8.12 medicinal-substances gate is CODE-set to included_assumed",
+      gluco_s8.meta.source_fields.includes(
+        "_medicinal_substances_gate:included_assumed"
+      )
+    );
+    assert(
+      "[glucometer] §8 §8.12 sub-block emitted with visible [ASSUMED YES] heading",
+      /##\s+§8\.12\s+Medicinal\s+substances.*\[ASSUMED YES.*confirm in editor\]/i.test(
+        gluco_s8.content
+      )
+    );
+    assert(
+      "[glucometer] §8 summary table marks drug component as [ASSUMED YES]",
+      /\*\*\[ASSUMED YES.*confirm in editor\]\*\*.*§8\.12/i.test(gluco_s8.content)
+    );
+  }
+
+  // §11 — §8.15 software_vv sub-block code-gated INCLUDED
+  // (software_in_device=Yes estimated)
+  const gluco_s11 = byKey.get("11_verification_validation");
+  assert("[glucometer] §11 present", gluco_s11 !== undefined);
+  if (gluco_s11) {
+    assert(
+      "[glucometer] §11 §8.15 software_vv gate is CODE-set to included",
+      gluco_s11.meta.source_fields.includes("_software_vv_gate:included")
+    );
+    assert(
+      "[glucometer] §11 emits §8.15 software V&V sub-block heading",
+      /##\s+§8\.15\s+Software\s+V&V/i.test(gluco_s11.content)
+    );
+    assert(
+      "[glucometer] §11 software V&V attestation rows present",
+      /Software\s+safety\s+classification/i.test(gluco_s11.content) &&
+        /Software\s+unit\s+V&V/i.test(gluco_s11.content)
+    );
+  }
+
+  // §12 — §8.16 animal preclinical gate behaviour:
+  //   Q9=blood_path_indirect NOT in LONG_TERM_CONTACT → falls through
+  //     to calibrated drug_content trigger
+  //   drug_content=No status=assumed → calibrated fires safeguard →
+  //     INCLUDED with [ASSUMED YES]
+  // Same calibrated/safeguard behaviour as §8.12.
+  const gluco_s12 = byKey.get("12_clinical_evidence_pms");
+  assert("[glucometer] §12 present", gluco_s12 !== undefined);
+  if (gluco_s12) {
+    assert(
+      "[glucometer] §12 §8.16 animal preclinical gate is CODE-set to included (drug-combination route via assumed)",
+      gluco_s12.meta.source_fields.includes("_animal_preclinical_gate:included")
+    );
+    assert(
+      "[glucometer] §12 emits §8.16 animal preclinical sub-block heading",
+      /##\s+§8\.16\s+Animal\s+preclinical/i.test(gluco_s12.content)
+    );
+    assert(
+      "[glucometer] §12 §8.16 heading carries visible [ASSUMED YES] tag (founder-visible safeguard)",
+      /##\s+§8\.16\s+Animal\s+preclinical.*\[ASSUMED YES.*confirm in editor\]/i.test(
+        gluco_s12.content
+      )
+    );
+    // Novel-device path NOT applicable for glucometer (Q8=yes_indian)
+    assert(
+      "[glucometer] §12 does NOT emit MD-22/MD-23 novel-device CI pathway (Q8=yes_indian)",
+      !/Clinical\s+investigation\s+pathway\s+\(MD-22\s*→\s*MD-23\)/i.test(
+        gluco_s12.content
+      )
+    );
+    assert(
+      "[glucometer] §12 cites MD-42 / MD-43 / Form 25 vigilance forms",
+      /MD-42/.test(gluco_s12.content) &&
+        /MD-43/.test(gluco_s12.content) &&
+        /Form[-\s]25/i.test(gluco_s12.content)
+    );
+  }
+
+  // §1 consolidator skipped in dry-run.
+  assert(
+    "[glucometer] §1 consolidator absent in dry-run",
+    !byKey.has("01_executive_summary")
+  );
+
+  } // end if (profile.id === "glucometer")
+
+  // ────────────────────────────────────────────────────────────────
+  // Shared / cross-profile assertions — run for every profile.
+  // ────────────────────────────────────────────────────────────────
+
+  // SaMD-gate leak detection across all rendered sections — gate-vs-
+  // mention detector (sentence-level).
+  const samdLeaksForProfile = sections.flatMap((s) =>
+    detectSamdGateLeak(s.content).map((leak) => ({
+      section_key: s.section_key,
+      sentence: leak,
+    }))
+  );
+  assert(
+    `[${profile.id}] no software-gate LEAKS (gates only — explicit 'n/a' / hypothetical mentions OK)`,
+    samdLeaksForProfile.length === 0,
+    samdLeaksForProfile
+      .map((l) => `${l.section_key}: ${l.sentence.slice(0, 120)}`)
+      .join(" || ")
+  );
+
+  // Roman-numeral Schedule guard — anti-hallucination. Scoped to the
+  // sections whose prompts embed MDR_2017_VERIFIED_CITATIONS_BLOCK:
+  // §3, §6, §8, §11, §12 (hardware overlays) + §4 (deterministic
+  // hardware overlay). Other sections (§2, §5, §7, §9, §10) still
+  // run their SaMD generators on hardware data and have not yet
+  // received the verified-citations module — they're Sprint-4 hardware-
+  // overlay backlog. Once a section gets its hardware overlay landed
+  // with the verified-citations block embedded, add it to this list.
+  const VERIFIED_CITATIONS_SECTIONS: ReadonlyArray<string> = [
+    "03_intended_use",
+    "04_classification_grouping",
+    "06_predicate_comparison",
+    "08_design_manufacturing",
+    "11_verification_validation",
+    "12_clinical_evidence_pms",
+  ];
+  const romanSchedule = sections.find(
+    (s) =>
+      VERIFIED_CITATIONS_SECTIONS.includes(s.section_key) &&
+      /\bSchedule\s+(I|II|III|IV|V|VI|VII|VIII|IX|X)\b/.test(s.content)
+  );
+  assert(
+    `[${profile.id}] no Roman-numeral MDR Schedule refs in overlaid sections (anti-hallucination)`,
+    romanSchedule === undefined,
+    romanSchedule?.section_key
+  );
+
+  // === Per-profile dump ===
+    if (dumpPath) {
+      const lines: string[] = [
+        `# Hardware pack smoke output — ${profile.id} (${caseEntry.card.meta.product_name})`,
+        "",
+        `Generated: ${new Date().toISOString()}`,
+        "",
+        `One-liner: ${sources.intake.one_liner}`,
+        "",
+        `Q3 user: ${profile.wizard.q3 ?? "(unset)"}`,
+        `Q8 predicate: ${profile.wizard.q8 ?? "(unset)"}`,
+        `Q9 patient_contact: ${profile.wizard.q9 ?? "(unset)"}`,
+        `B2 environment: ${profile.wizard.b2_use_environment ?? "(unset)"}`,
+        `B6 ISO 13485 status: ${profile.wizard.b6_iso_13485_status ?? "(unset)"}`,
+        "",
+        `Sections rendered: ${sections.length}`,
+        `Total LLM cost: $${sections.reduce((s, x) => s + (x.meta.llm_cost_usd ?? 0), 0).toFixed(4)}`,
+        "",
+        "---",
+        "",
+      ];
+      for (const s of sections) {
+        lines.push(
+          `# §${s.section_number} ${s.title}`,
+          "",
+          `_strategy: ${s.meta.generation_strategy} · status: ${s.completion_status} · cost: $${(s.meta.llm_cost_usd ?? 0).toFixed(4)}${s.meta.error_message ? ` · ERROR: ${s.meta.error_message.replace(/\n/g, " ")}` : ""}_`,
+          "",
+          s.content,
+          "",
+          "---",
+          "",
+        );
+      }
+      fs.writeFileSync(dumpPath, lines.join("\n"));
+      console.log(`\n  Eyeball dump written to ${dumpPath}`);
+    }
+  } // end for (profile of profilesToRun)
+
+  // === Aggregate report ===
+  console.log(`\n=== Assertions (across ${profilesToRun.length} profile${profilesToRun.length > 1 ? "s" : ""}) ===`);
   let failed = 0;
   for (const c of checks) {
     const mark = c.pass ? "✓" : "✗";
@@ -857,42 +1238,6 @@ async function main(): Promise<void> {
     if (!c.pass) failed++;
   }
   console.log(`\n  ${failed === 0 ? "ALL PASS ✓" : `${failed} / ${checks.length} FAILED ✗`}`);
-
-  // === Optional dump for founder eyeball ===
-  if (dumpPath) {
-    const lines: string[] = [
-      `# Hardware pack smoke output — ${stent.id} (${stent.card.meta.product_name})`,
-      "",
-      `Generated: ${new Date().toISOString()}`,
-      "",
-      `One-liner: ${sources.intake.one_liner}`,
-      "",
-      `Q8 predicate: ${STENT_WIZARD.q8}`,
-      `Q9 patient_contact: ${STENT_WIZARD.q9}`,
-      `B6 ISO 13485 status: ${STENT_WIZARD.b6_iso_13485_status}`,
-      "",
-      `Sections rendered: ${sections.length}`,
-      `Total LLM cost: $${sections.reduce((s, x) => s + (x.meta.llm_cost_usd ?? 0), 0).toFixed(4)}`,
-      `Assertions: ${checks.length - failed} pass / ${failed} fail`,
-      "",
-      "---",
-      "",
-    ];
-    for (const s of sections) {
-      lines.push(
-        `# §${s.section_number} ${s.title}`,
-        "",
-        `_strategy: ${s.meta.generation_strategy} · status: ${s.completion_status} · cost: $${(s.meta.llm_cost_usd ?? 0).toFixed(4)}${s.meta.error_message ? ` · ERROR: ${s.meta.error_message.replace(/\n/g, " ")}` : ""}_`,
-        "",
-        s.content,
-        "",
-        "---",
-        "",
-      );
-    }
-    fs.writeFileSync(dumpPath, lines.join("\n"));
-    console.log(`\n  Eyeball dump written to ${dumpPath}`);
-  }
 
   process.exit(failed === 0 ? 0 : 1);
 }

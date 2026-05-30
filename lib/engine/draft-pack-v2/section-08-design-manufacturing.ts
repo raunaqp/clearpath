@@ -35,6 +35,7 @@ import type {
 import { sectionNumberFromKey } from "./types";
 import { softenCertainty } from "@/lib/engine/soften-certainty";
 import { MDR_2017_VERIFIED_CITATIONS_BLOCK } from "./mdr-2017-citations";
+import { shouldIncludeSubBlock } from "./section-gating";
 
 const SECTION_KEY = "08_design_manufacturing" as const;
 const TITLE = "Design & Manufacturing";
@@ -341,14 +342,14 @@ const generateSection08Samd: SectionGenerator = async (
 // Hardware variant — Sprint 3 Day 5 afternoon
 // ────────────────────────────────────────────────────────────────────
 
-/** Drug-content trigger — same calibrated rule the gating module uses
- *  for §8.12 sub-block. Marker affirmative → drug sub-block emits. */
-function drugContentTriggered(sources: SourceData): boolean {
-  const m = sources.readiness_card.inference_markers?.find(
-    (x) => x.field === "drug_content"
-  );
-  return m !== undefined && /^\s*yes\b/i.test(m.value);
-}
+// §8.12 medicinal-substances sub-block gating delegates to
+// `shouldIncludeSubBlock("medicinal_substances", sources)` from
+// section-gating.ts — the single source of truth that applies the
+// calibrated rule (status=assumed → safeguard include with
+// [ASSUMED YES]). The previous local helper used strict value
+// parsing, which silently broke the standing rule for assumed-No
+// devices like the connected glucometer fixture (Day-5 EOD inverse-
+// case finding). See `feedback-inference-blast-radius` memory.
 
 // Schema cap calibration per
 // `feedback-schema-cap-calibration` memory:
@@ -372,11 +373,15 @@ const HardwareLlmSchema = z.object({
 });
 type HardwareLlmOutput = z.infer<typeof HardwareLlmSchema>;
 
-function buildHardwareUserMessage(sources: SourceData): string {
+function buildHardwareUserMessage(args: {
+  sources: SourceData;
+  includeDrugSubblock: boolean;
+  drugSubblockAssumed: boolean;
+}): string {
+  const { sources, includeDrugSubblock, drugSubblockAssumed } = args;
   const wa = sources.wizard_answers;
   const ai = sources.ai_extracted;
   const card = sources.readiness_card;
-  const drugEluting = drugContentTriggered(sources);
 
   return [
     "Generate Section 8 (Design & Manufacturing) for a CDSCO MD-7 / MD-3 hardware Submission Pack.",
@@ -401,7 +406,7 @@ function buildHardwareUserMessage(sources: SourceData): string {
     `Commercial stage (Q7): ${wa.q7 ?? "(not answered)"}`,
     `Manufacturing address: ${ai?.company?.manufacturing_address ?? ai?.company?.registered_address ?? "[NEEDS INPUT: manufacturing site address]"}`,
     `Q9 patient contact: ${wa.q9 ?? "[NEEDS INPUT]"}`,
-    `Drug-eluting trigger fired: ${drugEluting}`,
+    `§8.12 medicinal-substances sub-block gate: ${includeDrugSubblock ? `INCLUDE${drugSubblockAssumed ? " [ASSUMED YES — confirm in editor]" : ""}` : "OMIT (suppressed by section-gating predicate)"}`,
     "",
     "## Output (STRICT JSON)",
     "Return ONLY this JSON object. Aim for the lower end of each band.",
@@ -414,8 +419,8 @@ function buildHardwareUserMessage(sources: SourceData): string {
     `  "quality_management_overview": "120-180 words. High-level QMS posture (governance + management responsibility) anchored to B6 = ${wa.b6_iso_13485_status ?? "[NEEDS INPUT]"}. Do NOT enumerate the 11 QMS sub-rows — §18 QMS Compliance attestation owns that detail; cross-reference §18. Honest about gaps. ${card.classification.cdsco_class === "D" ? "Class D — note the heightened scrutiny on internal-audit cadence." : ""}",`,
     `  "iso_13485_evidence": "40-100 words. Based on B6 = ${wa.b6_iso_13485_status ?? "[NEEDS INPUT]"}. certified → [NEEDS INPUT: certificate number, CB, valid through]. in_progress → describe engagement (CB / Stage 1 / Stage 2 schedule) with [NEEDS INPUT] for unknown specifics. not_started → honest engagement plan.",`,
     `  "batch_release_summary": "40-100 words. Pointer to §16 Batch Release Certificates for per-batch CoA detail; this paragraph names the release-authorisation matrix + how it ties into the QMS doc-control schedule. NO software-version-release framing.",`,
-    drugEluting
-      ? `  "medicinal_substances_subblock": "120-260 words. DMF §8.12 medicinal-substances sub-block. Frame as combination-product dossier content (NOT a NOC — §19 owns the DCG(I) joint review pathway, this sub-block carries the device-side dossier content). Describe the drug component without inventing specifics ([NEEDS INPUT: drug substance INN]); name a typical class family if appropriate (e.g., limus-family antiproliferative, paclitaxel). Reference §13 ISO 10993-17 + -18 + -16 for leachables / allowable-limits / toxicokinetics linkage. Reference §19 DCG(I) joint-review track. Reference §12 clinical evidence — combination-product trial, not component-separable. [NEEDS INPUT: drug substance INN; drug load per device; release-rate profile; pre-approval status (new chemical entity vs previously-approved drug)]."`
+    includeDrugSubblock
+      ? `  "medicinal_substances_subblock": "120-260 words. DMF §8.12 medicinal-substances sub-block. Frame as combination-product dossier content (NOT a NOC — §19 owns the DCG(I) joint review pathway, this sub-block carries the device-side dossier content). Describe the drug component without inventing specifics ([NEEDS INPUT: drug substance INN]); name a typical class family if appropriate (e.g., limus-family antiproliferative, paclitaxel). Reference §13 ISO 10993-17 + -18 + -16 for leachables / allowable-limits / toxicokinetics linkage. Reference §19 DCG(I) joint-review track. Reference §12 clinical evidence — combination-product trial, not component-separable. ${drugSubblockAssumed ? "Important: the drug_content marker carried [ASSUMED YES] status (no synthesizer signal); call this out so the founder confirms whether the device has a drug component before doing any of this work — if non-drug, remove this sub-block in the editor." : ""} [NEEDS INPUT: drug substance INN; drug load per device; release-rate profile; pre-approval status (new chemical entity vs previously-approved drug)]."`
       : `  "medicinal_substances_subblock": null,`,
     "}",
     "```",
@@ -433,9 +438,10 @@ function buildHardwareUserMessage(sources: SourceData): string {
 function formatHardwareMarkdown(args: {
   llm: HardwareLlmOutput;
   sources: SourceData;
-  drugEluting: boolean;
+  includeDrugSubblock: boolean;
+  drugSubblockAssumed: boolean;
 }): string {
-  const { llm, sources, drugEluting } = args;
+  const { llm, sources, includeDrugSubblock, drugSubblockAssumed } = args;
   const wa = sources.wizard_answers;
   const ai = sources.ai_extracted;
 
@@ -450,7 +456,15 @@ function formatHardwareMarkdown(args: {
   lines.push(
     `| Manufacturing address | ${ai?.company?.manufacturing_address ?? ai?.company?.registered_address ?? "[NEEDS INPUT]"} |`
   );
-  lines.push(`| Drug component (combination product) | ${drugEluting ? "Yes — see §8.12 sub-block below" : "No"} |`);
+  lines.push(
+    `| Drug component (combination product) | ${
+      includeDrugSubblock
+        ? drugSubblockAssumed
+          ? "**[ASSUMED YES — confirm in editor]** — see §8.12 sub-block below"
+          : "Yes — see §8.12 sub-block below"
+        : "No"
+    } |`
+  );
   lines.push(
     `| Sterilization | See §14 Sterilization Validation for method-specific detail |`
   );
@@ -492,9 +506,20 @@ function formatHardwareMarkdown(args: {
   lines.push("");
 
   // §8.12 medicinal substances conditional sub-block
-  if (drugEluting && llm.medicinal_substances_subblock) {
-    lines.push("## §8.12 Medicinal substances (combination product)");
-    lines.push("");
+  if (includeDrugSubblock && llm.medicinal_substances_subblock) {
+    if (drugSubblockAssumed) {
+      lines.push(
+        "## §8.12 Medicinal substances (combination product) — [ASSUMED YES — confirm in editor]"
+      );
+      lines.push("");
+      lines.push(
+        "_The synthesizer had no explicit signal that this device contains a drug component; the standing blast-radius safeguard included this sub-block by default. Before doing any of the work below, confirm that the device is a combination product. If it is non-drug, remove this sub-block in the editor._"
+      );
+      lines.push("");
+    } else {
+      lines.push("## §8.12 Medicinal substances (combination product)");
+      lines.push("");
+    }
     lines.push(softenCertainty(llm.medicinal_substances_subblock));
     lines.push("");
     lines.push("### Combination-product dossier attestation");
@@ -518,8 +543,10 @@ function formatHardwareMarkdown(args: {
   lines.push("- §17 Plant Master File — facility-level detail");
   lines.push("- §18 QMS Compliance attestation — Fifth Schedule QMS sub-rows");
   lines.push("- §10 Risk Management — manufacturing failure modes feed the ISO 14971 hazard register");
-  if (drugEluting) {
-    lines.push("- §19 Conditional NOCs — DCG(I) joint review for combination product");
+  if (includeDrugSubblock) {
+    lines.push(
+      `- §19 Conditional NOCs — DCG(I) joint review${drugSubblockAssumed ? " (applies only if combination-product status is confirmed)" : " for combination product"}`
+    );
   }
 
   return lines.join("\n");
@@ -530,7 +557,19 @@ const generateSection08Hardware: SectionGenerator = async (
   opts: SectionOpts
 ) => {
   const startedAt = new Date().toISOString();
-  const drugEluting = drugContentTriggered(sources);
+
+  // §8.12 medicinal substances sub-block gating — single source of
+  // truth from section-gating.ts. Calibrated rule:
+  //   - marker absent → exclude
+  //   - status=assumed (no signal) → include with [ASSUMED YES]
+  //   - status=estimated/extracted + affirmative → include
+  //   - status=estimated/extracted + negative → exclude
+  // Stent (drug_content=Yes extracted) → INCLUDED, not assumed.
+  // Glucometer (drug_content=No assumed) → INCLUDED [ASSUMED YES].
+  const drugDecision = shouldIncludeSubBlock("medicinal_substances", sources);
+  const includeDrugSubblock = drugDecision.included;
+  const drugSubblockAssumed = drugDecision.assumed;
+
   const sourceFields = [
     "intake.one_liner",
     "wizard.b1_intended_use_statement",
@@ -553,7 +592,11 @@ const generateSection08Hardware: SectionGenerator = async (
       assessmentId: sources.assessment_id,
       callLayer: "draft_pack_v2",
       model: SECTION_MODEL,
-      userMessage: buildHardwareUserMessage(sources),
+      userMessage: buildHardwareUserMessage({
+        sources,
+        includeDrugSubblock,
+        drugSubblockAssumed,
+      }),
       systemPrompt: SHARED_SECTION_SYSTEM_PROMPT,
       maxTokens: MAX_TOKENS,
       dryRun: opts.dry_run,
@@ -575,7 +618,12 @@ const generateSection08Hardware: SectionGenerator = async (
       word_count: 0,
       meta: {
         generation_strategy: "llm_synthesized",
-        source_fields: sourceFields,
+        // Gate metadata set before the LLM call lands, so it survives
+        // a Zod / API failure (matches the §11 / §12 pattern).
+        source_fields: [
+          ...sourceFields,
+          `_medicinal_substances_gate:${includeDrugSubblock ? (drugSubblockAssumed ? "included_assumed" : "included") : "excluded"}`,
+        ],
         model: SECTION_MODEL,
         llm_cost_usd: cost,
         generated_at: startedAt,
@@ -586,7 +634,12 @@ const generateSection08Hardware: SectionGenerator = async (
     };
   }
 
-  const content = formatHardwareMarkdown({ llm: llmOutput, sources, drugEluting });
+  const content = formatHardwareMarkdown({
+    llm: llmOutput,
+    sources,
+    includeDrugSubblock,
+    drugSubblockAssumed,
+  });
   const wordCount = content.trim().split(/\s+/).length;
 
   const citations: SectionOutput["citations"] = [
@@ -608,7 +661,7 @@ const generateSection08Hardware: SectionGenerator = async (
       quote: "Medical devices — Quality management systems for regulatory purposes.",
       exact_reference: "ISO 13485:2016",
     },
-    ...(drugEluting
+    ...(includeDrugSubblock
       ? [
           {
             citation_id: "[4]",
@@ -638,7 +691,10 @@ const generateSection08Hardware: SectionGenerator = async (
     word_count: wordCount,
     meta: {
       generation_strategy: "llm_synthesized",
-      source_fields: sourceFields,
+      source_fields: [
+        ...sourceFields,
+        `_medicinal_substances_gate:${includeDrugSubblock ? (drugSubblockAssumed ? "included_assumed" : "included") : "excluded"}`,
+      ],
       model: SECTION_MODEL,
       llm_cost_usd: cost,
       generated_at: startedAt,

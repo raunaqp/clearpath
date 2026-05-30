@@ -329,9 +329,16 @@ function formatHardwareMarkdown(args: {
   llm: HardwareLlmOutput;
   sources: SourceData;
   includeAnimalPreclinical: boolean;
+  animalPreclinicalAssumed: boolean;
   isNovel: boolean;
 }): string {
-  const { llm, sources, includeAnimalPreclinical, isNovel } = args;
+  const {
+    llm,
+    sources,
+    includeAnimalPreclinical,
+    animalPreclinicalAssumed,
+    isNovel,
+  } = args;
   const wa = sources.wizard_answers;
   const lines: string[] = [];
 
@@ -350,10 +357,25 @@ function formatHardwareMarkdown(args: {
   lines.push(softenCertainty(llm.evidence_plan));
   lines.push("");
 
-  // §8.16 animal preclinical sub-block — code-gated
+  // §8.16 animal preclinical sub-block — code-gated. When the
+  // calibrated trigger fires under assumed-status safeguard, surface
+  // the [ASSUMED YES] tag prominently (heading + preamble) so the
+  // founder sees the safeguard at sub-block top, not buried in
+  // narrative. Same pattern as §8.12 in section-08-design-manufacturing.
   if (includeAnimalPreclinical && llm.animal_preclinical_subblock) {
-    lines.push("## §8.16 Animal preclinical (conditional sub-block)");
-    lines.push("");
+    if (animalPreclinicalAssumed) {
+      lines.push(
+        "## §8.16 Animal preclinical (conditional sub-block) — [ASSUMED YES — confirm in editor]"
+      );
+      lines.push("");
+      lines.push(
+        "_The synthesizer had no explicit signal that this device requires animal preclinical data; the standing blast-radius safeguard included this sub-block by default via the drug-combination route. Before doing any of the work below, confirm whether your device's profile actually requires animal preclinical evidence. If not, remove this sub-block in the editor._"
+      );
+      lines.push("");
+    } else {
+      lines.push("## §8.16 Animal preclinical (conditional sub-block)");
+      lines.push("");
+    }
     lines.push(softenCertainty(llm.animal_preclinical_subblock));
     lines.push("");
     lines.push("### Animal preclinical attestation");
@@ -491,6 +513,7 @@ const generateSection12Hardware: SectionGenerator = async (
     llm: llmOutput,
     sources,
     includeAnimalPreclinical,
+    animalPreclinicalAssumed,
     isNovel,
   });
   const wordCount = content.trim().split(/\s+/).length;
