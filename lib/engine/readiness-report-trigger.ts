@@ -35,10 +35,8 @@ import { ReadinessCardSchema } from "@/lib/schemas/readiness-card";
 import type { WizardAnswers } from "@/lib/wizard/types";
 import { generateReadinessReport } from "./readiness-report-v1-generator";
 import { ReadinessReportDocument } from "@/lib/pdf/readiness-report-template";
-import type {
-  AiExtractedRow,
-  PitchAiExtracted,
-} from "@/lib/intake/ai-extract";
+import type { AiExtractedRow } from "@/lib/intake/ai-extract";
+import { shortDeviceName } from "@/lib/intake/short-device-name";
 
 const TIER1_REPORTS_BUCKET = "tier1_reports";
 const SIGNED_URL_TTL_SECONDS = 90 * 24 * 60 * 60; // 90 days
@@ -285,54 +283,9 @@ export async function triggerReadinessReportForOrder(
  * cuts at the first clause-break stop word ("for", "to", "that",
  * "designed", etc.), caps at 5 words, and title-cases the result.
  */
-function shortDeviceName(
-  ai: PitchAiExtracted | null,
-  oneLiner: string
-): string {
-  // 1. Prefer the deck-extracted device_name when it's short enough to
-  //    fit the hero card (~ 1 line at the heroTitle font size).
-  if (ai?.device_name) {
-    const cleaned = ai.device_name.trim();
-    if (cleaned.length > 0 && cleaned.length <= 60) return cleaned;
-  }
-
-  // 2. Derive from the curated short one-liner if available.
-  const source = (ai?.intended_use_one_liner ?? "").trim() || oneLiner.trim();
-  if (!source) return "";
-
-  return deriveNounPhrase(source);
-}
-
-function deriveNounPhrase(source: string): string {
-  // Strip a leading article + trailing punctuation, then cut at the
-  // first clause-break stop word so we keep just the noun phrase.
-  const trimmed = source
-    .replace(/^(A|An|The)\s+/i, "")
-    .replace(/[.!?,;:]+$/g, "")
-    .trim();
-  const STOP_WORDS =
-    /\b(for|to|that|which|designed|intended|used|enabling|enables|enable|powered|by|with|in|when|while|so\s+that|aimed|aims)\b/i;
-  const match = trimmed.match(STOP_WORDS);
-  let head = match ? trimmed.slice(0, match.index).trim() : trimmed;
-  const words = head.split(/\s+/).filter(Boolean);
-  if (words.length > 5) head = words.slice(0, 5).join(" ");
-  if (!head) return source.slice(0, 40).trim();
-  return titleCase(head);
-}
-
-function titleCase(s: string): string {
-  return s
-    .split(/\s+/)
-    .map((w) => {
-      if (!w) return w;
-      // Preserve all-caps acronyms (≥ 2 uppercase letters).
-      if (/^[A-Z]{2,}$/.test(w)) return w;
-      // Preserve already-title-cased words (e.g. "RetinaFlag").
-      if (/^[A-Z][a-z]+[A-Z]/.test(w)) return w;
-      return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
-    })
-    .join(" ");
-}
+// Extracted to `lib/intake/short-device-name.ts` (Day-5 EOD) — single
+// source of truth shared with regen-report-pdf, verify-short-device-
+// name, and generate-readiness-report-sample scripts.
 
 async function stampFailure(orderId: string, note: string): Promise<void> {
   // CAS to 'failed' only from 'generating' — never reverse a delivered

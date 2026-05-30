@@ -200,11 +200,21 @@ async function loadFromAssessment(assessmentId: string): Promise<{
   companyName: string;
 }> {
   const { getServiceClient } = await import("../lib/supabase");
-  const { displayName } = await import("../lib/wizard/display-name");
+  // Day-5 EOD fix: previously used `displayName(data.one_liner)` from
+  // `lib/wizard/display-name`, which is a dumb 40-char clamp + "…"
+  // appender designed for wizard headers and concierge labels — not
+  // for a regulator-facing PDF hero. That bypassed the production
+  // trigger's actual selection (ai_extracted.device_name → noun-phrase
+  // chop fallback) and rendered "A bioresorbable cardiac stent for…"
+  // for the stent case. Now uses the shared `shortDeviceName` helper
+  // that the production trigger uses, with the same ai_extracted load.
+  const { shortDeviceName } = await import(
+    "../lib/intake/short-device-name"
+  );
   const supabase = getServiceClient();
   const { data, error } = await supabase
     .from("assessments")
-    .select("id, name, one_liner, readiness_card, wizard_answers")
+    .select("id, name, one_liner, readiness_card, wizard_answers, ai_extracted")
     .eq("id", assessmentId)
     .maybeSingle<{
       id: string;
@@ -212,16 +222,24 @@ async function loadFromAssessment(assessmentId: string): Promise<{
       one_liner: string;
       readiness_card: unknown;
       wizard_answers: unknown;
+      ai_extracted: unknown;
     }>();
   if (error || !data) {
     throw new Error(`assessment ${assessmentId} not found: ${error?.message ?? "no row"}`);
   }
   const card = ReadinessCardSchema.parse(data.readiness_card);
   const wizard = (data.wizard_answers ?? {}) as WizardAnswers;
+  // Match the trigger pattern: only use fields when status === "complete".
+  const aiRow = data.ai_extracted as
+    | { status?: string; fields?: import("../lib/intake/ai-extract").PitchAiExtracted }
+    | null;
+  const aiFields =
+    aiRow && aiRow.status === "complete" ? aiRow.fields ?? null : null;
   return {
     card,
     wizard,
-    productName: displayName(data.one_liner),
+    productName:
+      shortDeviceName(aiFields, data.one_liner ?? "") || data.name || "Your device",
     companyName: data.name,
   };
 }

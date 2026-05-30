@@ -39,38 +39,9 @@ import { ReadinessCardSchema } from "@/lib/schemas/readiness-card";
 import type { WizardAnswers } from "@/lib/wizard/types";
 import type { PitchAiExtracted } from "@/lib/intake/ai-extract";
 
-// Inline copy of shortDeviceName — kept in sync with the trigger.
-function shortDeviceName(
-  ai: PitchAiExtracted | null,
-  oneLiner: string
-): string {
-  if (ai?.device_name) {
-    const cleaned = ai.device_name.trim();
-    if (cleaned.length > 0 && cleaned.length <= 60) return cleaned;
-  }
-  const source = (ai?.intended_use_one_liner ?? "").trim() || oneLiner.trim();
-  if (!source) return "";
-  const trimmed = source
-    .replace(/^(A|An|The)\s+/i, "")
-    .replace(/[.!?,;:]+$/g, "")
-    .trim();
-  const STOP_WORDS =
-    /\b(for|to|that|which|designed|intended|used|enabling|enables|enable|powered|by|with|in|when|while|so\s+that|aimed|aims)\b/i;
-  const match = trimmed.match(STOP_WORDS);
-  let head = match ? trimmed.slice(0, match.index).trim() : trimmed;
-  const words = head.split(/\s+/).filter(Boolean);
-  if (words.length > 5) head = words.slice(0, 5).join(" ");
-  if (!head) return source.slice(0, 40).trim();
-  return head
-    .split(/\s+/)
-    .map((w) => {
-      if (!w) return w;
-      if (/^[A-Z]{2,}$/.test(w)) return w;
-      if (/^[A-Z][a-z]+[A-Z]/.test(w)) return w;
-      return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
-    })
-    .join(" ");
-}
+// Day-5 EOD — was an inline copy; now imports the single source of
+// truth that the production trigger also uses.
+import { shortDeviceName } from "@/lib/intake/short-device-name";
 
 async function regen(assessmentId: string): Promise<void> {
   const sb = getServiceClient();
