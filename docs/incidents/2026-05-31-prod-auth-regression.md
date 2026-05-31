@@ -1,13 +1,15 @@
 # 2026-05-31 — API auth-gate gap (PII + write leaks)
 
-**Status:** Phase 2 (helper + per-route fix) landed. Phase 3 (smoke + CI gate) pending.
+**Status:** **CLOSED** (2026-05-31 ~07:00 IST) — prod verified 401 on all four confirmed-leak endpoints. Phase 3 (smoke + CI gate) carried to Sprint 4.
 
 ## Timeline
 
 - **2026-05-30 EOD** — Founder reports incognito users seeing real data on `/dashboard` and `/upgrade/<id>` post-merge of `feat/sprint-3-phase-c-2c` → `main` on prod (`clearpath-medtech.vercel.app`).
-- **2026-05-31 ~05:40** — Diagnostic round 1. Page routes (`/dashboard`, `/upgrade/[id]`, `/draft/[id]`) confirmed clean (307 → `/login` in incognito). Root cause located in API layer: `/api/upgrade/status` returns full order data without auth check. Founder's "Sprint 3 regression" premise verified incorrect — file history at `4c8db26` (Sprint 2-era creation) is identical on auth surface to `d6a5e2b` and HEAD. The leak has existed since file creation; Sprint 3 merge to main is when the URL became broadly hit-able.
-- **2026-05-31 ~06:00** — Broader probe identifies ≥4 confirmed read leaks (`/api/upgrade/status`, `/api/assessment/[id]`, `/api/storage/signed-url`, candidate `/api/upgrade/submit-payment-proof`) plus 11 more endpoints using `getServiceClient()` without `getUser()`. Some are intentionally public/system (Cashfree webhook, share-link reader, admin endpoints presumably env-gated).
+- **2026-05-31 ~00:30 IST** — Discovered. Founder + on-call walk through the report.
+- **2026-05-31 ~01:00 IST** — Diagnosed. Page routes (`/dashboard`, `/upgrade/[id]`, `/draft/[id]`) confirmed clean (307 → `/login` in incognito). Root cause located in API layer: `/api/upgrade/status` returns full order data without auth check. "Sprint 3 regression" premise verified incorrect — file history at `4c8db26` (Sprint 2-era creation) is identical on auth surface to `d6a5e2b` and HEAD. The leak has existed since file creation; Sprint 3 merge to main is when the URL became broadly hit-able.
+- **2026-05-31 ~05:40 IST** — Broader probe identifies ≥4 confirmed read leaks (`/api/upgrade/status`, `/api/assessment/[id]`, `/api/storage/signed-url`, candidate `/api/upgrade/submit-payment-proof`) plus 11 more endpoints using `getServiceClient()` without `getUser()`. Some are intentionally public/system (Cashfree webhook, share-link reader, admin endpoints presumably env-gated).
 - **2026-05-31 morning** — Full-fix path adopted. Phase 1 audit, Phase 2 helper + per-route fix, Phase 3 smoke test + CI gate.
+- **2026-05-31 ~07:00 IST** — Patched + verified on prod. Four commits land on `main` (`7b76b88` helper, `b3ca259` 17-endpoint apply + `/start` rehydration, `3ff5b2f` PUBLIC/SYSTEM markers, `6df9073` webhook 503). Curl-from-incognito against prod returns 401 on all four confirmed-leak endpoints.
 
 ## Exposure window
 
@@ -56,3 +58,15 @@ Wire shape on auth failure (helper):
 - Periodic curl-from-incognito smoke against prod URLs as part of CI on every main merge.
 - Verify `assessments.share_token` column has ≥128 bits of entropy. `card/[token]/pdf` relies on the token as the auth boundary (anyone with URL can re-render); short / guessable tokens would break the public-share contract.
 - Bind `storage/signed-url` uploads to an opaque pre-intake session token issued from `/start` mount, so the AUTH-ONLY gate gains soft ownership without changing the no-assessment-id-yet contract.
+
+## Closeout (2026-05-31 ~07:00 IST)
+
+**Resolution timeline:** discovered 00:30 IST → diagnosed ~01:00 IST → patched + verified ~07:00 IST (six and a half hours, end-to-end).
+
+**Exposure window:** since commit `4c8db26` (Sprint 2 era). Pre-existing architectural omission, **not** a Sprint 3 regression. The Sprint 3 → main merge widened distribution of the URLs but did not introduce the gap.
+
+**Affected data:** order PII (email), signed PDF and screenshot URLs (some still valid for ~2 months at time of discovery), intake PII (name, email, mobile, one-liner, uploaded-doc references), and wizard mutations (`save`, `complete`, `ack-conflict`, `check-q2-followup`). Realised exposure bounded by who knew assessment UUIDs; UUIDs are not enumerable but were referenced in client-side `/upgrade/[id]` StatusPanel fetches.
+
+**Resolution:** shared helper extracted to `lib/auth/require-owned-assessment.ts` and applied to 17 AUTH+OWN endpoints; 4 PUBLIC routes marked with explicit `// PUBLIC:` comments; 4 SYSTEM routes (`admin/*`) marked with explicit `// SYSTEM:` comments; Cashfree webhook missing-config behavior tightened from 200-silent-ignore to 503 + log so Cashfree retries until ops repairs env.
+
+**Status:** CLOSED — prod verified 401 on all four confirmed-leak endpoints (`/api/upgrade/status`, `/api/assessment/[id]`, `/api/storage/signed-url`, `/api/upgrade/submit-payment-proof`).
