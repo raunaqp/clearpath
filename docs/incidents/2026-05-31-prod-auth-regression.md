@@ -1,6 +1,6 @@
 # 2026-05-31 — API auth-gate gap (PII + write leaks)
 
-**Status:** Phase 1 (audit) in progress.
+**Status:** Phase 2 (helper + per-route fix) landed. Phase 3 (smoke + CI gate) pending.
 
 ## Timeline
 
@@ -32,8 +32,27 @@ Three phases with founder-eyeball gates between each:
 2. **Phase 2 — Helper + fix.** Build `lib/auth/require-owned-assessment.ts` with `requireAuth()` and `requireAuthOwnedAssessment()`. Apply per classification. Pause for founder diff review.
 3. **Phase 3 — Tests + verify.** Build `scripts/smoke-api-auth.ts` that hits each endpoint unauthenticated and asserts expected behaviour. Wire into CI. Verify local → preview → prod.
 
+## Phase 2 outcome (2026-05-31 PM)
+
+Helper landed at `7b76b88 feat(auth): shared helper for API route authentication + ownership`. Per-route apply landed across 17 endpoints. Final classification, post-deviation:
+
+| Route | Class | Notes |
+|---|---|---|
+| 17 routes in `wizard/* upgrade/* draft/[id]/* cashfree/create-order assessment/[id]` | AUTH+OWN | `requireAuthOwnedAssessment(assessment_id)` |
+| `storage/signed-url` | **AUTH ONLY** | Reclassified from AUTH+OWN. No `assessment_id` exists at upload time (intake creates the row *after* uploads land). Paired with `/start` `sessionStorage` rehydration so a mid-upload 401 → `/login?return_to=/start` round-trip restores the form. |
+| `auth/resend-verification` | AUTH ONLY | Already gated; marker added. |
+| `intake`, `cashfree/return`, `card/[token]/pdf`, `concierge/submit` | PUBLIC | Marker added. `card/[token]/pdf` is token-gated (see Sprint-4 entropy follow-up below). |
+| `admin/costs`, `admin/generate-draft-pack`, `admin/reset-stuck-order`, `admin/verify-order` | SYSTEM | Vercel-edge Basic Auth (`www-authenticate: Basic realm="ClearPath Admin"`). |
+| `cashfree/webhook` | SYSTEM | HMAC-SHA256 signature on raw body. Missing-config behavior tightened: 200-silent-ignore → **503 + log** so Cashfree retries until ops repairs env. |
+
+Wire shape on auth failure (helper):
+- `401 {"error":"unauthorized"}` — no session.
+- `404 {"error":"not_found"}` for both "row missing" and "ownership mismatch" per OWASP A01:2021. Server-side log line distinguishes via `reason=missing_row | reason=ownership_mismatch` and includes `user.email`, `assessment.email`, `assessment_id`.
+
 ## Sprint-4 follow-ups
 
 - Consider RLS at the DB layer as defense in depth. Today every leak shares a single cause (service-role client). RLS would make the API correctness independent of the helper being called.
 - Document the "PUBLIC" and "SYSTEM" tags as durable architectural markers — every new API route must declare its type explicitly.
 - Periodic curl-from-incognito smoke against prod URLs as part of CI on every main merge.
+- Verify `assessments.share_token` column has ≥128 bits of entropy. `card/[token]/pdf` relies on the token as the auth boundary (anyone with URL can re-render); short / guessable tokens would break the public-share contract.
+- Bind `storage/signed-url` uploads to an opaque pre-intake session token issued from `/start` mount, so the AUTH-ONLY gate gains soft ownership without changing the no-assessment-id-yet contract.

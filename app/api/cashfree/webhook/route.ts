@@ -35,16 +35,31 @@ export const dynamic = "force-dynamic";
 // runs via after() and needs the extended window.
 export const maxDuration = 300;
 
+// SYSTEM: Cashfree-authenticated via HMAC-SHA256 signature on the raw
+// body (header `x-webhook-signature` against `x-webhook-timestamp` +
+// body). No user session — the secret-key check IS the auth boundary.
+// Misconfiguration (no key) returns 503 so Cashfree retries until ops
+// repairs the config; see 200-silent-ignore commit message for prior
+// behavior and the regression it masked.
 export async function POST(req: NextRequest) {
   const cfg = getCashfreeConfig();
   if (!cfg) {
-    // Without keys we can't verify — drop the event quietly. We
-    // surface 200 so Cashfree doesn't retry endlessly during a
-    // transient misconfiguration.
-    console.warn(
-      "[cashfree/webhook] dropped event: cashfree keys not configured"
+    // Phase 2 P0 follow-up — previously returned 200 + "ignored",
+    // which made Cashfree mark the event delivered. A misconfig in
+    // prod silently lost payment events. 503 keeps the order on
+    // Cashfree's retry queue (their backoff is bounded — see
+    // their webhook delivery docs) until ops restores the env keys.
+    console.error(
+      "[cashfree/webhook] CONFIG ERROR: CASHFREE_APP_ID / CASHFREE_SECRET_KEY not set; returning 503 so Cashfree will retry"
     );
-    return NextResponse.json({ ok: true, ignored: true });
+    return NextResponse.json(
+      {
+        error: "cashfree_not_configured",
+        message:
+          "Webhook receiver missing CASHFREE_APP_ID / CASHFREE_SECRET_KEY env. Restore config; Cashfree will retry.",
+      },
+      { status: 503 }
+    );
   }
 
   const rawBody = await req.text();
