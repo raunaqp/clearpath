@@ -52,6 +52,9 @@ const schema = z.object({
   prefilled: z.boolean().optional().default(false),
 });
 
+// PUBLIC: Tier 3 (Human Concierge) lead form. Anyone can request a
+// consultant — no prior session expected. Submissions email the
+// founder; rate-limit lives at the form layer on the marketing page.
 export async function POST(req: NextRequest) {
   let body: unknown;
   try {

@@ -20,6 +20,11 @@ type AssessmentRow = {
   readiness_card: unknown;
 };
 
+// PUBLIC: token-gated share card. Anyone with the URL can re-render
+// the PDF — this is the public-share property of `share_token`. The
+// token itself is the auth boundary; Sprint-4 follow-up tracked in
+// docs/incidents/2026-05-31-prod-auth-regression.md is to verify the
+// `share_token` column has ≥128 bits of entropy.
 export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ token: string }> }

@@ -4,6 +4,10 @@ import { getServiceClient } from "@/lib/supabase";
 
 const schema = z.object({ order_id: z.string().uuid() });
 
+// SYSTEM: gated at the Vercel edge by Basic Auth on /api/admin/* —
+// see middleware ("www-authenticate: Basic realm=\"ClearPath Admin\"").
+// No per-request session check; the edge rejects before the function
+// runs.
 export async function POST(req: NextRequest) {
   let body: unknown;
   try {

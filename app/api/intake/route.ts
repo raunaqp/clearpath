@@ -78,6 +78,10 @@ type AssessmentMeta = Record<string, unknown> & {
   conflict_edit_attempts?: number;
 };
 
+// PUBLIC: bootstrap endpoint — creates the first assessment row before
+// any session exists. Sign-in is optional; if present the email is
+// auto-bound to the row, otherwise the user verifies later via
+// /auth/verify. No PII read path.
 export async function POST(req: NextRequest) {
   let body: unknown;
   try {

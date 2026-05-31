@@ -25,6 +25,10 @@ function safeReturnTo(raw: unknown): string {
   return raw;
 }
 
+// AUTH ONLY: requires sign-in but no per-assessment ownership join —
+// the user is asking to resend their own verification email. Inline
+// `getUser()` check below stays; helper not introduced because there
+// is no ownership decision and no PII leak path here.
 export async function POST(req: NextRequest) {
   const user = await getUser();
   if (!user) {

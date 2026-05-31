@@ -15,6 +15,11 @@ import { getServiceClient } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
+// PUBLIC: Cashfree post-checkout redirect target. We can't require a
+// session here because the user arrives back from the Cashfree-hosted
+// checkout page (cross-origin). Authoritative payment state lives in
+// the HMAC-signed webhook (/api/cashfree/webhook); this endpoint only
+// reads order status and redirects, no PII surfaced.
 export async function GET(req: NextRequest) {
   const orderId = req.nextUrl.searchParams.get("order_id");
   if (!orderId) {

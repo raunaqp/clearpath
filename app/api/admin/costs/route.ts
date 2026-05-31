@@ -12,6 +12,11 @@ import { fetchCostsData } from "@/lib/admin/costs-data";
 
 export const dynamic = "force-dynamic";
 
+// SYSTEM: gated at the Vercel edge by Basic Auth on /api/admin/* —
+// see middleware ("www-authenticate: Basic realm=\"ClearPath Admin\"").
+// No per-request session check needed; the edge layer rejects before
+// the function runs. If middleware is ever loosened on this path,
+// re-introduce an in-handler auth check here.
 export async function GET() {
   try {
     const data = await fetchCostsData();
