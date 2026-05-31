@@ -10,7 +10,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase";
-import { getUser } from "@/lib/auth/session";
+import { requireAuthOwnedAssessment } from "@/lib/auth/require-owned-assessment";
 
 export const dynamic = "force-dynamic";
 
@@ -54,10 +54,8 @@ async function authzAndLoadAttachment(
 
 export async function PATCH(req: NextRequest, ctx: Params) {
   const { id, attachment_id } = await ctx.params;
-  const user = await getUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+  const authed = await requireAuthOwnedAssessment(id);
+  if (authed instanceof NextResponse) return authed;
   let body: { doc_type?: unknown; notes?: unknown };
   try {
     body = await req.json();
@@ -97,10 +95,8 @@ export async function PATCH(req: NextRequest, ctx: Params) {
 
 export async function DELETE(_req: NextRequest, ctx: Params) {
   const { id, attachment_id } = await ctx.params;
-  const user = await getUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+  const authed = await requireAuthOwnedAssessment(id);
+  if (authed instanceof NextResponse) return authed;
   const auth = await authzAndLoadAttachment(id, attachment_id);
   if ("error" in auth) {
     return NextResponse.json(

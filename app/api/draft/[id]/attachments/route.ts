@@ -11,7 +11,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase";
-import { getUser } from "@/lib/auth/session";
+import { requireAuthOwnedAssessment } from "@/lib/auth/require-owned-assessment";
 import { createHash } from "crypto";
 import {
   ATTACHMENT_FILE_LIMITS,
@@ -36,10 +36,9 @@ function extensionFromMime(mime: string): string {
 export async function POST(req: NextRequest, ctx: Params) {
   const { id } = await ctx.params;
 
-  const user = await getUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+  const auth = await requireAuthOwnedAssessment(id);
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
 
   let form: FormData;
   try {

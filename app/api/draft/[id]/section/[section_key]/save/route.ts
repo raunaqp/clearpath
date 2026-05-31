@@ -17,7 +17,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase";
-import { getUser } from "@/lib/auth/session";
+import { requireAuthOwnedAssessment } from "@/lib/auth/require-owned-assessment";
 
 export const dynamic = "force-dynamic";
 
@@ -31,10 +31,9 @@ type Params = {
 export async function POST(req: NextRequest, ctx: Params) {
   const { id, section_key } = await ctx.params;
 
-  const user = await getUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+  const auth = await requireAuthOwnedAssessment(id);
+  if (auth instanceof NextResponse) return auth;
+  const { user } = auth;
 
   let body: { content?: unknown; reason?: unknown };
   try {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getServiceClient } from "@/lib/supabase";
+import { requireAuth } from "@/lib/auth/require-owned-assessment";
 
 const BUCKET = "assessment-docs";
 
@@ -14,6 +15,15 @@ function safeName(name: string) {
 }
 
 export async function POST(req: NextRequest) {
+  // AUTH ONLY (not AUTH+OWN) — at intake time there is no assessment
+  // row yet, so we can't enforce ownership. The storage path uses a
+  // server-minted UUID prefix and is bound to the row only when
+  // `/api/intake` writes `uploaded_docs[].storage_path`. Rate-limiting
+  // and per-user upload quotas live one layer up; this gate just
+  // guarantees the caller is signed in.
+  const auth = await requireAuth();
+  if (auth instanceof NextResponse) return auth;
+
   let body: unknown;
   try {
     body = await req.json();

@@ -23,7 +23,7 @@ import {
   type DocumentProps,
 } from "@react-pdf/renderer";
 import { getServiceClient } from "@/lib/supabase";
-import { getUser } from "@/lib/auth/session";
+import { requireAuthOwnedAssessment } from "@/lib/auth/require-owned-assessment";
 import {
   ReadinessReportSchema,
   type ReadinessReport,
@@ -41,11 +41,6 @@ const bodySchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const user = await getUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
-
   const parsed = bodySchema.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) {
     return NextResponse.json(
@@ -55,25 +50,10 @@ export async function POST(req: NextRequest) {
   }
   const { assessment_id } = parsed.data;
 
-  const supabase = getServiceClient();
+  const auth = await requireAuthOwnedAssessment(assessment_id);
+  if (auth instanceof NextResponse) return auth;
 
-  // Ownership: the assessment's email must equal the session email.
-  // /upgrade/[id] uses the same join key, so this stays consistent
-  // with the rest of the upgrade funnel until we promote to user_id.
-  const { data: assessment } = await supabase
-    .from("assessments")
-    .select("id, email")
-    .eq("id", assessment_id)
-    .maybeSingle<{ id: string; email: string }>();
-  if (!assessment) {
-    return NextResponse.json(
-      { error: "assessment_not_found" },
-      { status: 404 }
-    );
-  }
-  if (assessment.email.toLowerCase() !== user.email.toLowerCase()) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+  const supabase = getServiceClient();
 
   // Pick the latest delivered draft_pack order for this assessment.
   const { data: order } = await supabase

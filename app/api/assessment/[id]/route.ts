@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase";
+import { requireAuthOwnedAssessment } from "@/lib/auth/require-owned-assessment";
 
 /**
  * GET /api/assessment/[id]
  * Returns the intake-form-shaped fields from an assessment so that
  * `/start?resume=<id>` can pre-fill the form. Does NOT expose meta
- * or pre-router internals.
+ * or pre-router internals. AUTH+OWN — only the owner can read.
  */
 export async function GET(
   _req: NextRequest,
@@ -15,6 +16,8 @@ export async function GET(
   if (!/^[0-9a-f-]{36}$/.test(id)) {
     return NextResponse.json({ error: "Invalid id." }, { status: 400 });
   }
+  const auth = await requireAuthOwnedAssessment(id);
+  if (auth instanceof NextResponse) return auth;
   const supabase = getServiceClient();
   const { data, error } = await supabase
     .from("assessments")

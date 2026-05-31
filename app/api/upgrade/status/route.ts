@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getServiceClient } from "@/lib/supabase";
+import { requireAuthOwnedAssessment } from "@/lib/auth/require-owned-assessment";
 
 const idSchema = z.string().uuid();
 
@@ -16,6 +17,9 @@ export async function GET(req: NextRequest) {
       { status: 422 }
     );
   }
+
+  const auth = await requireAuthOwnedAssessment(parsed.data);
+  if (auth instanceof NextResponse) return auth;
 
   const supabase = getServiceClient();
   const { data, error } = await supabase

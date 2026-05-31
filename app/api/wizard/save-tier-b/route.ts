@@ -12,7 +12,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getServiceClient } from "@/lib/supabase";
-import { getUser } from "@/lib/auth/session";
+import { requireAuthOwnedAssessment } from "@/lib/auth/require-owned-assessment";
 import {
   TierBAnswersPartialSchema,
   type WizardAnswers,
@@ -32,11 +32,6 @@ type AssessmentMeta = Record<string, unknown> & {
 };
 
 export async function POST(req: NextRequest) {
-  const user = await getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthenticated." }, { status: 401 });
-  }
-
   let body: unknown;
   try {
     body = await req.json();
@@ -70,6 +65,9 @@ export async function POST(req: NextRequest) {
 
   const { assessment_id, answers, completed } = parsed.data;
 
+  const auth = await requireAuthOwnedAssessment(assessment_id);
+  if (auth instanceof NextResponse) return auth;
+
   const supabase = getServiceClient();
 
   const { data: existing, error: fetchError } = await supabase
@@ -87,11 +85,6 @@ export async function POST(req: NextRequest) {
   }
   if (!existing) {
     return NextResponse.json({ error: "Assessment not found." }, { status: 404 });
-  }
-
-  // Ownership check — the authed user must match the assessment email.
-  if (existing.email !== user.email) {
-    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
   }
 
   const currentAnswers: WizardAnswers =

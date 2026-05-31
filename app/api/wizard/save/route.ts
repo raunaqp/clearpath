@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getServiceClient } from "@/lib/supabase";
+import { requireAuthOwnedAssessment } from "@/lib/auth/require-owned-assessment";
 import {
   WizardAnswersPartialSchema,
   type WizardAnswers,
@@ -37,6 +38,9 @@ export async function POST(req: NextRequest) {
   }
 
   const { assessment_id, answer } = parsed.data;
+
+  const auth = await requireAuthOwnedAssessment(assessment_id);
+  if (auth instanceof NextResponse) return auth;
 
   const supabase = getServiceClient();
   const { data: existing, error: fetchError } = await supabase

@@ -18,7 +18,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getServiceClient } from "@/lib/supabase";
-import { getUser } from "@/lib/auth/session";
+import { requireAuthOwnedAssessment } from "@/lib/auth/require-owned-assessment";
 import {
   checkoutUrlFor,
   createOrder,
@@ -49,11 +49,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const user = await getUser();
-  if (!user) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
-
   const parsed = schema.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) {
     return NextResponse.json(
@@ -61,6 +56,10 @@ export async function POST(req: NextRequest) {
       { status: 422 }
     );
   }
+
+  const authed = await requireAuthOwnedAssessment(parsed.data.assessment_id);
+  if (authed instanceof NextResponse) return authed;
+  const { user, assessment: ownedAssessment } = authed;
 
   const tierChoice = parsed.data.tier_choice;
   const tierConfig = TIER_PRICING[tierChoice];

@@ -27,6 +27,33 @@ const MAX_FILES = 3;
 const MAX_SIZE_BYTES = 5 * 1024 * 1024;   // 5 MB
 const MAX_PAGES = 10;
 
+// Phase 2 P0 auth incident — when /api/storage/signed-url returns 401
+// (session expired mid-upload), we redirect to /login and need to come
+// back to a populated form. File blobs can't survive the round trip, so
+// they're not persisted; everything else is.
+const INTAKE_DRAFT_KEY = "clearpath:intake-draft:v1";
+
+type IntakeDraft = {
+  step: 1 | 2;
+  name: string;
+  email: string;
+  mobile: string;
+  persona: Persona | null;
+  oneLiner: string;
+  url: string;
+  // Only uploaded docs (with storage_path) survive — in-flight and failed
+  // are dropped on serialise. The user re-picks any failed files.
+  uploadedDocs: Array<{
+    id: string;
+    filename: string;
+    size_bytes: number;
+    sha256: string;
+    page_count: number;
+    storage_path: string;
+    doc_type?: string;
+  }>;
+};
+
 const DOC_TYPE_GROUPS = groupedDocTypeOptions();
 
 type FieldName = "name" | "email" | "mobile" | "oneLiner" | "url";
@@ -191,6 +218,86 @@ function StartPageInner() {
       cancelled = true;
     };
   }, [resumeId]);
+
+  // Phase 2 P0 — restore intake draft from sessionStorage on mount.
+  // Set only when we landed here from a mid-upload 401 round-trip. We
+  // skip this whenever ?resume= is present (the resume flow has its own
+  // prefill source) so the two paths don't fight.
+  useEffect(() => {
+    if (resumeId) return;
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.sessionStorage.getItem(INTAKE_DRAFT_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw) as Partial<IntakeDraft>;
+      if (typeof draft.name === "string") setName(draft.name);
+      if (typeof draft.email === "string") setEmail(draft.email);
+      if (typeof draft.mobile === "string") setMobile(draft.mobile);
+      if (
+        draft.persona === "manufacturer_samd" ||
+        draft.persona === "clinical_investigation_researcher" ||
+        draft.persona === "manufacturer_hardware"
+      ) {
+        setPersona(draft.persona);
+      }
+      if (typeof draft.oneLiner === "string") setOneLiner(draft.oneLiner);
+      if (typeof draft.url === "string") setUrl(draft.url);
+      if (draft.step === 2) setStep(2);
+      if (Array.isArray(draft.uploadedDocs)) {
+        setDocs(
+          draft.uploadedDocs.map((d) => ({
+            id: d.id,
+            filename: d.filename,
+            size_bytes: d.size_bytes,
+            sha256: d.sha256,
+            page_count: d.page_count,
+            storage_path: d.storage_path,
+            status: "uploaded" as const,
+            progress: 100,
+            doc_type: d.doc_type,
+          }))
+        );
+      }
+      window.sessionStorage.removeItem(INTAKE_DRAFT_KEY);
+    } catch (err) {
+      console.warn("[start] intake draft restore failed:", err);
+      try {
+        window.sessionStorage.removeItem(INTAKE_DRAFT_KEY);
+      } catch {}
+    }
+  }, [resumeId]);
+
+  // Persist intake draft so a mid-upload 401 → /login round-trip can
+  // restore the form. Skipped on resume flow (server is source of truth).
+  useEffect(() => {
+    if (resumeId) return;
+    if (typeof window === "undefined") return;
+    const draft: IntakeDraft = {
+      step,
+      name,
+      email,
+      mobile,
+      persona,
+      oneLiner,
+      url,
+      uploadedDocs: docs
+        .filter((d) => d.status === "uploaded" && d.storage_path)
+        .map((d) => ({
+          id: d.id,
+          filename: d.filename,
+          size_bytes: d.size_bytes,
+          sha256: d.sha256,
+          page_count: d.page_count,
+          storage_path: d.storage_path,
+          doc_type: d.doc_type,
+        })),
+    };
+    try {
+      window.sessionStorage.setItem(INTAKE_DRAFT_KEY, JSON.stringify(draft));
+    } catch {
+      // sessionStorage can throw under quota / Safari private — ignore.
+    }
+  }, [resumeId, step, name, email, mobile, persona, oneLiner, url, docs]);
 
   // Prefill from existing assessment when ?resume={id} is present.
   useEffect(() => {
@@ -404,6 +511,16 @@ function StartPageInner() {
               size_bytes: file.size,
             }),
           });
+          // Phase 2 P0 — signed-url now requires sign-in. If the user's
+          // session lapsed mid-flow, send them to /login and rehydrate
+          // from sessionStorage on return. The persist effect runs on
+          // every state change, so the latest form values are already
+          // saved by the time we redirect.
+          if (res.status === 401) {
+            const returnTo = encodeURIComponent("/start");
+            router.push(`/login?return_to=${returnTo}`);
+            return;
+          }
           if (!res.ok) throw new Error((await res.json()).error || "Signed URL failed");
           const { signedUrl, storage_path } = await res.json();
 
@@ -530,6 +647,12 @@ function StartPageInner() {
       setSubmitting(false);
       return;
     }
+
+    // Intake succeeded — the draft has served its purpose. Clear so a
+    // future first-time visitor doesn't see a stale name/email prefill.
+    try {
+      window.sessionStorage.removeItem(INTAKE_DRAFT_KEY);
+    } catch {}
 
     router.push(`/assess/${json.assessmentId}`);
   }

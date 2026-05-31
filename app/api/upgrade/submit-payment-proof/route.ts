@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getServiceClient } from "@/lib/supabase";
+import { requireAuthOwnedAssessment } from "@/lib/auth/require-owned-assessment";
 
 const PAYMENT_PROOFS_BUCKET = "payment_proofs";
 const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 MB — matches Supabase bucket limit
@@ -37,6 +38,9 @@ export async function POST(req: NextRequest) {
     );
   }
   const assessment_id = parsedId.data;
+
+  const auth = await requireAuthOwnedAssessment(assessment_id);
+  if (auth instanceof NextResponse) return auth;
 
   const rawTxn = formData.get("transaction_id");
   let transaction_id: string | null = null;
