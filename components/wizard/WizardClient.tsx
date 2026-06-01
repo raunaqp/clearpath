@@ -21,6 +21,7 @@ import type {
   Persona,
   WizardAnswers,
 } from "@/lib/wizard/types";
+import { useElapsedPhase } from "@/lib/hooks/use-elapsed-phase";
 
 type Props = {
   assessmentId: string;
@@ -80,10 +81,15 @@ export default function WizardClient({
     return typeof v === "string" ? v : undefined;
   });
   const [skipped] = useState<number[]>(initialSkipped);
+  // Sprint 4B ITEM 1B — 3s/10s/30s threshold UX so a slow Q2 / Q7
+  // await never looks like a dead click. Hook ticks while busy is
+  // true; phase resets on busy→false transitions.
   // `busy` is only used when we MUST block — i.e. the Q2 follow-up
   // check (which decides the routing target). Optimistic paths never
   // set busy because they route immediately.
   const [busy, setBusy] = useState(false);
+  const { phase: busyPhase, elapsedSeconds: busyElapsedSeconds } =
+    useElapsedPhase(busy);
   const [q2Phrases, setQ2Phrases] = useState<string[] | null>(null);
   const stepStartedAt = useRef<number>(Date.now());
   const wizardStartedAt = useRef<number>(Date.now());
@@ -586,6 +592,37 @@ export default function WizardClient({
           indicates a required question
         </p>
       )}
+
+      {busy && busyPhase !== "idle" ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className={
+            busyPhase === "stuck"
+              ? "mb-3 rounded-md border border-[#BA7517]/30 bg-[#FFF7E6] px-3 py-2 text-sm text-[#7A4E0F] flex items-center gap-2"
+              : "mb-3 rounded-md border border-[#0F6E56]/20 bg-[#EAF3EF] px-3 py-2 text-sm text-[#0F6E56] flex items-center gap-2"
+          }
+        >
+          <span
+            aria-hidden
+            className={
+              busyPhase === "stuck"
+                ? "inline-block h-3.5 w-3.5 rounded-full bg-[#BA7517]"
+                : "inline-block h-3.5 w-3.5 rounded-full border-2 border-[#0F6E56]/30 border-t-[#0F6E56] animate-spin"
+            }
+          />
+          <span>
+            {busyPhase === "saving" && "Saving your answer…"}
+            {busyPhase === "longer" &&
+              "This is taking longer than usual — still working."}
+            {busyPhase === "stuck" &&
+              "Still working. If this doesn't resolve, refresh the page and try again."}
+          </span>
+          <span className="ml-auto font-mono text-xs opacity-60">
+            {busyElapsedSeconds}s
+          </span>
+        </div>
+      ) : null}
 
       <WizardNav
         onBack={currentStep > 1 ? handleBack : undefined}

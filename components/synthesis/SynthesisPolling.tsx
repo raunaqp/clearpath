@@ -13,6 +13,7 @@
  */
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { elapsedToPhase } from "@/lib/hooks/use-elapsed-phase";
 
 const POLL_INTERVAL_MS = 2000;
 
@@ -89,6 +90,10 @@ export function SynthesisPolling({
   }, [assessmentId, router]);
 
   const ageSeconds = status?.age_seconds ?? initialAgeSeconds ?? 0;
+  // Sprint 4B ITEM 1C — same 3s/10s/30s ladder as the wizard busy
+  // feedback. Source is server-stamped synthesizer_running_at, so
+  // page reloads pick up the real lock age, not a fresh client clock.
+  const phase = elapsedToPhase(ageSeconds);
 
   if (terminalError) {
     return (
@@ -113,6 +118,17 @@ export function SynthesisPolling({
     );
   }
 
+  // Phase ladder:
+  //  idle/saving (0–9s)    — normal Opus latency window; just the spinner + tagline.
+  //  longer      (10–29s)  — surface the "longer than usual" tone so the user knows
+  //                          we noticed and to keep waiting.
+  //  stuck       (≥30s)    — offer the unstick affordance. The same `onRetry` server
+  //                          action used for the terminal-error path: flips the row
+  //                          back to wizard_complete, the next page load redrives
+  //                          synthesis with a fresh worker.
+  const isStuck = phase === "stuck";
+  const isLonger = phase === "longer";
+
   return (
     <div className="max-w-xl mx-auto px-4 py-12 text-center">
       <div className="inline-block h-8 w-8 rounded-full border-2 border-[#0F6E56]/30 border-t-[#0F6E56] animate-spin mb-5" />
@@ -120,12 +136,31 @@ export function SynthesisPolling({
         Generating your readiness card…
       </p>
       <p className="text-sm text-[#6B766F]">
-        Working through your assessment. This usually takes 20–30 seconds.
+        {isStuck
+          ? "Still working, but this is taking unusually long."
+          : isLonger
+            ? "This is taking longer than usual — still working."
+            : "Working through your assessment. This usually takes 20–30 seconds."}
       </p>
       {ageSeconds > 0 ? (
         <p className="text-xs text-[#6B766F] mt-3 font-mono">
           {ageSeconds}s elapsed
         </p>
+      ) : null}
+      {isStuck ? (
+        <form
+          action={async () => {
+            await onRetry();
+          }}
+          className="mt-5"
+        >
+          <button
+            type="submit"
+            className="text-sm rounded-full bg-[#0F6E56] hover:bg-[#0d5c48] text-white px-4 py-2"
+          >
+            Restart generation
+          </button>
+        </form>
       ) : null}
     </div>
   );
