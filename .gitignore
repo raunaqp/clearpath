@@ -44,3 +44,4 @@ next-env.d.ts
 /.patches-archive/
 *.patch
 readiness-report-sample*.pdf
+data/cdsco-registry/
