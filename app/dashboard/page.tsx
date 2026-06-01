@@ -217,7 +217,7 @@ function CardRow({
             </Link>
           ) : card.status === "wizard" ? (
             <Link
-              href={`/wizard/${card.id}`}
+              href={`/assess/${card.id}`}
               className="text-sm text-[#0F6E56] underline underline-offset-2 hover:no-underline"
             >
               Resume wizard
