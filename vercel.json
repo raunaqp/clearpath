@@ -1,3 +1,9 @@
 {
-  "alias": ["clearpath-medtech.vercel.app"]
+  "alias": ["clearpath-medtech.vercel.app"],
+  "crons": [
+    {
+      "path": "/api/cron/wizard-warmup",
+      "schedule": "*/5 * * * *"
+    }
+  ]
 }
