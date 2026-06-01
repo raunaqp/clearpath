@@ -252,16 +252,42 @@ function CardRow({
             </span>
             {ORDER_STATUS_LABEL[order.status] ?? order.status}
           </p>
-          <Link
-            href={`/upgrade/${card.id}`}
-            className="text-sm text-[#0F6E56] underline underline-offset-2 hover:no-underline"
-          >
-            {order.status === "delivered"
-              ? order.tier_choice === "draft_editor"
-                ? "Open Workspace →"
-                : "Download Report →"
-              : "View status →"}
-          </Link>
+          <div className="flex gap-3 shrink-0">
+            {/* Tier 2 delivered keeps the Open Workspace primary CTA. */}
+            {order.status === "delivered" &&
+            order.tier_choice === "draft_editor" ? (
+              <Link
+                href={`/upgrade/${card.id}`}
+                className="text-sm text-[#0F6E56] underline underline-offset-2 hover:no-underline"
+              >
+                Open Workspace →
+              </Link>
+            ) : null}
+            {/* Delivered orders expose a direct-download link to the
+                signed PDF when present. URL is the cached one stamped on
+                the order at generation time (30-day TTL for draft_editor,
+                90-day for draft_pack). Sprint-4 follow-up: refresh on
+                expiry instead of relying on the cached value. */}
+            {order.status === "delivered" && order.draft_pack_pdf_url ? (
+              <a
+                href={order.draft_pack_pdf_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-[#0F6E56] underline underline-offset-2 hover:no-underline"
+              >
+                {order.tier_choice === "draft_editor"
+                  ? "Download Submission Pack"
+                  : "Download Readiness Report"}
+              </a>
+            ) : order.status !== "delivered" ? (
+              <Link
+                href={`/upgrade/${card.id}`}
+                className="text-sm text-[#0F6E56] underline underline-offset-2 hover:no-underline"
+              >
+                View status →
+              </Link>
+            ) : null}
+          </div>
         </div>
       ) : null}
     </Tag>
