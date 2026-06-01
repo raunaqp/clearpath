@@ -5,14 +5,14 @@ import { runPreRouter, type PreRouterPdf } from "@/lib/engine/pre-router";
 import { fetchUrl } from "@/lib/engine/fetch-url";
 import { downloadPdfAsBase64 } from "@/lib/engine/download-pdf";
 import { checkPdfCache, savePdfSummary } from "@/lib/engine/pdf-cache";
-import { runSynthesisForAssessment } from "@/lib/engine/run-synthesis";
+import { dispatchSynthesisForAssessment } from "@/lib/engine/run-synthesis";
+import { SynthesisPolling } from "@/components/synthesis/SynthesisPolling";
 import type { WizardAnswers } from "@/lib/wizard/types";
 import { totalSteps } from "@/lib/wizard/questions";
 import {
   SynthesizerErrorPanel,
   type SynthesizerErrorType,
 } from "@/components/card/SynthesizerErrorPanel";
-import { SynthesizerWaitingPanel } from "@/components/card/SynthesizerWaitingPanel";
 import { GlobalHeader } from "@/components/layout/GlobalHeader";
 import { retrySynthesis } from "./actions";
 
@@ -182,38 +182,44 @@ export default async function AssessPage({
     );
   }
 
-  // wizard_complete | synthesizing — drive (or observe) synthesis. The helper
-  // handles fresh-lock detection (returns "wait") and stale-lock takeover.
+  // wizard_complete | synthesizing — dispatch synthesis (or observe it
+  // already in flight) and hand off to the client polling shell.
+  //
+  // Sprint 4B ITEM 1A — was a synchronous `await runSynthesisForAssessment`
+  // which blocked the server response for the full 20-30s Opus call. The
+  // browser received no UI during that window, which is exactly what the
+  // Monday-demo "hang" looked like. dispatchSynthesisForAssessment now
+  // acquires the lock atomically, fires the Opus call via after(), and
+  // returns immediately. The polling client takes over from the browser.
   if (
     assessment.status === "wizard_complete" ||
     assessment.status === "synthesizing"
   ) {
-    const result = await runSynthesisForAssessment(id);
+    const result = await dispatchSynthesisForAssessment(id);
 
     if (result.kind === "redirect") {
       redirect(`/c/${result.shareToken}`);
     }
 
+    async function handlePollingRetry(): Promise<void> {
+      "use server";
+      await retrySynthesis(id);
+    }
+
     if (result.kind === "wait") {
-      async function handleStuckRetry(): Promise<void> {
-        "use server";
-        await retrySynthesis(id);
-      }
       return (
         <AssessShell>
-          <SynthesizerWaitingPanel
-            ageSeconds={Math.floor(result.runningSinceMs / 1000)}
-            onRetry={handleStuckRetry}
+          <SynthesisPolling
+            assessmentId={id}
+            initialAgeSeconds={Math.floor(result.runningSinceMs / 1000)}
+            onRetry={handlePollingRetry}
           />
         </AssessShell>
       );
     }
 
-    async function handleRetry(): Promise<void> {
-      "use server";
-      await retrySynthesis(id);
-    }
-
+    // result.kind === "error" — synthesizer landed in synthesizer_error
+    // state. Keep the existing panel; user retries via server action.
     return (
       <AssessShell>
         <SynthesizerErrorPanel
@@ -221,7 +227,7 @@ export default async function AssessPage({
           retryCount={result.retryCount}
           errorType={result.errorType}
           canRetry={result.retryCount < MAX_SYNTHESIZER_RETRIES}
-          onRetry={handleRetry}
+          onRetry={handlePollingRetry}
         />
       </AssessShell>
     );

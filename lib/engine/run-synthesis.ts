@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { getServiceClient } from "@/lib/supabase";
 import {
   runSynthesizer,
@@ -77,13 +78,19 @@ function isLockFresh(meta: Record<string, unknown>, nowMs: number): {
 }
 
 /**
- * Drives the synthesizer for a wizard-complete assessment with single-flight
- * semantics. Idempotent: safe to call repeatedly. Returns the action the
- * caller should take (redirect / wait / show error).
+ * Read the assessment row + acquire the synthesizer lock atomically.
+ *
+ * Returns either a terminal result (caller returns it directly) or a
+ * "locked" handoff carrying the row data + lockMeta the synthesis worker
+ * needs. Extracted from runSynthesisForAssessment so the new
+ * dispatchSynthesisForAssessment can reuse it without duplicating the
+ * single-flight semantics.
  */
-export async function runSynthesisForAssessment(
-  id: string
-): Promise<RunSynthesisResult> {
+type AcquireLockResult =
+  | RunSynthesisResult
+  | { kind: "locked"; data: AssessmentRow; lockMeta: Record<string, unknown> };
+
+async function acquireSynthesisLock(id: string): Promise<AcquireLockResult> {
   const supabase = getServiceClient();
 
   const { data, error: fetchErr } = await supabase
@@ -103,7 +110,6 @@ export async function runSynthesisForAssessment(
     };
   }
 
-  // Already done — short-circuit to redirect.
   if (data.status === "completed" && data.share_token) {
     return { kind: "redirect", shareToken: data.share_token };
   }
@@ -119,9 +125,6 @@ export async function runSynthesisForAssessment(
     return { kind: "wait", runningSinceMs: ageMs };
   }
 
-  // Acquire the lock atomically. We update only if status is still in
-  // a takeover-eligible state. If no row matches, another worker raced
-  // ahead — treat as a wait.
   const lockMeta: Record<string, unknown> = {
     ...meta,
     synthesizer_running_at: new Date(nowMs).toISOString(),
@@ -149,11 +152,75 @@ export async function runSynthesisForAssessment(
     };
   }
   if (!locked) {
-    // Race lost; assume the other worker is making progress.
     return { kind: "wait", runningSinceMs: 0 };
   }
 
-  // Past this point: this worker owns the synthesis attempt.
+  return { kind: "locked", data, lockMeta };
+}
+
+/**
+ * Drives the synthesizer for a wizard-complete assessment with single-flight
+ * semantics. Idempotent: safe to call repeatedly. Returns the action the
+ * caller should take (redirect / wait / show error).
+ *
+ * Note: this is the SYNCHRONOUS path — caller awaits the Opus call. For
+ * the user-facing /assess/[id] page, use dispatchSynthesisForAssessment
+ * instead so the LLM call runs via after() and the page returns a
+ * polling shell immediately. This function stays exported for any
+ * caller that genuinely needs the synchronous behavior (admin retry,
+ * scripts, future cron etc.) and as a stable seam for tests.
+ */
+export async function runSynthesisForAssessment(
+  id: string
+): Promise<RunSynthesisResult> {
+  const lock = await acquireSynthesisLock(id);
+  if (lock.kind !== "locked") return lock;
+  return synthesizeAndSaveCard(lock.data, lock.lockMeta);
+}
+
+/**
+ * Async-dispatch variant. Acquires the lock synchronously (so the status
+ * flips to 'synthesizing' before the response is sent), then fires the
+ * Opus call + DB save via after() so the request can return immediately.
+ *
+ * Used by /assess/[id]/page.tsx to render a polling UI instead of
+ * blocking the server response for the 20-30s Opus latency — see
+ * Sprint 4B ITEM 1A. The polling client hits /api/synthesis/status
+ * and redirects to /c/<share_token> when the worker stamps completion.
+ */
+export async function dispatchSynthesisForAssessment(
+  id: string
+): Promise<RunSynthesisResult> {
+  const lock = await acquireSynthesisLock(id);
+  if (lock.kind !== "locked") return lock;
+  // Dispatch the Opus + save phase past the response. Errors land on
+  // assessments.meta.synthesizer_error and surface to the client via
+  // the synthesis-status poll endpoint.
+  const { data, lockMeta } = lock;
+  after(async () => {
+    try {
+      await synthesizeAndSaveCard(data, lockMeta);
+    } catch (err) {
+      console.error(
+        `[dispatch-synthesis] uncaught error for ${id}:`,
+        err instanceof Error ? err.message : err
+      );
+    }
+  });
+  return { kind: "wait", runningSinceMs: 0 };
+}
+
+async function synthesizeAndSaveCard(
+  data: AssessmentRow,
+  lockMeta: Record<string, unknown>
+): Promise<RunSynthesisResult> {
+  const supabase = getServiceClient();
+  const id = data.id;
+  const meta: Record<string, unknown> = (data.meta ?? {}) as Record<
+    string,
+    unknown
+  >;
+  const nowMs = Date.now();
   const pdfHashes = (data.uploaded_docs ?? []).map((d) => d.sha256);
   const cacheKey = computeCacheKey({
     email: data.email,
